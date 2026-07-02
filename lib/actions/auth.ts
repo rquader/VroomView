@@ -67,13 +67,15 @@ export async function signUpAction(
   });
 
   if (error) {
-    return {
-      status: "error",
-      message:
-        error.code === "user_already_exists"
-          ? "That email already has an account — sign in instead."
-          : "Sign-up didn't go through. Try again in a moment.",
-    };
+    const message =
+      error.code === "user_already_exists"
+        ? "That email already has an account — sign in instead."
+        : error.code === "email_address_invalid"
+          ? "That email doesn't look deliverable — double-check it."
+          : error.code === "over_email_send_rate_limit"
+            ? "Too many sign-ups right now — try again in a few minutes."
+            : "Sign-up didn't go through. Try again in a moment.";
+    return { status: "error", message };
   }
 
   // Email confirmation is ON, so no session yet — the account activates when

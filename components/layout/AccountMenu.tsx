@@ -67,7 +67,9 @@ export function AccountMenu({
               <p className="text-sm font-semibold">
                 {displayName ?? `@${username}`}
               </p>
-              <p className="dateline text-[10px] text-ink-2">@{username}</p>
+              <p className="dateline text-[10px] text-ink-2 normal-case">
+                @{username}
+              </p>
             </div>
             <form action={signOutAction} className="flex flex-col py-1.5">
               <button
