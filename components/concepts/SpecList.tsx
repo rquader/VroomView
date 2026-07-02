@@ -10,18 +10,23 @@ import type { SpecMetric } from "@/types";
 export function SpecList({
   specs,
   size = "card",
+  columns = "auto",
 }: {
   specs: SpecMetric[];
   size?: "card" | "hero";
+  /** "auto" = responsive 2→4; 3 = always three-up (e.g. a three-stat strip) */
+  columns?: "auto" | 3;
 }) {
   const hero = size === "hero";
 
   return (
     <dl
       className={
-        hero
-          ? "grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4"
-          : "grid grid-cols-2 gap-x-6 gap-y-3.5 min-[440px]:grid-cols-4"
+        columns === 3
+          ? "grid grid-cols-3 gap-x-6 gap-y-3.5"
+          : hero
+            ? "grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-4"
+            : "grid grid-cols-2 gap-x-6 gap-y-3.5 min-[440px]:grid-cols-4"
       }
     >
       {specs.map((s) => (

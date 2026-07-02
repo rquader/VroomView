@@ -32,7 +32,9 @@ export function ConceptCard({
         {/* suppress: age labels re-compute on the client and may drift from the
             build-time SSG text (e.g. "5h" → "9h") — that drift is expected */}
         <span className="dateline" suppressHydrationWarning>
-          {timeAgo(concept.postedAt)} · @{concept.author}
+          {timeAgo(concept.postedAt)} ·{" "}
+          {/* handles keep their true case inside the caps dateline */}
+          <span className="normal-case">@{concept.author}</span>
         </span>
       </div>
 

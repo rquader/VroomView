@@ -41,7 +41,7 @@ export default function HomePage() {
           </p>
 
           <div className="mt-8 max-w-md">
-            <SpecList specs={boardSpecs} />
+            <SpecList specs={boardSpecs} columns={3} />
           </div>
         </div>
 

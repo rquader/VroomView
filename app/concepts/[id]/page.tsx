@@ -76,7 +76,8 @@ export default async function ConceptDetailPage({
                 {concept.bodyStyle}
               </span>
               <span className="dateline">
-                {timeAgo(concept.postedAt)} · @{concept.author}
+                {timeAgo(concept.postedAt)} ·{" "}
+                <span className="normal-case">@{concept.author}</span>
               </span>
             </div>
             <h1 className="mt-3 font-serif text-4xl font-medium leading-[1.1] tracking-[-0.02em] sm:text-[2.75rem]">
