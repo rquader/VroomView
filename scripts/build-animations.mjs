@@ -328,9 +328,119 @@ const empty = comp({
   ],
 });
 
+// hero: "elevation studies" — three vehicles draft themselves in sequence on
+// a registered plate, each measured by its own dimension rule. The profiles
+// mirror components/ui/Silhouette.tsx (canonical source — keep in sync).
+const PROFILES = {
+  sedan: {
+    body: "M3,29 L3,25.5 Q3,23.5 6,23 L15,21.5 L25,14.5 Q26.5,13.5 29,13.5 L54,13.5 Q57,13.5 59.5,15 L67,21 L85,23.5 Q93,24.5 93,26.5 L93,29 Z",
+    detail: "M30,14 L28,21.5",
+    wheels: [25, 73],
+    span: [3, 93],
+  },
+  truck: {
+    body: "M3,29 L3,24.5 Q3,22.5 6,22 L14,20.5 L22,12 Q23.5,11 26,11 L44,11 Q47,11 47,13.5 L47,19.5 L88,19.5 Q90,19.5 90,21.5 L90,29 Z",
+    detail: "M87.5,20 L87.5,28.5",
+    wheels: [24, 76],
+    span: [3, 90],
+  },
+  minivan: {
+    body: "M3,29 L3,23 Q3,19.5 7,18.5 L12,17 L20,10 Q21.5,8.5 24,8.5 L78,8.5 Q84,8.5 87,11.5 L91,19 Q93,21 93,25 L93,29 Z",
+    detail: "M57,9 L57,28",
+    wheels: [24, 74],
+    span: [3, 93],
+  },
+};
+
+const HERO = { w: 420, h: 250, scale: 3.4, cx: 210, cy: 118, seg: 172 };
+const hx = (x) => HERO.cx + (x - 48) * HERO.scale;
+const hy = (y) => HERO.cy + (y - 22) * HERO.scale;
+
+/** one vehicle's drafting sequence, windowed via layer in/out points */
+function heroSegment(profile, t) {
+  const { seg } = HERO;
+  const fade = (peak) => anim([[t, 0], [t + 8, peak], [t + seg - 22, peak], [t + seg - 4, 0]]);
+  const carTransform = {
+    p: stat([HERO.cx, HERO.cy, 0]),
+    a: stat([48, 22, 0]),
+    s: stat([HERO.scale * 100, HERO.scale * 100, 100]),
+  };
+  return [
+    layer({
+      name: `body-${t}`, cl: "vv-ink-2", op: t + seg, opacity: fade(100),
+      transform: carTransform,
+      items: [
+        pathFromSvg(profile.body),
+        trim(stat(0), anim([[t + 4, 0], [t + 74, 100]])),
+        strokeItem("vv-ink-2", 1.55),
+      ],
+    }),
+    layer({
+      name: `seam-${t}`, cl: "vv-ink-2", op: t + seg,
+      opacity: anim([[t + 64, 0], [t + 78, 55], [t + seg - 22, 55], [t + seg - 4, 0]]),
+      transform: carTransform,
+      items: [line(...profile.detail.match(/-?[\d.]+/g).reduce((a, n, i) => (i % 2 ? a[a.length - 1].push(+n) : a.push([+n]), a), [])), strokeItem("vv-ink-2", 1.1)],
+    }),
+    ...profile.wheels.map((cx, n) =>
+      layer({
+        name: `wheel-${t}-${n}`, cl: "vv-ink-2", op: t + seg,
+        opacity: anim([[t + 70 + n * 8, 0], [t + 74 + n * 8, 100], [t + seg - 22, 100], [t + seg - 4, 0]]),
+        transform: {
+          p: stat([hx(cx), hy(31.5), 0]),
+          s: anim([
+            [t + 70 + n * 8, [0, 0, 100]],
+            [t + 82 + n * 8, [112, 112, 100]],
+            [t + 90 + n * 8, [100, 100, 100]],
+          ]),
+        },
+        items: [
+          ellipse(0, 0, 11 * HERO.scale),
+          ellipse(0, 0, 2.9 * HERO.scale),
+          strokeItem("vv-ink-2", 1.55 * HERO.scale),
+        ],
+      }),
+    ),
+    layer({
+      name: `dim-${t}`, cl: "vv-accent", op: t + seg,
+      opacity: anim([[t + 88, 0], [t + 92, 100], [t + seg - 22, 100], [t + seg - 4, 0]]),
+      items: [
+        line([hx(profile.span[0]), 216], [hx(profile.span[0]), 230]),
+        line([hx(profile.span[0]), 223], [hx(profile.span[1]), 223]),
+        line([hx(profile.span[1]), 216], [hx(profile.span[1]), 230]),
+        trim(stat(0), anim([[t + 88, 0], [t + 116, 100]])),
+        strokeItem("vv-accent", 2.6),
+      ],
+    }),
+  ];
+}
+
+/** small registration crosshair at (x, y) */
+const regMark = (x, y) => [line([x - 7, y], [x + 7, y]), line([x, y - 7], [x, y + 7])];
+
+const hero = comp({
+  name: "vv-hero",
+  w: HERO.w, h: HERO.h, op: HERO.seg * 3,
+  layers: () => [
+    ...Object.values(PROFILES).flatMap((p, i) => heroSegment(p, i * HERO.seg)),
+    layer({
+      name: "reg-marks", cl: "vv-ink-3", op: HERO.seg * 3,
+      opacity: anim([[0, 0], [14, 60]]),
+      items: [...regMark(22, 22), ...regMark(398, 22), strokeItem("vv-ink-3", 1.5)],
+    }),
+    layer({
+      name: "ground", cl: "vv-control", op: HERO.seg * 3,
+      opacity: anim([[0, 0], [16, 100]]),
+      items: [
+        line([34, hy(31.5) + 22], [386, hy(31.5) + 22]),
+        strokeItem("vv-control", 2, [2, 10]),
+      ],
+    }),
+  ],
+});
+
 // ── write + sanity-check ────────────────────────────────────────────────
 mkdirSync(OUT, { recursive: true });
-for (const [file, data] of Object.entries({ loading, success, error, empty })) {
+for (const [file, data] of Object.entries({ loading, success, error, empty, hero })) {
   // structural sanity: every layer needs full ks + at least one shape group
   for (const l of data.layers) {
     for (const key of ["o", "r", "p", "a", "s"]) {

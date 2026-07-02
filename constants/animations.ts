@@ -11,6 +11,7 @@ export const ANIMATION_SRC = {
   empty: "/animations/empty.json",
   success: "/animations/success.json",
   error: "/animations/error.json",
+  hero: "/animations/hero.json",
 } as const;
 
 export type AnimationKey = keyof typeof ANIMATION_SRC;

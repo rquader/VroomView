@@ -1,5 +1,6 @@
 import { FeedView } from "@/components/concepts/FeedView";
 import { SpecList } from "@/components/concepts/SpecList";
+import { HeroSketch } from "@/components/animations/HeroSketch";
 import { MOCK_CONCEPTS } from "@/lib/mock/concepts";
 import { ALL_TAGS } from "@/constants/lenses";
 
@@ -25,21 +26,27 @@ export default function HomePage() {
         className="drafting-grid pointer-events-none absolute inset-x-0 top-0 h-72"
       />
 
-      <section className="relative max-w-3xl">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
-          The proving ground
-        </p>
-        <h1 className="mt-3 font-serif text-4xl font-medium leading-[1.08] tracking-[-0.02em] sm:text-5xl">
-          The cars that <em className="font-medium">should</em> exist, argued
-          into shape.
-        </h1>
-        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ink-2">
-          An open review board for automotive concepts — proposals with real
-          numbers, debated like a design review.
-        </p>
+      <section className="relative lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center lg:gap-16">
+        <div className="max-w-3xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
+            The proving ground
+          </p>
+          <h1 className="mt-3 font-serif text-4xl font-medium leading-[1.08] tracking-[-0.02em] sm:text-5xl">
+            The cars that <em className="font-medium">should</em> exist, argued
+            into shape.
+          </h1>
+          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ink-2">
+            An open review board for automotive concepts — proposals with real
+            numbers, debated like a design review.
+          </p>
 
-        <div className="mt-8 max-w-md">
-          <SpecList specs={boardSpecs} />
+          <div className="mt-8 max-w-md">
+            <SpecList specs={boardSpecs} />
+          </div>
+        </div>
+
+        <div className="mx-auto mt-10 w-full max-w-md lg:mt-0 lg:max-w-none">
+          <HeroSketch />
         </div>
       </section>
 
