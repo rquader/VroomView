@@ -68,7 +68,11 @@ public/         static assets (public/animations for Lottie JSON)
 
 ## Deployment
 
-Deploys to Vercel. Set the same env vars in **Vercel → Project Settings → Environment Variables**. Node is pinned to 22.x via `engines` + `.nvmrc`.
+**Production:** https://vroom-view.vercel.app (Vercel project `vroom-view`, GitHub `main` → auto deploy).
+
+Set the same env vars in **Vercel → Project Settings → Environment Variables**. Node is pinned to 22.x via `engines` + `.nvmrc` + the Vercel project setting — keep them aligned.
+
+**Important:** Vercel **Framework Preset** must be **Next.js**. If set to "Other" with output directory `public`, only static files deploy and app routes 404. See team doc `08 - Development Workflow`.
 
 ## Team learning docs
 
