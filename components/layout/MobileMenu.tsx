@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ROUTES } from "@/constants/app";
 import { useDialogFocus } from "@/hooks/useDialogFocus";
+import { signOutAction } from "@/lib/actions/auth";
 import { MenuIcon, CloseIcon } from "@/components/ui/Icon";
 import { ThemeList } from "@/components/ui/ThemeSwitcher";
 
@@ -20,7 +21,7 @@ const NAV = [
  * so no functionality is desktop-only. Closes on navigation, Escape, or the
  * backdrop; scroll locks while open so the page doesn't drift underneath.
  */
-export function MobileMenu() {
+export function MobileMenu({ username }: { username: string | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panelId = useId();
@@ -105,6 +106,35 @@ export function MobileMenu() {
               </ul>
               <p className="overline mt-5 mb-2">Palette</p>
               <ThemeList />
+
+              <p className="overline mt-5 mb-2">Account</p>
+              {username ? (
+                <div className="flex items-center justify-between gap-3 pb-2">
+                  <span className="text-sm text-ink-2">
+                    Signed in as{" "}
+                    <span className="font-medium text-ink">@{username}</span>
+                  </span>
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      name="scope"
+                      value="local"
+                      className="btn btn-secondary btn-sm min-h-10"
+                    >
+                      Sign out
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 pb-2">
+                  <Link href={ROUTES.login} className="btn btn-secondary btn-sm min-h-10">
+                    Sign in
+                  </Link>
+                  <Link href={ROUTES.signup} className="btn btn-ghost btn-sm min-h-10">
+                    Create account
+                  </Link>
+                </div>
+              )}
             </nav>
           </div>
         </div>

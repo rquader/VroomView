@@ -41,17 +41,20 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // --- Protected-route pattern (enable once auth pages exist) -----------------
-  // Bounce unauthenticated visitors away from private areas, e.g.:
-  //
-  //   if (!user && request.nextUrl.pathname.startsWith("/feed")) {
-  //     const loginUrl = request.nextUrl.clone();
-  //     loginUrl.pathname = "/login";
-  //     return NextResponse.redirect(loginUrl);
-  //   }
-  //
-  // For the skeleton we only refresh the session and let every route through.
-  void user;
+  // Signed-in users have no business on the credential pages — bounce home.
+  // (Content pages stay public; actions enforce auth server-side + RLS.)
+  // IMPORTANT: any redirect must CARRY the refreshed session cookies from
+  // supabaseResponse, or the refresh this middleware just performed is lost.
+  if (user && ["/login", "/signup"].includes(request.nextUrl.pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    url.search = "";
+    const redirectResponse = NextResponse.redirect(url);
+    supabaseResponse.cookies
+      .getAll()
+      .forEach(({ name, value }) => redirectResponse.cookies.set(name, value));
+    return redirectResponse;
+  }
 
   return supabaseResponse;
 }
