@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { APP_NAME, ROUTES } from "@/constants/app";
 import { PlusIcon } from "@/components/ui/Icon";
-import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
+import { ThemeCycleButton } from "@/components/ui/ThemeSwitcher";
 import { HeaderNav } from "./HeaderNav";
 import { MobileMenu } from "./MobileMenu";
 
@@ -33,14 +33,13 @@ export function SiteHeader() {
           </span>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 md:gap-4">
+        <div className="flex shrink-0 items-center gap-2 md:gap-3">
           <HeaderNav items={NAV} />
-          <div className="hidden md:block">
-            <ThemeSwitcher />
-          </div>
-          <Link href={ROUTES.submit} className="btn btn-primary">
+          <ThemeCycleButton />
+          {/* icon-only below sm so the theme button always fits; label returns at sm */}
+          <Link href={ROUTES.submit} className="btn btn-primary" aria-label="Propose a concept">
             <PlusIcon size={16} />
-            Propose
+            <span className="hidden sm:inline">Propose</span>
           </Link>
           <MobileMenu />
         </div>

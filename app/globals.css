@@ -413,6 +413,17 @@
     opacity: 1;
   }
 }
+/* the theme button's glyph landing — a stamp, not a spin */
+@keyframes vv-glyph-in {
+  from {
+    transform: scale(0.55) rotate(-24deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,
