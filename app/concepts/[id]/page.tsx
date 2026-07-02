@@ -1,0 +1,137 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ROUTES } from "@/constants/app";
+import { MOCK_CONCEPTS } from "@/lib/mock/concepts";
+import { getMockComments } from "@/lib/mock/comments";
+import { timeAgo } from "@/utils/time";
+import { SpecList } from "@/components/concepts/SpecList";
+import { VoteControl } from "@/components/concepts/VoteControl";
+import { CommentThread } from "@/components/concepts/CommentThread";
+import { ConceptMeta } from "@/components/concepts/ConceptMeta";
+import { RelatedConcepts } from "@/components/concepts/RelatedConcepts";
+import { ArrowLeftIcon, TagIcon } from "@/components/ui/Icon";
+
+export function generateStaticParams() {
+  return MOCK_CONCEPTS.map((concept) => ({ id: concept.id }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const concept = MOCK_CONCEPTS.find((c) => c.id === id);
+  return { title: concept ? concept.title : "Concept not found" };
+}
+
+/** Drawing-sheet number for the title block, e.g. "SHEET VV-04". */
+function sheetNo(id: string): string {
+  const digits = id.replace(/\D/g, "");
+  return `VV-${digits ? digits.padStart(2, "0") : id.slice(0, 4).toUpperCase()}`;
+}
+
+/** Related = shares lenses (weighted) then support; excludes the concept itself. */
+function relatedTo(concept: (typeof MOCK_CONCEPTS)[number]) {
+  return MOCK_CONCEPTS.filter((c) => c.id !== concept.id)
+    .map((c) => ({
+      c,
+      score:
+        c.tags.filter((t) => concept.tags.includes(t)).length * 1000 + c.votes,
+    }))
+    .filter(({ score }) => score >= 1000) // at least one shared lens
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map(({ c }) => c);
+}
+
+export default async function ConceptDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const concept = MOCK_CONCEPTS.find((c) => c.id === id);
+  if (!concept) notFound();
+
+  const comments = getMockComments(concept.id);
+  const related = relatedTo(concept);
+
+  return (
+    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+      <Link
+        href={ROUTES.home}
+        className="inline-flex min-h-8 items-center gap-1.5 text-sm text-ink-3 transition-colors hover:text-ink"
+      >
+        <ArrowLeftIcon size={16} />
+        Feed
+      </Link>
+
+      <div className="mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_264px] lg:gap-16">
+        <div className="max-w-3xl">
+          <article>
+            <div className="flex items-center gap-2.5 text-[11px]">
+              <span className="font-semibold uppercase tracking-[0.14em] text-accent">
+                {concept.bodyStyle}
+              </span>
+              <span className="dateline">
+                {timeAgo(concept.postedAt)} · @{concept.author}
+              </span>
+            </div>
+            <h1 className="mt-3 font-serif text-4xl font-medium leading-[1.1] tracking-[-0.02em] sm:text-[2.75rem]">
+              {concept.title}
+            </h1>
+            <p className="mt-4 text-xl leading-relaxed text-ink-2">
+              {concept.summary}
+            </p>
+            {concept.details ? (
+              <p className="mt-4 leading-relaxed">{concept.details}</p>
+            ) : null}
+
+            {/* The spec sheet is the lead image — set as a drawing's title block. */}
+            <div className="sheet mt-8 overflow-hidden">
+              <div className="flex items-center justify-between gap-3 border-b border-line bg-well/60 px-5 py-2.5">
+                <h2 className="overline text-accent">Proposed specification</h2>
+                <span className="dateline">Sheet {sheetNo(concept.id)}</span>
+              </div>
+              <div className="px-5 py-6 sm:px-6">
+                <SpecList specs={concept.specs} size="hero" />
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center gap-4 border-t border-line pt-4">
+              <div className="flex min-w-0 items-center gap-1.5 text-[11px] uppercase tracking-wide text-ink-3">
+                <TagIcon size={13} className="shrink-0" />
+                <span className="truncate">{concept.tags.join(" · ")}</span>
+              </div>
+              <div className="ml-auto shrink-0">
+                <VoteControl initial={concept.votes} />
+              </div>
+            </div>
+          </article>
+
+          <section className="mt-12">
+            <div className="flex items-baseline gap-3 border-b border-line pb-3">
+              <h2 className="font-serif text-2xl font-medium tracking-[-0.01em]">
+                Discussion
+              </h2>
+              <span className="dateline">
+                {comments.length} {comments.length === 1 ? "note" : "notes"}
+              </span>
+            </div>
+            <div className="mt-6">
+              <CommentThread comments={comments} />
+            </div>
+          </section>
+        </div>
+
+        {/* Meta + related: right rail on desktop, end-of-page on mobile */}
+        <aside className="mt-14 lg:sticky lg:top-24 lg:mt-0 lg:self-start">
+          <ConceptMeta concept={concept} />
+          <RelatedConcepts concepts={related} />
+        </aside>
+      </div>
+    </main>
+  );
+}
