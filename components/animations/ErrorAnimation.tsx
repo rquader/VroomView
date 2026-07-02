@@ -20,7 +20,7 @@ export function ErrorAnimation({
         src={ANIMATION_SRC.error}
         loop={false}
         ariaLabel="Error"
-        className="h-24 w-24"
+        className="h-24 w-44"
         fallback={
           <svg viewBox="0 0 120 44" className="h-12 w-32" aria-hidden>
             {/* left rule with end tick */}

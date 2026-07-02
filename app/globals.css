@@ -369,6 +369,19 @@
     top: 1rem;
   }
 
+  /*
+    Theme-aware Lottie: our animations (authored by scripts/build-animations.mjs)
+    are stroke-only, and each layer carries a `cl` class that lottie-web writes
+    onto its <g>. CSS properties beat SVG presentation attributes, so these
+    rules re-ink every animation with the active theme — one JSON, four themes.
+  */
+  .vv-lottie svg .vv-ink path { stroke: var(--ink); }
+  .vv-lottie svg .vv-ink-2 path { stroke: var(--ink-2); }
+  .vv-lottie svg .vv-ink-3 path { stroke: var(--ink-3); }
+  .vv-lottie svg .vv-control path { stroke: var(--control); }
+  .vv-lottie svg .vv-accent path { stroke: var(--accent); }
+  .vv-lottie svg .vv-danger path { stroke: var(--danger); }
+
   /* thin themed scrollbar */
   .scrollbar-thin {
     scrollbar-width: thin;

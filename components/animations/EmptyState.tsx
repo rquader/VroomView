@@ -30,7 +30,7 @@ export function EmptyState({
       <LottiePlayer
         src={ANIMATION_SRC.empty}
         ariaLabel="Empty"
-        className="h-32 w-32"
+        className="h-36 w-56 max-w-full"
         fallback={
           <div
             aria-hidden

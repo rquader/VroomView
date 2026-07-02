@@ -94,7 +94,8 @@ export function LottiePlayer({
   if (reducedMotion || !data || failed) return <>{fallback}</>;
 
   return (
-    <div className={className} role="img" aria-label={ariaLabel}>
+    // vv-lottie scopes the theme re-inking rules in globals.css
+    <div className={`vv-lottie ${className ?? ""}`} role="img" aria-label={ariaLabel}>
       <Lottie animationData={data} loop={loop} autoplay={autoplay} />
     </div>
   );
