@@ -2,6 +2,7 @@
 
 import { useEffect, useId } from "react";
 import type { ConceptTag } from "@/types";
+import { useDialogFocus } from "@/hooks/useDialogFocus";
 import { LensControls } from "./LensControls";
 import { CloseIcon } from "@/components/ui/Icon";
 
@@ -29,6 +30,7 @@ export function LensDrawer({
   onClear: () => void;
 }) {
   const titleId = useId();
+  const panelRef = useDialogFocus<HTMLDivElement>(open);
 
   useEffect(() => {
     if (!open) return;
@@ -54,10 +56,12 @@ export function LensDrawer({
         className="fixed inset-0 z-40 cursor-default bg-black/30 motion-safe:animate-[vv-fade-in_0.15s_ease]"
       />
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col rounded-t-2xl border-t border-line bg-page shadow-[var(--shadow-raise)] motion-safe:animate-[vv-slide-up_0.22s_var(--ease-out-soft)]"
+        tabIndex={-1}
+        className="fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col rounded-t-2xl border-t border-line bg-page shadow-[var(--shadow-raise)] outline-none motion-safe:animate-[vv-slide-up_0.22s_var(--ease-out-soft)]"
       >
         <div aria-hidden className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-line-2" />
         <div className="flex items-center justify-between px-5 pt-3 pb-4">

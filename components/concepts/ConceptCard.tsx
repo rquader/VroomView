@@ -62,6 +62,7 @@ export function ConceptCard({
           >
             <CommentIcon size={15} />
             <span className="font-mono tabular-nums">{concept.comments}</span>
+            <span className="sr-only">notes in discussion</span>
           </span>
           <VoteControl initial={concept.votes} />
         </div>

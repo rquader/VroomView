@@ -32,7 +32,7 @@ export function TagFilterBar({
             type="button"
             aria-pressed={on}
             onClick={() => onToggle(tag)}
-            className={`min-h-8 border-b-2 pb-0.5 text-sm transition-colors ${
+            className={`min-h-10 border-b-2 pb-0.5 text-sm transition-colors ${
               on
                 ? "border-accent text-ink"
                 : "border-transparent text-ink-3 hover:border-line-2 hover:text-ink"

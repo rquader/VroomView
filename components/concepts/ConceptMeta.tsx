@@ -24,7 +24,8 @@ export function ConceptMeta({ concept }: { concept: Concept }) {
           className="mx-auto h-auto w-full max-w-[220px] text-ink-2"
         />
         <div className="dim-rule mx-auto mt-2 max-w-[220px]" aria-hidden />
-        <p className="dateline mt-2 text-center">
+        {/* ink-2 (not ink-3): this caption sits on a well-tinted plate */}
+        <p className="dateline mt-2 text-center text-ink-2">
           {concept.bodyStyle} · elevation
         </p>
       </div>

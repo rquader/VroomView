@@ -1,11 +1,32 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 
 // lottie-react touches `document`, so it must never render on the server. Importing
 // it via next/dynamic with ssr:false guarantees a client-only load.
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
+
+// The global reduced-motion CSS rule can't reach Lottie's JS-driven playback,
+// so the player itself respects the preference: reduced → static fallback.
+const rmQuery = () => window.matchMedia("(prefers-reduced-motion: reduce)");
+const subscribeReducedMotion = (cb: () => void) => {
+  const mq = rmQuery();
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+function useReducedMotion(): boolean {
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    () => rmQuery().matches,
+    () => false, // server snapshot
+  );
+}
 
 export type LottiePlayerProps = {
   /** Pre-imported Lottie JSON (bundled). Takes precedence over `src`. */
@@ -39,9 +60,11 @@ export function LottiePlayer({
 }: LottiePlayerProps) {
   const [data, setData] = useState<unknown>(animationData ?? null);
   const [failed, setFailed] = useState(false);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (animationData || !src) return;
+    // Don't even fetch when the user prefers reduced motion.
+    if (reducedMotion || animationData || !src) return;
 
     let cancelled = false;
 
@@ -66,9 +89,9 @@ export function LottiePlayer({
     return () => {
       cancelled = true;
     };
-  }, [src, animationData]);
+  }, [src, animationData, reducedMotion]);
 
-  if (!data || failed) return <>{fallback}</>;
+  if (reducedMotion || !data || failed) return <>{fallback}</>;
 
   return (
     <div className={className} role="img" aria-label={ariaLabel}>

@@ -27,7 +27,7 @@ export function SiteFooter() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-btn px-2 py-1 text-xs text-ink-3 transition-colors hover:bg-well hover:text-ink"
+                className="rounded-btn px-2 py-2 text-xs text-ink-3 transition-colors hover:bg-well hover:text-ink"
               >
                 {item.label}
               </Link>

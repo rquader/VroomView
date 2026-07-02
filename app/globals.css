@@ -12,10 +12,12 @@
   Semantic tokens flip per theme (data-theme on <html>). Fonts are wired by
   next/font in app/layout.tsx as --ff-serif / --ff-sans / --ff-mono.
 
-  CONTRAST CONTRACT (verified by script — see "21 - Accessibility and Mobile QA"):
-  every theme keeps ink/ink-2/ink-3, accent, rubric and danger at ≥ 4.5:1 on
-  page AND card (small-text AA), and --control at ≥ 3:1 for interactive borders
-  (WCAG 1.4.11). --line/--line-2 are DECORATIVE hairlines only — never the sole
+  CONTRAST CONTRACT (verified by scripts/check-contrast.mjs — see
+  "21 - Accessibility and Mobile QA"): every theme keeps ink/ink-2/ink-3,
+  accent, rubric and danger at ≥ 4.5:1 on page AND card (small-text AA), and
+  --control at ≥ 3:1 for interactive borders (WCAG 1.4.11). On WELL-tinted
+  surfaces only ink/ink-2 may carry text — ink-3 and rubric dip below AA
+  there. --line/--line-2 are DECORATIVE hairlines only — never the sole
   boundary of an interactive control; use --control for that.
 */
 

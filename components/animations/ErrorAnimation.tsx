@@ -7,9 +7,10 @@ import { ANIMATION_SRC } from "@/constants/animations";
  * drafting break mark, with the break struck in the danger tone.
  */
 export function ErrorAnimation({
-  message = "Something went wrong",
+  message,
   className,
 }: {
+  /** Optional caption; omit when the surrounding page provides its own text. */
   message?: string;
   className?: string;
 }) {
@@ -40,7 +41,7 @@ export function ErrorAnimation({
           </svg>
         }
       />
-      <p className="text-sm text-ink-2">{message}</p>
+      {message ? <p className="text-sm text-ink-2">{message}</p> : null}
     </div>
   );
 }

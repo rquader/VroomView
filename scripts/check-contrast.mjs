@@ -77,6 +77,11 @@ for (const [name, t] of Object.entries(themes)) {
   for (const surface of ["page", "card"]) {
     check(`control on ${surface}`, t.control, t[surface], 3.0);
   }
+  // Well surfaces are darker (light themes) / lighter (dark) than page, so
+  // only ink/ink-2 may carry text there — never ink-3/rubric (audited 4.1–4.4
+  // in every theme). These checks keep the approved pairs honest.
+  check("ink on well", t.ink, t.well, 4.5);
+  check("ink-2 on well", t["ink-2"], t.well, 4.5);
 }
 
 console.log(

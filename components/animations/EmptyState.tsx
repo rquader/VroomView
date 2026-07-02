@@ -14,11 +14,14 @@ export function EmptyState({
   description,
   action,
   className,
+  heading: Heading = "h3",
 }: {
   title?: string;
   description?: string;
   action?: ReactNode;
   className?: string;
+  /** Match the surrounding outline — e.g. "h2" when no h2 precedes it. */
+  heading?: "h2" | "h3";
 }) {
   return (
     <div
@@ -41,7 +44,7 @@ export function EmptyState({
           </div>
         }
       />
-      <h3 className="mt-1 text-lg font-semibold">{title}</h3>
+      <Heading className="mt-1 text-lg font-semibold">{title}</Heading>
       {description ? (
         <p className="max-w-sm text-sm leading-relaxed text-ink-2">
           {description}

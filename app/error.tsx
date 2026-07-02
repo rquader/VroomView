@@ -19,9 +19,15 @@ export default function Error({
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-[55vh] max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
-      <ErrorAnimation message="This page failed to load. It's us, not you." />
-      <div className="flex flex-wrap items-center justify-center gap-3">
+    <main className="mx-auto flex min-h-[55vh] max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+      <ErrorAnimation />
+      <h1 className="font-serif text-3xl font-medium tracking-[-0.02em]">
+        This page failed to load
+      </h1>
+      <p role="alert" className="leading-relaxed text-ink-2">
+        Something broke on our side, not yours. Trying again usually clears it.
+      </p>
+      <div className="mt-1 flex flex-wrap items-center justify-center gap-3">
         <button type="button" onClick={reset} className="btn btn-secondary">
           Try again
         </button>

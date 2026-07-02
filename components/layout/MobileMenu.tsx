@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ROUTES } from "@/constants/app";
+import { useDialogFocus } from "@/hooks/useDialogFocus";
 import { MenuIcon, CloseIcon } from "@/components/ui/Icon";
 import { ThemeList } from "@/components/ui/ThemeSwitcher";
 
@@ -33,6 +34,8 @@ export function MobileMenu() {
     setOpen(false);
   }
 
+  const panelRef = useDialogFocus<HTMLDivElement>(open);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -45,6 +48,17 @@ export function MobileMenu() {
       document.documentElement.style.overflow = "";
     };
   }, [open]);
+
+  // The trigger hides at md — if the viewport crosses that line while open,
+  // close so the scroll lock can't outlive its visible UI.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onChange = (e: MediaQueryListEvent) => {
+      if (e.matches) setOpen(false);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   return (
     <>
@@ -69,7 +83,9 @@ export function MobileMenu() {
           />
           <div
             id={panelId}
-            className="absolute inset-x-0 top-full z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-line bg-page shadow-[var(--shadow-raise)] motion-safe:animate-[vv-drop-in_0.18s_var(--ease-out-soft)]"
+            ref={panelRef}
+            tabIndex={-1}
+            className="absolute inset-x-0 top-full z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-line bg-page shadow-[var(--shadow-raise)] outline-none motion-safe:animate-[vv-drop-in_0.18s_var(--ease-out-soft)]"
           >
             <nav className="mx-auto max-w-6xl px-5 py-4 sm:px-8" aria-label="Site">
               <ul className="flex flex-col">

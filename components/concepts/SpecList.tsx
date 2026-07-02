@@ -32,6 +32,7 @@ export function SpecList({
             {s.label}
           </dt>
           <dd
+            title={s.value}
             className={`mt-1 truncate font-mono font-medium tabular-nums text-ink ${
               hero ? "text-[1.45rem] leading-tight" : "text-[15px]"
             }`}

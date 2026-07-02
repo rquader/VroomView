@@ -62,7 +62,7 @@ export default async function ConceptDetailPage({
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
       <Link
         href={ROUTES.home}
-        className="inline-flex min-h-8 items-center gap-1.5 text-sm text-ink-3 transition-colors hover:text-ink"
+        className="inline-flex min-h-10 items-center gap-1.5 text-sm text-ink-3 transition-colors hover:text-ink"
       >
         <ArrowLeftIcon size={16} />
         Feed
@@ -91,9 +91,13 @@ export default async function ConceptDetailPage({
 
             {/* The spec sheet is the lead image — set as a drawing's title block. */}
             <div className="sheet mt-8 overflow-hidden">
+              {/* text on well-tinted surfaces uses ink-2/accent tiers — ink-3
+                  dips below 4.5:1 there (see 21 - Accessibility and Mobile QA) */}
               <div className="flex items-center justify-between gap-3 border-b border-line bg-well/60 px-5 py-2.5">
                 <h2 className="overline text-accent">Proposed specification</h2>
-                <span className="dateline">Sheet {sheetNo(concept.id)}</span>
+                <span className="dateline text-ink-2">
+                  Sheet {sheetNo(concept.id)}
+                </span>
               </div>
               <div className="px-5 py-6 sm:px-6">
                 <SpecList specs={concept.specs} size="hero" />

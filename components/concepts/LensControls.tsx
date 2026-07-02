@@ -1,3 +1,5 @@
+"use client";
+
 import type { ConceptTag } from "@/types";
 import { LENS_GROUPS } from "@/constants/lenses";
 
@@ -26,12 +28,14 @@ export function LensControls({
           <p className={`overline ${roomy ? "mb-2" : "mb-3.5"}`}>
             {group.label}
           </p>
-          <ul className={`flex flex-col ${roomy ? "gap-0.5" : "gap-2.5"}`}>
+          <ul className={`flex flex-col ${roomy ? "gap-0.5" : "gap-0"}`}>
             {group.tags.map((tag) => (
               <li key={tag}>
                 <label
                   className={`flex cursor-pointer items-center gap-2.5 text-sm text-ink-2 transition-colors hover:text-ink ${
-                    roomy ? "min-h-11 rounded-btn px-1.5 hover:bg-well" : ""
+                    roomy
+                      ? "min-h-11 rounded-btn px-1.5 hover:bg-well"
+                      : "min-h-9" /* the lg rail is touch-reachable on tablets */
                   }`}
                 >
                   <input

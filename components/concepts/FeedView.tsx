@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Concept, ConceptTag } from "@/types";
 import { ConceptCard } from "./ConceptCard";
 import { LensControls } from "./LensControls";
@@ -29,6 +29,17 @@ export function FeedView({ concepts }: { concepts: Concept[] }) {
   const [active, setActive] = useState<ConceptTag[]>([]);
   const [sort, setSort] = useState<SortKey>("support");
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // The drawer trigger hides at lg (the rail takes over) — close on crossing
+  // that line so the scroll lock can't outlive its visible UI.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const onChange = (e: MediaQueryListEvent) => {
+      if (e.matches) setDrawerOpen(false);
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   const toggle = (tag: ConceptTag) =>
     setActive((cur) =>
@@ -141,13 +152,14 @@ export function FeedView({ concepts }: { concepts: Concept[] }) {
 
         {visible.length === 0 ? (
           <EmptyState
+            heading="h2"
             title="Nothing matches every lens"
             description="Each lens narrows the board further. Remove one, or propose the concept that fits."
             action={
               <button
                 type="button"
                 onClick={() => setActive([])}
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm min-h-10"
               >
                 Clear lenses
               </button>
