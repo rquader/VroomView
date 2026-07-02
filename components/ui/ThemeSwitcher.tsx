@@ -5,9 +5,7 @@ import { CheckIcon } from "@/components/ui/Icon";
 
 /**
  * Curated themes (nature / car-studio inspired). Each maps to a token table in
- * globals.css via data-theme on <html>. Order defines the cycle. Every theme
- * carries an original stroke glyph — the material of its studio: vellum sheet,
- * moss leaf, clay modeling buck, graphite crescent (night).
+ * globals.css via data-theme on <html>. Order defines the cycle.
  */
 const THEMES = [
   { id: "vellum", label: "Vellum", note: "Studio paper · petrol", paper: "#f2eee5", accent: "#0c5b5e" },
@@ -16,31 +14,32 @@ const THEMES = [
   { id: "graphite", label: "Graphite", note: "Night studio", paper: "#1e1b15", accent: "#58c2b0" },
 ];
 
-const GLYPHS: Record<string, React.ReactNode> = {
-  // a drawing sheet with a folded corner
-  vellum: (
-    <>
-      <path d="M6 3.5h7.5L19 9v11.5H6z" />
-      <path d="M13.5 3.5V9H19" />
-    </>
-  ),
-  // a leaf with its vein
-  moss: (
-    <>
-      <path d="M11.5 20.5C11.5 13 14 7.5 20 4.5c.5 8-2.5 13.5-8.5 16z" />
-      <path d="M11.5 20.5C7 19 4.5 16 4.5 12c3.5 0 6 1.5 7.5 4" />
-    </>
-  ),
-  // a clay modeling buck on the bench
-  clay: (
-    <>
-      <path d="M4.5 16c1.5-5.5 4-7.5 7.5-7.5s6 2 7.5 7.5z" />
-      <path d="M3.5 19.5h17" />
-    </>
-  ),
-  // the night studio's crescent
-  graphite: <path d="M19.5 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10 10.5z" />,
-};
+/**
+ * The theme's color chip: a disc split on the 135° diagonal — paper above,
+ * accent below — drawn as true SVG halves (crisper than a CSS gradient).
+ * The seam is the paper showing through a hairline gap.
+ */
+function SwatchDisc({
+  paper,
+  accent,
+  className,
+}: {
+  paper: string;
+  accent: string;
+  className?: string;
+}) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className={className}>
+      <circle cx="12" cy="12" r="11.5" fill={paper} />
+      {/* lower-right half: chord runs 45° corner-to-corner, arc sweeps clockwise */}
+      <path
+        d="M19.85 4.5 A11.5 11.5 0 0 1 4.5 19.85 Z"
+        fill={accent}
+        transform="translate(0.4 0.4)"
+      />
+    </svg>
+  );
+}
 
 const THEME_EVENT = "vv-theme-change";
 
@@ -55,8 +54,7 @@ const subscribe = (cb: () => void) => {
   window.addEventListener(THEME_EVENT, cb);
   return () => window.removeEventListener(THEME_EVENT, cb);
 };
-const getSnapshot = () =>
-  document.documentElement.dataset.theme || "vellum";
+const getSnapshot = () => document.documentElement.dataset.theme || "vellum";
 const getServerSnapshot = () => "vellum";
 
 function pickTheme(id: string) {
@@ -75,9 +73,10 @@ function useTheme() {
 }
 
 /**
- * THE theme picker: one disc that wears the current theme (its paper, its
- * accent, its glyph) and advances to the next on click. Direct selection with
- * names lives in the mobile menu's <ThemeList> — this button is the fast lane.
+ * THE theme picker: one button wearing the current theme's color chip
+ * (paper/accent split disc); each click advances to the next theme and the
+ * new chip stamps in. Direct selection with names lives in the mobile menu's
+ * <ThemeList> — this button is the fast lane.
  */
 export function ThemeCycleButton() {
   const { theme, pick } = useTheme();
@@ -103,23 +102,14 @@ export function ThemeCycleButton() {
         title={`Theme: ${current.label} — click for ${next.label}`}
         aria-label={`Theme: ${current.label}. Switch to ${next.label}.`}
         suppressHydrationWarning
-        className="group relative flex h-10 w-10 items-center justify-center rounded-full ring-1 ring-control transition-transform hover:scale-105 active:scale-95"
-        style={{ background: current.paper }}
+        className="group flex h-10 w-10 items-center justify-center rounded-full transition-transform hover:scale-105 active:scale-95"
       >
-        <svg
+        <SwatchDisc
           key={current.id}
-          viewBox="0 0 24 24"
-          fill="none"
-          strokeWidth={1.75}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden
-          suppressHydrationWarning
-          className="h-[19px] w-[19px] motion-safe:animate-[vv-glyph-in_0.25s_var(--ease-spring)]"
-          style={{ stroke: current.accent }}
-        >
-          {GLYPHS[current.id]}
-        </svg>
+          paper={current.paper}
+          accent={current.accent}
+          className="h-9 w-9 rounded-full ring-1 ring-control motion-safe:animate-[vv-glyph-in_0.25s_var(--ease-spring)]"
+        />
       </button>
       <span aria-live="polite" className="sr-only">
         {announce}
@@ -147,24 +137,11 @@ export function ThemeList() {
               on ? "bg-well" : "hover:bg-well"
             }`}
           >
-            <span
-              aria-hidden
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-1 ring-control"
-              style={{ background: t.paper }}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                strokeWidth={1.75}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden
-                className="h-[15px] w-[15px]"
-                style={{ stroke: t.accent }}
-              >
-                {GLYPHS[t.id]}
-              </svg>
-            </span>
+            <SwatchDisc
+              paper={t.paper}
+              accent={t.accent}
+              className="h-7 w-7 shrink-0 rounded-full ring-1 ring-control"
+            />
             <span className="flex-1">
               <span className="block text-sm font-medium">{t.label}</span>
               {/* ink-2: the selected row is well-tinted, where ink-3 dips below AA */}
