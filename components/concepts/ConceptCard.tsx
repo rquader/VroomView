@@ -14,9 +14,11 @@ import { CommentIcon, TagIcon } from "@/components/ui/Icon";
 export function ConceptCard({
   concept,
   index,
+  signedIn,
 }: {
   concept: Concept;
   index?: number;
+  signedIn: boolean;
 }) {
   return (
     <article className="sheet sheet-hover p-5 sm:p-6">
@@ -34,7 +36,7 @@ export function ConceptCard({
         <span className="dateline" suppressHydrationWarning>
           {timeAgo(concept.postedAt)} ·{" "}
           {/* handles keep their true case inside the caps dateline */}
-          <span className="normal-case">@{concept.author}</span>
+          <span className="normal-case">@{concept.author.username}</span>
         </span>
       </div>
 
@@ -66,7 +68,12 @@ export function ConceptCard({
             <span className="font-mono tabular-nums">{concept.comments}</span>
             <span className="sr-only">notes in discussion</span>
           </span>
-          <VoteControl initial={concept.votes} />
+          <VoteControl
+            target={{ kind: "concept", conceptId: concept.id }}
+            votes={concept.votes}
+            voted={concept.viewerHasVoted}
+            signedIn={signedIn}
+          />
         </div>
       </div>
     </article>

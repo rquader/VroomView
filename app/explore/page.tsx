@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ROUTES } from "@/constants/app";
 import { ALL_TAGS, LENS_GROUPS } from "@/constants/lenses";
-import { MOCK_CONCEPTS } from "@/lib/mock/concepts";
+import { listConcepts } from "@/lib/services/concepts.service";
 import { Silhouette } from "@/components/ui/Silhouette";
 
 export const metadata: Metadata = { title: "Explore" };
@@ -10,23 +10,22 @@ export const metadata: Metadata = { title: "Explore" };
 /**
  * The catalogue: two honest indexes over what's actually on the board —
  * body styles (drawn plates, real counts, each leading to its top proposal)
- * and the review lenses. Counts are derived from the data, never invented.
+ * and the review lenses. Counts are derived from live data, never invented.
  */
-export default function ExplorePage() {
+export default async function ExplorePage() {
+  const concepts = await listConcepts();
+
   // Group concepts by body style; surface each shelf's most-supported proposal.
-  const shelves = [...new Set(MOCK_CONCEPTS.map((c) => c.bodyStyle))]
+  const shelves = [...new Set(concepts.map((c) => c.bodyStyle))]
     .map((style) => {
-      const inShelf = MOCK_CONCEPTS.filter((c) => c.bodyStyle === style);
+      const inShelf = concepts.filter((c) => c.bodyStyle === style);
       const leading = [...inShelf].sort((a, b) => b.votes - a.votes)[0];
       return { style, count: inShelf.length, leading };
     })
     .sort((a, b) => b.count - a.count || a.style.localeCompare(b.style));
 
   const lensCounts = Object.fromEntries(
-    ALL_TAGS.map((t) => [
-      t,
-      MOCK_CONCEPTS.filter((c) => c.tags.includes(t)).length,
-    ]),
+    ALL_TAGS.map((t) => [t, concepts.filter((c) => c.tags.includes(t)).length]),
   );
 
   return (

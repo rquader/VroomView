@@ -1,17 +1,28 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { ConceptComment, ConceptTag } from "@/types";
+import { ROUTES } from "@/constants/app";
 import { TagFilterBar } from "./TagFilterBar";
 import { CommentCard } from "./CommentCard";
+import { CommentComposer } from "./CommentComposer";
 
 /**
- * The discussion under a concept. Owns the comment tag-filter state; the tab
- * bar only offers lenses that actually occur in this thread. Notes are ordered
- * by support so the strongest arguments lead. The compose box is a disabled
- * preview (posting needs auth + a backend, which don't exist yet).
+ * The discussion under a concept — now live. Signed-in reviewers get the
+ * composer; guests get a real invitation (a link, not a dead control). Notes
+ * order by support, then age, so the strongest arguments lead while ties stay
+ * conversational. The tab bar only offers lenses that actually occur here.
  */
-export function CommentThread({ comments }: { comments: ConceptComment[] }) {
+export function CommentThread({
+  conceptId,
+  comments,
+  signedIn,
+}: {
+  conceptId: string;
+  comments: ConceptComment[];
+  signedIn: boolean;
+}) {
   const [active, setActive] = useState<ConceptTag[]>([]);
 
   const toggle = (tag: ConceptTag) =>
@@ -30,11 +41,27 @@ export function CommentThread({ comments }: { comments: ConceptComment[] }) {
       active.length === 0
         ? comments
         : comments.filter((c) => active.every((t) => c.tags.includes(t)));
-    return [...filtered].sort((a, b) => b.votes - a.votes);
+    return [...filtered].sort(
+      (a, b) => b.votes - a.votes || a.postedAt.localeCompare(b.postedAt),
+    );
   }, [comments, active]);
 
   return (
     <div className="flex flex-col gap-6">
+      {signedIn ? (
+        <CommentComposer conceptId={conceptId} />
+      ) : (
+        <div className="sheet flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-ink-2">
+            Reviews are open — sign in to add your take and support the strong
+            arguments.
+          </p>
+          <Link href={ROUTES.login} className="btn btn-secondary btn-sm min-h-9 shrink-0">
+            Sign in to review
+          </Link>
+        </div>
+      )}
+
       {available.length > 0 ? (
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center justify-between">
@@ -53,30 +80,17 @@ export function CommentThread({ comments }: { comments: ConceptComment[] }) {
         </div>
       ) : null}
 
-      <div className="sheet p-4">
-        <textarea
-          disabled
-          rows={2}
-          placeholder="Add your take on this proposal…"
-          className="field resize-none"
-        />
-        <div className="mt-2.5 flex items-center justify-between gap-3">
-          <span className="dateline">Posting opens with accounts</span>
-          <button type="button" disabled className="btn btn-secondary btn-sm">
-            Post note
-          </button>
-        </div>
-      </div>
-
       {visible.length === 0 ? (
         <p className="note">
-          No notes under that lens yet — try another, or add the first.
+          {comments.length === 0
+            ? "No notes yet — this proposal is waiting on its first review."
+            : "No notes under that lens yet — try another, or add the first."}
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
           {visible.map((c) => (
             <li key={c.id}>
-              <CommentCard comment={c} />
+              <CommentCard comment={c} signedIn={signedIn} />
             </li>
           ))}
         </ul>

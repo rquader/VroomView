@@ -2,12 +2,14 @@
 export type { Database, Json } from "./database";
 
 /**
- * DOMAIN types — the shapes YOUR app reasons about, kept independent of the
- * database's exact column names/types. Data-access code (lib/services/*) maps
- * raw rows into these. This decoupling is what lets you later swap or add a data
- * source (e.g. a Java/Python API) WITHOUT touching UI code.
+ * DOMAIN types — the shapes the app reasons about, independent of the
+ * database's column names. lib/services/* maps raw rows into these, which is
+ * what lets the UI stay untouched when the data source evolves.
  *
- * This is an illustrative starter — evolve it as you design real features.
+ * Two fields deserve explanation because they're PER-VIEWER, not per-row:
+ * `viewerHasVoted` and `isOwn` are computed by the services against the
+ * current session — the same concept is a different object for different
+ * people. That's also why pages that render these are dynamically rendered.
  */
 export type Profile = {
   id: string;
@@ -16,6 +18,13 @@ export type Profile = {
   avatarUrl: string | null;
   bio: string | null;
   createdAt: string;
+};
+
+/** The public identity attached to concepts and comments. */
+export type Author = {
+  id: string;
+  username: string;
+  displayName: string | null;
 };
 
 /** A single label/value row in a concept's "spec sheet". */
@@ -32,28 +41,33 @@ export type ConceptTag =
   | "Safety"
   | "Market fit";
 
-/** A proposed vehicle concept post (the core domain object of the forum). */
+/** A proposed vehicle concept post (the core domain object of the board). */
 export type Concept = {
   id: string;
   title: string;
   summary: string;
-  author: string; // display handle
-  bodyStyle: string; // e.g. "Minivan", "Wagon", "Coupe"
+  details: string | null;
+  author: Author;
+  bodyStyle: string;
   specs: SpecMetric[];
   tags: ConceptTag[];
   votes: number;
   comments: number;
-  postedAt: string; // ISO timestamp (matches Supabase created_at) — render via utils/time timeAgo()
-  details?: string; // longer proposal body shown on the concept detail page
+  viewerHasVoted: boolean;
+  isOwn: boolean;
+  postedAt: string; // ISO (created_at)
 };
 
-/** A comment in a concept's discussion — filterable by the same 8 tags. */
+/** A note in a concept's discussion — filterable by the same 8 lenses. */
 export type ConceptComment = {
   id: string;
   conceptId: string;
-  author: string;
+  author: Author;
   body: string;
   tags: ConceptTag[];
   votes: number;
-  postedAt: string; // ISO timestamp, as above
+  viewerHasVoted: boolean;
+  isOwn: boolean;
+  edited: boolean; // derived server-side: updated_at > created_at
+  postedAt: string;
 };

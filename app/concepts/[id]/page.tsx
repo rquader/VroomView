@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ROUTES } from "@/constants/app";
-import { MOCK_CONCEPTS } from "@/lib/mock/concepts";
-import { getMockComments } from "@/lib/mock/comments";
+import { getConcept, getRelated } from "@/lib/services/concepts.service";
+import { listCommentsByConcept } from "@/lib/services/comments.service";
+import { getViewer } from "@/lib/services/viewer.service";
 import { timeAgo } from "@/utils/time";
 import { SpecList } from "@/components/concepts/SpecList";
 import { VoteControl } from "@/components/concepts/VoteControl";
@@ -12,9 +13,8 @@ import { ConceptMeta } from "@/components/concepts/ConceptMeta";
 import { RelatedConcepts } from "@/components/concepts/RelatedConcepts";
 import { ArrowLeftIcon, TagIcon } from "@/components/ui/Icon";
 
-export function generateStaticParams() {
-  return MOCK_CONCEPTS.map((concept) => ({ id: concept.id }));
-}
+// Rendered per request: content lives in Supabase now, and vote state is
+// per-viewer. (No generateStaticParams — that pattern retired with the mock.)
 
 export async function generateMetadata({
   params,
@@ -22,28 +22,13 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const concept = MOCK_CONCEPTS.find((c) => c.id === id);
+  const concept = await getConcept(id);
   return { title: concept ? concept.title : "Concept not found" };
 }
 
-/** Drawing-sheet number for the title block, e.g. "SHEET VV-04". */
+/** Drawing-sheet number for the title block, from the id's first hex nibble. */
 function sheetNo(id: string): string {
-  const digits = id.replace(/\D/g, "");
-  return `VV-${digits ? digits.padStart(2, "0") : id.slice(0, 4).toUpperCase()}`;
-}
-
-/** Related = shares lenses (weighted) then support; excludes the concept itself. */
-function relatedTo(concept: (typeof MOCK_CONCEPTS)[number]) {
-  return MOCK_CONCEPTS.filter((c) => c.id !== concept.id)
-    .map((c) => ({
-      c,
-      score:
-        c.tags.filter((t) => concept.tags.includes(t)).length * 1000 + c.votes,
-    }))
-    .filter(({ score }) => score >= 1000) // at least one shared lens
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
-    .map(({ c }) => c);
+  return `VV-${id.replace(/-/g, "").slice(0, 4).toUpperCase()}`;
 }
 
 export default async function ConceptDetailPage({
@@ -52,11 +37,15 @@ export default async function ConceptDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const concept = MOCK_CONCEPTS.find((c) => c.id === id);
+  const concept = await getConcept(id);
   if (!concept) notFound();
 
-  const comments = getMockComments(concept.id);
-  const related = relatedTo(concept);
+  const [comments, related, viewer] = await Promise.all([
+    listCommentsByConcept(concept.id),
+    getRelated(concept),
+    getViewer(),
+  ]);
+  const signedIn = viewer !== null;
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
@@ -77,7 +66,7 @@ export default async function ConceptDetailPage({
               </span>
               <span className="dateline">
                 {timeAgo(concept.postedAt)} ·{" "}
-                <span className="normal-case">@{concept.author}</span>
+                <span className="normal-case">@{concept.author.username}</span>
               </span>
             </div>
             <h1 className="mt-3 font-serif text-4xl font-medium leading-[1.1] tracking-[-0.02em] sm:text-[2.75rem]">
@@ -111,7 +100,12 @@ export default async function ConceptDetailPage({
                 <span className="truncate">{concept.tags.join(" · ")}</span>
               </div>
               <div className="ml-auto shrink-0">
-                <VoteControl initial={concept.votes} />
+                <VoteControl
+                  target={{ kind: "concept", conceptId: concept.id }}
+                  votes={concept.votes}
+                  voted={concept.viewerHasVoted}
+                  signedIn={signedIn}
+                />
               </div>
             </div>
           </article>
@@ -126,7 +120,11 @@ export default async function ConceptDetailPage({
               </span>
             </div>
             <div className="mt-6">
-              <CommentThread comments={comments} />
+              <CommentThread
+                conceptId={concept.id}
+                comments={comments}
+                signedIn={signedIn}
+              />
             </div>
           </section>
         </div>

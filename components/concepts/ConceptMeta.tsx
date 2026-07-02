@@ -32,9 +32,9 @@ export function ConceptMeta({ concept }: { concept: Concept }) {
 
       <dl className="mt-5 flex flex-col">
         {[
-          ["Filed by", `@${concept.author}`],
+          ["Filed by", `@${concept.author.username}`],
           ["Filed", filed],
-          ["Support", `${concept.votes} votes`],
+          ["Support", `${concept.votes} ${concept.votes === 1 ? "vote" : "votes"}`],
         ].map(([label, value]) => (
           <div
             key={label}

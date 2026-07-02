@@ -25,7 +25,13 @@ const SORTS: { key: SortKey; label: string }[] = [
  * <LensControls> renders inside a bottom-sheet drawer, with active lenses
  * echoed as dismissible chips so state is never hidden behind the drawer.
  */
-export function FeedView({ concepts }: { concepts: Concept[] }) {
+export function FeedView({
+  concepts,
+  signedIn,
+}: {
+  concepts: Concept[];
+  signedIn: boolean;
+}) {
   const [active, setActive] = useState<ConceptTag[]>([]);
   const [sort, setSort] = useState<SortKey>("support");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -168,7 +174,7 @@ export function FeedView({ concepts }: { concepts: Concept[] }) {
         ) : (
           <div className="flex flex-col gap-4 sm:gap-5">
             {visible.map((c, i) => (
-              <ConceptCard key={c.id} concept={c} index={i + 1} />
+              <ConceptCard key={c.id} concept={c} index={i + 1} signedIn={signedIn} />
             ))}
           </div>
         )}

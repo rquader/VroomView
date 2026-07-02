@@ -1,19 +1,25 @@
 import { FeedView } from "@/components/concepts/FeedView";
 import { SpecList } from "@/components/concepts/SpecList";
 import { HeroSketch } from "@/components/animations/HeroSketch";
-import { MOCK_CONCEPTS } from "@/lib/mock/concepts";
+import { listConcepts } from "@/lib/services/concepts.service";
+import { getViewer } from "@/lib/services/viewer.service";
 import { ALL_TAGS } from "@/constants/lenses";
 
-// Home / feed. Server Component: owns the (currently mock) data and hands it to
-// the client <FeedView>. Swap MOCK_CONCEPTS for a lib/services call once the
-// Supabase `concepts` table + RLS exist.
-export default function HomePage() {
+/**
+ * Home / feed. Server Component: fetches real rows through the service layer
+ * (which reads the session cookie for per-viewer vote state — that's what
+ * makes this page dynamically rendered) and hands plain domain objects to the
+ * client <FeedView> for filtering/sorting.
+ */
+export default async function HomePage() {
+  const [concepts, viewer] = await Promise.all([listConcepts(), getViewer()]);
+
   // The board's own spec sheet — honest numbers derived from the data.
   const boardSpecs = [
-    { label: "On the board", value: String(MOCK_CONCEPTS.length) },
+    { label: "On the board", value: String(concepts.length) },
     {
       label: "Notes filed",
-      value: String(MOCK_CONCEPTS.reduce((n, c) => n + c.comments, 0)),
+      value: String(concepts.reduce((n, c) => n + c.comments, 0)),
     },
     { label: "Review lenses", value: String(ALL_TAGS.length) },
   ];
@@ -51,7 +57,7 @@ export default function HomePage() {
       </section>
 
       <section className="mt-12 sm:mt-14">
-        <FeedView concepts={MOCK_CONCEPTS} />
+        <FeedView concepts={concepts} signedIn={viewer !== null} />
       </section>
     </main>
   );
