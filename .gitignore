@@ -40,3 +40,4 @@ next-env.d.ts
 # claude code — keep shared project settings (.claude/settings.json),
 # ignore personal/local overrides
 .claude/settings.local.json
+.visual-audit/
