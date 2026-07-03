@@ -11,8 +11,23 @@ import { ALL_TAGS } from "@/constants/lenses";
  * makes this page dynamically rendered) and hands plain domain objects to the
  * client <FeedView> for filtering/sorting.
  */
-export default async function HomePage() {
-  const [concepts, viewer] = await Promise.all([listConcepts(), getViewer()]);
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ body?: string }>;
+}) {
+  const [concepts, viewer, params] = await Promise.all([
+    listConcepts(),
+    getViewer(),
+    searchParams,
+  ]);
+
+  // ?body= deep link (Explore's shelves): only honor styles that exist,
+  // matched case-insensitively to the canonical casing in the data.
+  const initialBody =
+    concepts
+      .map((c) => c.bodyStyle)
+      .find((s) => s.toLowerCase() === params.body?.toLowerCase()) ?? null;
 
   // The board's own spec sheet — honest numbers derived from the data.
   const boardSpecs = [
@@ -57,7 +72,11 @@ export default async function HomePage() {
       </section>
 
       <section className="mt-12 sm:mt-14">
-        <FeedView concepts={concepts} signedIn={viewer !== null} />
+        <FeedView
+          concepts={concepts}
+          signedIn={viewer !== null}
+          initialBody={initialBody}
+        />
       </section>
     </main>
   );

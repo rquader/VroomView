@@ -144,6 +144,14 @@
   ::selection {
     background: color-mix(in oklab, var(--accent) 22%, transparent);
   }
+
+  /* anchor jumps (skip link, in-page nav) glide instead of teleporting —
+     only for users who haven't asked for reduced motion */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
 }
 
 @layer components {
@@ -419,6 +427,17 @@
 @keyframes vv-drop-in {
   from {
     transform: translateY(-6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+/* cards arriving on the board — a short rise, staggered by index */
+@keyframes vv-rise {
+  from {
+    transform: translateY(10px);
     opacity: 0;
   }
   to {

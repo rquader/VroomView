@@ -1,119 +1,65 @@
 import type { Metadata } from "next";
-import { ALL_TAGS } from "@/constants/lenses";
+import Link from "next/link";
+import { ROUTES } from "@/constants/app";
+import { getViewer } from "@/lib/services/viewer.service";
+import { DraftingTable } from "@/components/concepts/DraftingTable";
 
 export const metadata: Metadata = { title: "Propose a concept" };
 
 /**
- * Placeholder proposal form. Intentionally non-functional (fields disabled,
- * nothing submits) — it previews the structured shape a real submission will
- * capture: the idea, the numbers, and the lenses it invites.
+ * REAL posting. Signed-in reviewers get the drafting table (live preview,
+ * files through createConcept → RLS). Guests get an honest gate — browsing
+ * is free; filing needs an account — with sign-in carrying them back here.
  */
-export default function SubmitPage() {
+export default async function SubmitPage() {
+  const viewer = await getViewer();
+
   return (
-    <main className="mx-auto max-w-2xl px-5 py-10 sm:px-8 sm:py-14">
+    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
         Draft a proposal
       </p>
       <h1 className="mt-3 font-serif text-4xl font-medium tracking-[-0.02em]">
         Propose a concept
       </h1>
-      <p className="mt-3 leading-relaxed text-ink-2">
+      <p className="mt-3 max-w-2xl leading-relaxed text-ink-2">
         Lay out the vehicle you think should exist — the idea, and the numbers
         that make it real.
       </p>
 
-      <p className="note mt-6">
-        Proposals open once accounts arrive. This is a preview of the form —
-        nothing submits yet.
-      </p>
-
-      <form className="mt-10 flex flex-col gap-10">
-        <fieldset>
-          <legend className="overline mb-4 border-b border-line pb-2.5 w-full">
-            The idea
-          </legend>
-          <div className="flex flex-col gap-5">
-            <Field label="Title" placeholder="e.g. Compact EV wagon concept" />
-            <Field
-              label="Summary"
-              placeholder="One or two sentences on the idea…"
-              textarea
-            />
-            <Field
-              label="The case for it"
-              placeholder="Why should this exist? Who is it for, and what does the market keep getting wrong?"
-              textarea
-              rows={4}
-            />
+      <div className="mt-10">
+        {viewer ? (
+          <DraftingTable username={viewer.username} />
+        ) : (
+          <div className="sheet max-w-xl overflow-hidden">
+            <div className="flex items-center justify-between gap-3 border-b border-line bg-well/60 px-5 py-2.5">
+              <span className="overline text-accent">Filing desk</span>
+              <span className="dateline text-ink-2">Account required</span>
+            </div>
+            <div className="px-5 py-6">
+              <p className="leading-relaxed text-ink-2">
+                Browsing the board is open to everyone. Filing a proposal —
+                and voting, and arguing in the notes — needs an account, so
+                every idea has a name behind it.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <Link
+                  href={`${ROUTES.login}?next=${encodeURIComponent(ROUTES.submit)}`}
+                  className="btn btn-primary"
+                >
+                  Sign in to file
+                </Link>
+                <Link
+                  href={`${ROUTES.signup}?next=${encodeURIComponent(ROUTES.submit)}`}
+                  className="btn btn-secondary"
+                >
+                  Create an account
+                </Link>
+              </div>
+            </div>
           </div>
-        </fieldset>
-
-        <fieldset>
-          <legend className="overline mb-4 border-b border-line pb-2.5 w-full">
-            The numbers
-          </legend>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <Field label="Body style" placeholder="Wagon" />
-            <Field label="Estimated price" placeholder="$32,000" />
-            <Field label="Range / mileage" placeholder="320 mi" />
-            <Field label="Drivetrain" placeholder="AWD" />
-            <Field label="Seats" placeholder="5" />
-            <Field label="One more that matters" placeholder="Cargo — 38 cu ft" />
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend className="overline mb-4 border-b border-line pb-2.5 w-full">
-            Lenses it invites
-          </legend>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 sm:grid-cols-4">
-            {ALL_TAGS.map((tag) => (
-              <label
-                key={tag}
-                className="flex min-h-9 cursor-not-allowed items-center gap-2.5 text-sm text-ink-3"
-              >
-                <input type="checkbox" disabled className="lens-check" />
-                {tag}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="flex items-center gap-4 border-t border-line pt-5">
-          <button type="button" disabled className="btn btn-primary">
-            Submit proposal
-          </button>
-          <span className="dateline">Opens with accounts</span>
-        </div>
-      </form>
+        )}
+      </div>
     </main>
-  );
-}
-
-function Field({
-  label,
-  placeholder,
-  textarea = false,
-  rows = 3,
-}: {
-  label: string;
-  placeholder: string;
-  textarea?: boolean;
-  rows?: number;
-}) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="overline">{label}</span>
-      {textarea ? (
-        <textarea
-          disabled
-          rows={rows}
-          placeholder={placeholder}
-          className="field resize-none"
-        />
-      ) : (
-        <input disabled placeholder={placeholder} className="field" />
-      )}
-    </label>
   );
 }

@@ -48,20 +48,28 @@ export default async function ExplorePage() {
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {shelves.map(({ style, count, leading }) => (
             <div key={style} className="sheet sheet-hover flex flex-col p-5">
-              <div className="rounded-[8px] border border-line bg-well/60 px-4 pt-3 pb-2">
-                <Silhouette
-                  bodyStyle={style}
-                  className="mx-auto h-auto w-full max-w-[190px] text-ink-2"
-                />
-              </div>
-              <div className="mt-4 flex items-baseline justify-between gap-3">
-                <h3 className="font-serif text-xl font-medium tracking-[-0.01em]">
-                  {style}
-                </h3>
-                <span className="dateline">
-                  {count} {count === 1 ? "concept" : "concepts"}
-                </span>
-              </div>
+              {/* the shelf itself links into the filtered feed (?body=…);
+                  the leading proposal below keeps its own link — never nested */}
+              <Link
+                href={`${ROUTES.home}?body=${encodeURIComponent(style)}`}
+                aria-label={`Open the ${style} shelf in the feed`}
+                className="group block"
+              >
+                <div className="rounded-[8px] border border-line bg-well/60 px-4 pt-3 pb-2 transition-colors group-hover:border-control">
+                  <Silhouette
+                    bodyStyle={style}
+                    className="mx-auto h-auto w-full max-w-[190px] text-ink-2 transition-colors group-hover:text-ink"
+                  />
+                </div>
+                <div className="mt-4 flex items-baseline justify-between gap-3">
+                  <h3 className="font-serif text-xl font-medium tracking-[-0.01em] transition-colors group-hover:text-accent">
+                    {style}
+                  </h3>
+                  <span className="dateline">
+                    {count} {count === 1 ? "concept" : "concepts"}
+                  </span>
+                </div>
+              </Link>
               <p className="overline mt-4 text-[10px]">Leading proposal</p>
               <Link
                 href={ROUTES.concept(leading.id)}
@@ -69,7 +77,7 @@ export default async function ExplorePage() {
               >
                 {leading.title}
                 <span className="ml-2 font-mono text-xs text-ink-3">
-                  {leading.votes} votes
+                  {leading.votes} {leading.votes === 1 ? "vote" : "votes"}
                 </span>
               </Link>
             </div>
@@ -102,14 +110,14 @@ export default async function ExplorePage() {
           ))}
         </div>
         <p className="mt-8 text-sm text-ink-3">
-          Lenses do the filtering in the{" "}
+          Lenses do their filtering in the{" "}
           <Link
             href={ROUTES.home}
             className="text-accent underline-offset-2 hover:underline"
           >
             feed
           </Link>
-          . Dedicated shelves arrive with the database.
+          ; the shelves above open it pre-narrowed.
         </p>
       </section>
     </main>

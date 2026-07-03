@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ROUTES } from "@/constants/app";
 import type { Concept, ConceptTag } from "@/types";
 import { ConceptCard } from "./ConceptCard";
 import { LensControls } from "./LensControls";
@@ -28,13 +30,23 @@ const SORTS: { key: SortKey; label: string }[] = [
 export function FeedView({
   concepts,
   signedIn,
+  initialBody = null,
 }: {
   concepts: Concept[];
   signedIn: boolean;
+  /** validated ?body= deep link (Explore's shelves land here) */
+  initialBody?: string | null;
 }) {
+  const router = useRouter();
   const [active, setActive] = useState<ConceptTag[]>([]);
+  const [bodyFilter, setBodyFilter] = useState<string | null>(initialBody);
   const [sort, setSort] = useState<SortKey>("support");
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const clearBody = () => {
+    setBodyFilter(null);
+    router.replace(ROUTES.home, { scroll: false }); // drop ?body= from the URL
+  };
 
   // The drawer trigger hides at lg (the rail takes over) — close on crossing
   // that line so the scroll lock can't outlive its visible UI.
@@ -59,17 +71,20 @@ export function FeedView({
   }, [concepts]);
 
   const visible = useMemo(() => {
-    const filtered =
+    const byLens =
       active.length === 0
         ? concepts
         : concepts.filter((c) => active.every((t) => c.tags.includes(t)));
+    const filtered = bodyFilter
+      ? byLens.filter((c) => c.bodyStyle === bodyFilter)
+      : byLens;
     const bySort: Record<SortKey, (a: Concept, b: Concept) => number> = {
       support: (a, b) => b.votes - a.votes,
       newest: (a, b) => b.postedAt.localeCompare(a.postedAt),
       discussed: (a, b) => b.comments - a.comments,
     };
     return [...filtered].sort(bySort[sort]);
-  }, [concepts, active, sort]);
+  }, [concepts, active, bodyFilter, sort]);
 
   return (
     <div className="grid gap-10 lg:grid-cols-[230px_1fr] lg:gap-14">
@@ -97,7 +112,7 @@ export function FeedView({
         <div className="mb-6 flex items-center gap-3 border-b border-line pb-3">
           <p className="dateline">
             {visible.length} {visible.length === 1 ? "concept" : "concepts"}
-            {active.length ? " · narrowed" : ""}
+            {active.length || bodyFilter ? " · narrowed" : ""}
           </p>
 
           <div className="ml-auto flex items-center gap-2">
@@ -138,6 +153,22 @@ export function FeedView({
           </div>
         </div>
 
+        {/* The body-style deep link (from Explore) shows at every size —
+            it's URL state, not rail state, so it must never hide */}
+        {bodyFilter ? (
+          <div className="mb-5 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={clearBody}
+              aria-label={`Stop filtering by ${bodyFilter}`}
+              className="inline-flex min-h-9 items-center gap-1.5 rounded-btn border border-accent bg-accent/10 px-2.5 text-xs text-accent transition-colors hover:bg-accent/20"
+            >
+              {bodyFilter} shelf
+              <CloseIcon size={11} />
+            </button>
+          </div>
+        ) : null}
+
         {/* Active lenses echoed as dismissible chips where the rail is hidden */}
         {active.length > 0 ? (
           <div className="mb-5 flex flex-wrap items-center gap-2 lg:hidden">
@@ -159,22 +190,32 @@ export function FeedView({
         {visible.length === 0 ? (
           <EmptyState
             heading="h2"
-            title="Nothing matches every lens"
-            description="Each lens narrows the board further. Remove one, or propose the concept that fits."
+            title="Nothing matches every filter"
+            description="Each filter narrows the board further. Loosen one, or propose the concept that fits."
             action={
               <button
                 type="button"
-                onClick={() => setActive([])}
+                onClick={() => {
+                  setActive([]);
+                  if (bodyFilter) clearBody();
+                }}
                 className="btn btn-secondary btn-sm min-h-10"
               >
-                Clear lenses
+                Clear filters
               </button>
             }
           />
         ) : (
           <div className="flex flex-col gap-4 sm:gap-5">
             {visible.map((c, i) => (
-              <ConceptCard key={c.id} concept={c} index={i + 1} signedIn={signedIn} />
+              // staggered rise on arrival (capped so long boards don't lag the tail)
+              <div
+                key={c.id}
+                style={{ animationDelay: `${Math.min(i, 6) * 60}ms` }}
+                className="motion-safe:animate-[vv-rise_0.4s_var(--ease-out-soft)_backwards]"
+              >
+                <ConceptCard concept={c} index={i + 1} signedIn={signedIn} />
+              </div>
             ))}
           </div>
         )}
