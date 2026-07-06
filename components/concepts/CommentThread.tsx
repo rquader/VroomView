@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useOptimistic, useState } from "react";
 import Link from "next/link";
 import type { ConceptComment, ConceptTag } from "@/types";
 import { ROUTES } from "@/constants/app";
@@ -9,21 +9,33 @@ import { CommentCard } from "./CommentCard";
 import { CommentComposer } from "./CommentComposer";
 
 /**
- * The discussion under a concept — now live. Signed-in reviewers get the
- * composer; guests get a real invitation (a link, not a dead control). Notes
- * order by support, then age, so the strongest arguments lead while ties stay
- * conversational. The tab bar only offers lenses that actually occur here.
+ * The discussion under a concept. Signed-in reviewers get the composer; guests
+ * get a real invitation (a link, not a dead control). Notes order by support,
+ * then age, so the strongest arguments lead while ties stay conversational.
+ *
+ * PERCEIVED SPEED: posting appends the note optimistically — it appears the
+ * instant you file it (marked "filing…"), and React swaps in the server truth
+ * when the action's revalidation lands (or rolls it back on failure, with the
+ * composer keeping your text). Optimistic entries are recognized by their
+ * "optimistic-" id prefix — a convention shared with CommentComposer only.
  */
 export function CommentThread({
   conceptId,
   comments,
   signedIn,
+  viewer,
 }: {
   conceptId: string;
   comments: ConceptComment[];
   signedIn: boolean;
+  /** the signed-in reviewer's identity, for optimistic authorship */
+  viewer: { id: string; username: string } | null;
 }) {
   const [active, setActive] = useState<ConceptTag[]>([]);
+  const [optimisticComments, addOptimistic] = useOptimistic(
+    comments,
+    (cur, next: ConceptComment) => [...cur, next],
+  );
 
   const toggle = (tag: ConceptTag) =>
     setActive((cur) =>
@@ -32,24 +44,30 @@ export function CommentThread({
 
   const available = useMemo(() => {
     const seen = new Set<ConceptTag>();
-    for (const c of comments) for (const t of c.tags) seen.add(t);
+    for (const c of optimisticComments) for (const t of c.tags) seen.add(t);
     return [...seen];
-  }, [comments]);
+  }, [optimisticComments]);
 
   const visible = useMemo(() => {
     const filtered =
       active.length === 0
-        ? comments
-        : comments.filter((c) => active.every((t) => c.tags.includes(t)));
+        ? optimisticComments
+        : optimisticComments.filter((c) =>
+            active.every((t) => c.tags.includes(t)),
+          );
     return [...filtered].sort(
       (a, b) => b.votes - a.votes || a.postedAt.localeCompare(b.postedAt),
     );
-  }, [comments, active]);
+  }, [optimisticComments, active]);
 
   return (
     <div className="flex flex-col gap-6">
-      {signedIn ? (
-        <CommentComposer conceptId={conceptId} />
+      {signedIn && viewer ? (
+        <CommentComposer
+          conceptId={conceptId}
+          viewer={viewer}
+          onOptimistic={addOptimistic}
+        />
       ) : (
         <div className="sheet flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-ink-2">
@@ -82,7 +100,7 @@ export function CommentThread({
 
       {visible.length === 0 ? (
         <p className="note">
-          {comments.length === 0
+          {optimisticComments.length === 0
             ? "No notes yet — this proposal is waiting on its first review."
             : "No notes under that lens yet — try another, or add the first."}
         </p>
@@ -90,7 +108,11 @@ export function CommentThread({
         <ul className="flex flex-col gap-3">
           {visible.map((c) => (
             <li key={c.id}>
-              <CommentCard comment={c} signedIn={signedIn} />
+              <CommentCard
+                comment={c}
+                signedIn={signedIn}
+                pending={c.id.startsWith("optimistic-")}
+              />
             </li>
           ))}
         </ul>

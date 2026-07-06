@@ -16,13 +16,16 @@ import { CommentComposer } from "./CommentComposer";
 export function CommentCard({
   comment,
   signedIn,
+  pending = false,
 }: {
   comment: ConceptComment;
   signedIn: boolean;
+  /** an optimistic entry still being filed — render calm, without controls */
+  pending?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [deleting, startTransition] = useTransition();
   const top = comment.votes >= 5;
 
   const remove = () => {
@@ -40,22 +43,26 @@ export function CommentCard({
         top
           ? "border border-line-2 border-l-2 border-l-accent"
           : "border border-line"
-      } ${pending ? "opacity-50" : ""}`}
+      } ${deleting ? "opacity-50" : ""}`}
     >
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
         <span className="font-semibold text-ink">
           @{comment.author.username}
         </span>
-        <span className="dateline" suppressHydrationWarning>
-          {timeAgo(comment.postedAt)}
-          {comment.edited ? " · edited" : ""}
-        </span>
+        {pending ? (
+          <span className="dateline text-accent">filing…</span>
+        ) : (
+          <span className="dateline" suppressHydrationWarning>
+            {timeAgo(comment.postedAt)}
+            {comment.edited ? " · edited" : ""}
+          </span>
+        )}
         {top ? (
           <span className="text-[10px] font-semibold uppercase tracking-wide text-accent">
             · top note
           </span>
         ) : null}
-        {comment.isOwn && !editing ? (
+        {comment.isOwn && !editing && !pending ? (
           <span className="ml-auto flex items-center gap-1">
             <button
               type="button"
@@ -67,7 +74,7 @@ export function CommentCard({
             <button
               type="button"
               onClick={remove}
-              disabled={pending}
+              disabled={deleting}
               className="btn btn-ghost btn-sm min-h-8 px-2 text-xs hover:text-danger"
             >
               Delete
@@ -98,18 +105,20 @@ export function CommentCard({
                 {comment.tags.join(" · ")}
               </span>
             ) : null}
-            <div className="ml-auto">
-              <VoteControl
-                target={{
-                  kind: "comment",
-                  commentId: comment.id,
-                  conceptId: comment.conceptId,
-                }}
-                votes={comment.votes}
-                voted={comment.viewerHasVoted}
-                signedIn={signedIn}
-              />
-            </div>
+            {pending ? null : (
+              <div className="ml-auto">
+                <VoteControl
+                  target={{
+                    kind: "comment",
+                    commentId: comment.id,
+                    conceptId: comment.conceptId,
+                  }}
+                  votes={comment.votes}
+                  voted={comment.viewerHasVoted}
+                  signedIn={signedIn}
+                />
+              </div>
+            )}
           </div>
         </>
       )}

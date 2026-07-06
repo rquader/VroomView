@@ -163,6 +163,9 @@ export default async function ConceptDetailPage({
                 conceptId={concept.id}
                 comments={comments}
                 signedIn={signedIn}
+                viewer={
+                  viewer ? { id: viewer.id, username: viewer.username } : null
+                }
               />
             </div>
           </section>

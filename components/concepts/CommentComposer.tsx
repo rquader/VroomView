@@ -9,17 +9,25 @@ import { TagFilterBar } from "./TagFilterBar";
  * Write or edit a note. One component, two modes: pass `editing` to rework an
  * existing note (the same lens-tab control doubles as the tag picker — picking
  * lenses on your own note is the same gesture as filtering by them).
- * Submission runs in a transition; the server action revalidates the page so
- * the fresh note arrives with server-stamped timestamps.
+ * Submission runs in a transition; when posting fresh notes it first hands the
+ * thread an optimistic copy (id-prefixed "optimistic-") so the note appears
+ * instantly, then the server action revalidates and the server-stamped truth
+ * replaces it. On failure React rolls the optimistic note back and the text
+ * stays here in the composer.
  */
 export function CommentComposer({
   conceptId,
   editing,
   onDone,
+  viewer,
+  onOptimistic,
 }: {
   conceptId: string;
   editing?: ConceptComment;
   onDone?: () => void;
+  /** identity for optimistic authorship (posting mode only) */
+  viewer?: { id: string; username: string };
+  onOptimistic?: (comment: ConceptComment) => void;
 }) {
   const [body, setBody] = useState(editing?.body ?? "");
   const [tags, setTags] = useState<ConceptTag[]>(editing?.tags ?? []);
@@ -34,6 +42,20 @@ export function CommentComposer({
   const submit = () => {
     setError(null);
     startTransition(async () => {
+      if (!editing && viewer && onOptimistic && body.trim().length > 0) {
+        onOptimistic({
+          id: `optimistic-${Date.now()}`,
+          conceptId,
+          author: { id: viewer.id, username: viewer.username, displayName: null },
+          body: body.trim(),
+          tags,
+          votes: 0,
+          viewerHasVoted: false,
+          isOwn: true,
+          edited: false,
+          postedAt: new Date().toISOString(),
+        });
+      }
       const result = editing
         ? await updateComment(editing.id, conceptId, body, tags)
         : await addComment(conceptId, body, tags);
