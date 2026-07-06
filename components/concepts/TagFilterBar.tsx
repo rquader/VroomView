@@ -35,7 +35,8 @@ export function TagFilterBar({
             className={`min-h-10 border-b-2 pb-0.5 text-sm transition-colors ${
               on
                 ? "border-accent text-ink"
-                : "border-transparent text-ink-3 hover:border-line-2 hover:text-ink"
+                : // resting underline so these read as controls, not labels
+                  "border-line-2 text-ink-2 hover:border-control hover:text-ink"
             }`}
           >
             {tag}

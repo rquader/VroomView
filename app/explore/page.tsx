@@ -76,9 +76,13 @@ export default async function ExplorePage() {
                 className="mt-1 line-clamp-2 text-sm leading-snug text-ink-2 transition-colors hover:text-accent"
               >
                 {leading.title}
-                <span className="ml-2 font-mono text-xs text-ink-3">
-                  {leading.votes} {leading.votes === 1 ? "vote" : "votes"}
-                </span>
+                {/* only claim votes that exist — a column of zeros reads as a
+                    dead board, and silence is honest too */}
+                {leading.votes > 0 ? (
+                  <span className="ml-2 font-mono text-xs text-ink-3">
+                    {leading.votes} {leading.votes === 1 ? "vote" : "votes"}
+                  </span>
+                ) : null}
               </Link>
             </div>
           ))}
