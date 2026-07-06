@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ViewTransition } from "react";
 import { notFound } from "next/navigation";
 import { ROUTES } from "@/constants/app";
 import { getConcept, getRelated } from "@/lib/services/concepts.service";
@@ -92,9 +93,13 @@ export default async function ConceptDetailPage({
               {/* title block: headline + summary beside the elevation drawing */}
               <div className="relative grid gap-7 px-5 pt-6 pb-7 sm:px-7 sm:pt-8 lg:grid-cols-[minmax(0,1fr)_290px] lg:items-center lg:gap-10">
                 <div>
-                  <h1 className="font-serif text-4xl font-medium leading-[1.08] tracking-[-0.02em] sm:text-[2.75rem]">
-                    {concept.title}
-                  </h1>
+                  {/* pairs with the feed card's identically-named transition:
+                      the title morphs from card to sheet on navigation */}
+                  <ViewTransition name={`vv-title-${concept.id}`}>
+                    <h1 className="font-serif text-4xl font-medium leading-[1.08] tracking-[-0.02em] sm:text-[2.75rem]">
+                      {concept.title}
+                    </h1>
+                  </ViewTransition>
                   <p className="mt-4 text-lg leading-relaxed text-ink-2 sm:text-xl">
                     {concept.summary}
                   </p>

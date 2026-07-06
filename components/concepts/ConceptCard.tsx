@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ViewTransition } from "react";
 import type { Concept } from "@/types";
 import { ROUTES } from "@/constants/app";
 import { timeAgo } from "@/utils/time";
@@ -49,14 +50,18 @@ export function ConceptCard({
         </span>
       </div>
 
-      <h2 className="mt-2.5 font-serif text-[1.4rem] font-medium leading-snug tracking-[-0.01em]">
-        <Link
-          href={ROUTES.concept(concept.id)}
-          className="transition-colors group-hover:text-accent"
-        >
-          {concept.title}
-        </Link>
-      </h2>
+      {/* named transition: this title morphs into the detail sheet's h1 —
+          the card being pulled up to the drafting table */}
+      <ViewTransition name={`vv-title-${concept.id}`}>
+        <h2 className="mt-2.5 font-serif text-[1.4rem] font-medium leading-snug tracking-[-0.01em]">
+          <Link
+            href={ROUTES.concept(concept.id)}
+            className="transition-colors group-hover:text-accent"
+          >
+            {concept.title}
+          </Link>
+        </h2>
+      </ViewTransition>
       <p className="mt-1.5 leading-relaxed text-ink-2">{concept.summary}</p>
 
       <div className="mt-5">

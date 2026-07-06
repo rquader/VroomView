@@ -484,4 +484,11 @@
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+  /* view transitions (page crossfade + title morph) collapse to instant —
+     the pseudo-elements live on the root, outside the * rules above */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }

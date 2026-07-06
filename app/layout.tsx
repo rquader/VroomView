@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { ViewTransition, type ReactNode } from "react";
 import { Newsreader, Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { APP_NAME, APP_DESCRIPTION } from "@/constants/app";
@@ -50,7 +50,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </a>
         <SiteHeader />
         <div id="main-content" tabIndex={-1} className="flex-1 outline-none">
-          {children}
+          {/* route changes crossfade (View Transitions API); browsers without
+              it — and reduced-motion users, via globals.css — navigate
+              instantly. The masthead stays outside so it never re-fades. */}
+          <ViewTransition>{children}</ViewTransition>
         </div>
         <SiteFooter />
       </body>
