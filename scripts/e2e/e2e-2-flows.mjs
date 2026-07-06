@@ -65,7 +65,13 @@ check(votedState === "true", "vote persists across reload (server truth)");
 await a.getByPlaceholder("Add your take on this proposal…").fill(NOTE);
 await a.getByRole("button", { name: "Market fit" }).first().click();
 await a.getByRole("button", { name: "Post note" }).click();
-await a.getByText(NOTE, { exact: true }).waitFor({ timeout: 15000 });
+// target the RENDERED note (a <p> in the thread), not any text on the page —
+// optimistic append means the note and the still-clearing composer textarea
+// briefly hold the same text, which trips getByText's strict mode
+await a
+  .getByRole("paragraph")
+  .filter({ hasText: NOTE })
+  .waitFor({ timeout: 15000 });
 check(true, "comment posts and appears in the thread");
 
 // edit it
@@ -74,7 +80,10 @@ await myCard.getByRole("button", { name: "Edit" }).click();
 const editBox = myCard.locator("textarea");
 await editBox.fill(NOTE_EDITED);
 await myCard.getByRole("button", { name: "Save note" }).click();
-await a.getByText(NOTE_EDITED, { exact: true }).waitFor({ timeout: 15000 });
+await a
+  .getByRole("paragraph")
+  .filter({ hasText: NOTE_EDITED })
+  .waitFor({ timeout: 15000 });
 await a.getByText(/· edited/i).first().waitFor();
 check(true, "comment edits in place and shows the edited mark");
 
