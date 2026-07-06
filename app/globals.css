@@ -214,6 +214,14 @@
     right: 0;
   }
 
+  /* Accent-tinted dimension rule — under a card's HEADLINE spec only (the
+     one number that sells the concept). Decorative, so the soft mix is fine. */
+  .dim-rule-accent,
+  .dim-rule-accent::before,
+  .dim-rule-accent::after {
+    background: color-mix(in oklab, var(--accent) 55%, var(--line-2));
+  }
+
   /* Faint drafting grid for hero/empty regions — reads as graph vellum. */
   .drafting-grid {
     background-image:
