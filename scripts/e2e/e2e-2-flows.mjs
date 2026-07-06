@@ -1,12 +1,12 @@
 // E2E part 2: the full engagement story on the REAL stack, across two
 // "devices" (independent browser contexts = independent cookie jars).
 import { createRequire } from "node:module";
+import { e2eCredentials } from "./_creds.mjs";
 const { chromium } = createRequire(import.meta.url)("playwright");
 
 const BASE = "http://localhost:3100";
 const TRUCK = `${BASE}/concepts/c0000000-0000-4000-8000-000000000004`;
-const email = process.argv[2];
-const password = process.argv[3];
+const { email, password } = e2eCredentials("e2e-2-flows.mjs");
 const NOTE = `E2E note ${Date.now()}: the five-foot bed is the whole ballgame.`;
 const NOTE_EDITED = `${NOTE} (measured twice)`;
 
@@ -72,18 +72,40 @@ await a
   .getByRole("paragraph")
   .filter({ hasText: NOTE })
   .waitFor({ timeout: 15000 });
-check(true, "comment posts and appears in the thread");
+check(true, "comment posts and appears in the thread (optimistic)");
+
+// settle: the optimistic entry becomes the server note (Edit appears). A
+// stalled local network can hold the post-action refresh stream open — fall
+// back to a reload; the write itself is proven by the note surviving it.
+const myCard = a.locator("article", { hasText: NOTE });
+try {
+  await myCard.getByRole("button", { name: "Edit" }).waitFor({ timeout: 12000 });
+} catch {
+  console.log("     (refresh stream stalled — reloading for server truth)");
+  await a.reload({ waitUntil: "networkidle" });
+  await myCard.getByRole("button", { name: "Edit" }).waitFor({ timeout: 15000 });
+}
+check(true, "note settles to the server truth (editable)");
 
 // edit it
-const myCard = a.locator("article", { hasText: NOTE });
 await myCard.getByRole("button", { name: "Edit" }).click();
 const editBox = myCard.locator("textarea");
 await editBox.fill(NOTE_EDITED);
 await myCard.getByRole("button", { name: "Save note" }).click();
-await a
-  .getByRole("paragraph")
-  .filter({ hasText: NOTE_EDITED })
-  .waitFor({ timeout: 15000 });
+// same stall-tolerance for the edit's refresh
+try {
+  await a
+    .getByRole("paragraph")
+    .filter({ hasText: NOTE_EDITED })
+    .waitFor({ timeout: 12000 });
+} catch {
+  console.log("     (refresh stream stalled — reloading for server truth)");
+  await a.reload({ waitUntil: "networkidle" });
+  await a
+    .getByRole("paragraph")
+    .filter({ hasText: NOTE_EDITED })
+    .waitFor({ timeout: 15000 });
+}
 await a.getByText(/· edited/i).first().waitFor();
 check(true, "comment edits in place and shows the edited mark");
 
@@ -105,7 +127,14 @@ check(bVoted === "true", "device B sees the vote from device A (account state, n
 const bCard = b.locator("article", { hasText: NOTE_EDITED });
 b.once("dialog", (d) => d.accept());
 await bCard.getByRole("button", { name: "Delete" }).click();
-await b.waitForTimeout(2000);
+// the deleted note leaves the DOM when the refresh lands — stall-tolerant
+// like the settle checks above
+try {
+  await bCard.waitFor({ state: "detached", timeout: 12000 });
+} catch {
+  console.log("     (refresh stream stalled — reloading for server truth)");
+  await b.reload({ waitUntil: "networkidle" });
+}
 check(
   !(await b.getByText(NOTE_EDITED, { exact: true }).isVisible().catch(() => false)),
   "note deleted from device B",

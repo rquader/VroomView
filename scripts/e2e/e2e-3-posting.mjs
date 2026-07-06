@@ -2,11 +2,11 @@
 // createConcept + RLS and lands on the live page. Also checks the guest gate.
 // Clean up afterwards: delete the created concept (SQL) to keep the board tidy.
 import { createRequire } from "node:module";
+import { e2eCredentials } from "./_creds.mjs";
 const { chromium } = createRequire(import.meta.url)("playwright");
 
 const BASE = "http://localhost:3100";
-const email = process.argv[2];
-const password = process.argv[3];
+const { email, password } = e2eCredentials("e2e-3-posting.mjs");
 const TITLE = `E2E microbus concept ${String(Date.now()).slice(-6)}`;
 
 let failures = 0;

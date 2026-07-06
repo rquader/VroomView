@@ -30,6 +30,11 @@ yarn-error.log*
 .env*
 !.env.example
 
+# local-only E2E credentials (NOT matched by .env* — different prefix).
+# Holds the rotated E2E test account login; never commit, never paste into chats.
+.e2e.local
+.e2e.*
+
 # vercel (contains project linkage + a local OIDC token — keep out of git)
 .vercel
 
