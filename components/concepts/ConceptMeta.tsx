@@ -1,9 +1,11 @@
 import type { Concept } from "@/types";
-import { Silhouette } from "@/components/ui/Silhouette";
+import { sheetNo } from "@/utils/sheet";
 
 /**
- * "About this proposal" — the drawing-plate meta block for the detail page.
- * Desktop: lives in the right rail. Mobile: flows after the discussion. Server
+ * The filing register for the detail page's desktop rail — sheet number,
+ * author, date, support, lenses as a quiet dl. The elevation drawing moved
+ * into the page's sheet header (it's the showpiece there); on mobile the
+ * header carries all of this, so the rail simply doesn't render. Server
  * Component; purely presentational.
  */
 export function ConceptMeta({ concept }: { concept: Concept }) {
@@ -17,21 +19,9 @@ export function ConceptMeta({ concept }: { concept: Concept }) {
     <section aria-label="About this proposal">
       <h2 className="overline border-b border-line pb-3">On this sheet</h2>
 
-      {/* the elevation plate — body style drawn, not photographed */}
-      <div className="mt-5 rounded-card border border-line bg-well/60 px-4 pt-4 pb-3">
-        <Silhouette
-          bodyStyle={concept.bodyStyle}
-          className="mx-auto h-auto w-full max-w-[220px] text-ink-2"
-        />
-        <div className="dim-rule mx-auto mt-2 max-w-[220px]" aria-hidden />
-        {/* ink-2 (not ink-3): this caption sits on a well-tinted plate */}
-        <p className="dateline mt-2 text-center text-ink-2">
-          {concept.bodyStyle} · elevation
-        </p>
-      </div>
-
-      <dl className="mt-5 flex flex-col">
+      <dl className="mt-2 flex flex-col">
         {[
+          ["Sheet", sheetNo(concept.id)],
           ["Filed by", `@${concept.author.username}`],
           ["Filed", filed],
           ["Support", `${concept.votes} ${concept.votes === 1 ? "vote" : "votes"}`],

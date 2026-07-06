@@ -445,6 +445,18 @@
     opacity: 1;
   }
 }
+/* the support stamp landing — approval pressed onto the sheet */
+@keyframes vv-stamp {
+  from {
+    transform: scale(0.82) rotate(-5deg);
+  }
+  60% {
+    transform: scale(1.08) rotate(1deg);
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+  }
+}
 /* the theme button's glyph landing — a stamp, not a spin */
 @keyframes vv-glyph-in {
   from {
