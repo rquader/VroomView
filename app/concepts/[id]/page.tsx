@@ -6,6 +6,7 @@ import { getConcept, getRelated } from "@/lib/services/concepts.service";
 import { listCommentsByConcept } from "@/lib/services/comments.service";
 import { getViewer } from "@/lib/services/viewer.service";
 import { timeAgo } from "@/utils/time";
+import { sheetNo } from "@/utils/sheet";
 import { SpecList } from "@/components/concepts/SpecList";
 import { VoteControl } from "@/components/concepts/VoteControl";
 import { CommentThread } from "@/components/concepts/CommentThread";
@@ -24,11 +25,6 @@ export async function generateMetadata({
   const { id } = await params;
   const concept = await getConcept(id);
   return { title: concept ? concept.title : "Concept not found" };
-}
-
-/** Drawing-sheet number for the title block, from the id's first hex nibble. */
-function sheetNo(id: string): string {
-  return `VV-${id.replace(/-/g, "").slice(0, 4).toUpperCase()}`;
 }
 
 export default async function ConceptDetailPage({

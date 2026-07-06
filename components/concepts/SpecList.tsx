@@ -36,10 +36,11 @@ export function SpecList({
           >
             {s.label}
           </dt>
+          {/* values WRAP, never clip — a spec sheet that hides its numbers on a
+              phone has failed at its one job */}
           <dd
-            title={s.value}
-            className={`mt-1 truncate font-mono font-medium tabular-nums text-ink ${
-              hero ? "text-[1.45rem] leading-tight" : "text-[15px]"
+            className={`mt-1 break-words font-mono font-medium tabular-nums text-ink ${
+              hero ? "text-[1.25rem] leading-tight sm:text-[1.45rem]" : "text-[15px]"
             }`}
           >
             {s.value}

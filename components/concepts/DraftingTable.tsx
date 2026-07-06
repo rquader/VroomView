@@ -148,7 +148,7 @@ export function DraftingTable({ username }: { username: string }) {
                     value={s.label}
                     onChange={(e) => setSpec(i, { label: e.target.value })}
                     maxLength={24}
-                    placeholder="Label — e.g. Payload"
+                    placeholder="e.g. Payload"
                     aria-label={`Spec ${i + 1} label`}
                     className="field flex-1"
                   />
@@ -156,7 +156,7 @@ export function DraftingTable({ username }: { username: string }) {
                     value={s.value}
                     onChange={(e) => setSpec(i, { value: e.target.value })}
                     maxLength={24}
-                    placeholder="Value — e.g. 1,400 lb"
+                    placeholder="e.g. 1,400 lb"
                     aria-label={`Spec ${i + 1} value`}
                     className="field flex-1 font-mono text-sm"
                   />
