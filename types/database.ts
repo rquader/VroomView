@@ -8,7 +8,7 @@
  *   npx supabase gen types typescript --project-id <project-ref> > types/database.ts
  *   (or via the Supabase MCP generate_typescript_types tool)
  *
- * Generated 2026-07-02 against project eryncjvhlfyqyfglknjr.
+ * Generated 2026-07-07 against project eryncjvhlfyqyfglknjr.
  */
 export type Json =
   | string
@@ -108,16 +108,19 @@ export type Database = {
         Row: {
           concept_id: string
           created_at: string
+          value: number
           voter_id: string
         }
         Insert: {
           concept_id: string
           created_at?: string
+          value?: number
           voter_id: string
         }
         Update: {
           concept_id?: string
           created_at?: string
+          value?: number
           voter_id?: string
         }
         Relationships: [
@@ -143,7 +146,9 @@ export type Database = {
           body_style: string
           created_at: string
           details: string | null
+          feasibility: string | null
           id: string
+          make: string | null
           specs: Json
           summary: string
           tags: string[]
@@ -155,7 +160,9 @@ export type Database = {
           body_style: string
           created_at?: string
           details?: string | null
+          feasibility?: string | null
           id?: string
+          make?: string | null
           specs?: Json
           summary: string
           tags?: string[]
@@ -167,7 +174,9 @@ export type Database = {
           body_style?: string
           created_at?: string
           details?: string | null
+          feasibility?: string | null
           id?: string
+          make?: string | null
           specs?: Json
           summary?: string
           tags?: string[]
