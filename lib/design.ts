@@ -33,29 +33,50 @@ const COORD_MAX = 160;
 
 const NUMBER_RE = /^-?(?:\d+\.?\d*|\.\d+)$/;
 
-/** One stroke of M/L/Q/Z path data: right grammar, bounded finite numbers. */
-export function validStrokePath(d: string): boolean {
+/**
+ * One stroke of M/L/Q/Z path data: right grammar, bounded finite numbers.
+ * Returns the CANONICAL serialization ("M1,2 L3,4 …") or null — storing the
+ * rebuilt string (never the raw input) means every renderer downstream sees
+ * exactly one, unambiguous form of the path.
+ */
+export function canonicalStrokePath(d: string): string | null {
   if (typeof d !== "string" || d.length === 0 || d.length > DESIGN_LIMITS.maxPathChars)
-    return false;
-  if (!/^[MLQZ0-9\-.,\s]*$/.test(d)) return false;
+    return null;
+  if (!/^[MLQZ0-9\-.,\s]*$/.test(d)) return null;
   const tokens = d.match(/[MLQZ]|-?[\d.]+/g);
-  if (!tokens || tokens[0] !== "M") return false;
+  if (!tokens || tokens[0] !== "M") return null;
   let k = 0;
   let points = 0;
-  const okNum = () => {
+  const parts: string[] = [];
+  const num = (): string | null => {
     const t = tokens[k++];
-    if (t === undefined || !NUMBER_RE.test(t)) return false;
+    if (t === undefined || !NUMBER_RE.test(t)) return null;
     const v = parseFloat(t);
-    return v >= COORD_MIN && v <= COORD_MAX;
+    if (v < COORD_MIN || v > COORD_MAX) return null;
+    return String(Math.round(v * 10) / 10);
   };
   while (k < tokens.length) {
-    const cmd = tokens[k++];
+    const cmd = tokens[k++] as string;
     const need = cmd === "M" || cmd === "L" ? 2 : cmd === "Q" ? 4 : cmd === "Z" ? 0 : -1;
-    if (need < 0) return false;
-    for (let i = 0; i < need; i++) if (!okNum()) return false;
+    if (need < 0) return null;
+    const nums: string[] = [];
+    for (let i = 0; i < need; i++) {
+      const n = num();
+      if (n === null) return null;
+      nums.push(n);
+    }
     points += need / 2;
+    parts.push(
+      cmd === "Z"
+        ? "Z"
+        : cmd === "Q"
+          ? `Q${nums[0]},${nums[1]} ${nums[2]},${nums[3]}`
+          : `${cmd}${nums[0]},${nums[1]}`,
+    );
   }
-  return points >= 1;
+  if (points < 1) return null;
+  const canonical = parts.join(" ");
+  return canonical.length <= DESIGN_LIMITS.maxPathChars ? canonical : null;
 }
 
 const clamp = (v: number, min: number, max: number) =>
@@ -90,11 +111,18 @@ export function parseDesign(raw: unknown): ConceptDesign | null {
   for (const s of o.strokes) {
     if (typeof s !== "object" || s === null) return null;
     const d = (s as { d?: unknown }).d;
-    if (typeof d !== "string" || !validStrokePath(d)) return null;
-    strokes.push({ d });
+    if (typeof d !== "string") return null;
+    const canonical = canonicalStrokePath(d);
+    if (canonical === null) return null;
+    strokes.push({ d: canonical });
   }
 
   if (base === null && strokes.length === 0) return null;
+  // a blank plate has no body to lift and no wheels to size — normalize the
+  // knobs so every renderer (static SVG, Lottie) agrees on the geometry
+  if (base === null) {
+    return { v: 1, kind: "studio", base, wheelScale: 1, rideHeight: 0, strokes };
+  }
   return { v: 1, kind: "studio", base, wheelScale, rideHeight, strokes };
 }
 

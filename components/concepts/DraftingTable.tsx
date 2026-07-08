@@ -121,6 +121,12 @@ export function DraftingTable({
 
   const file = () => {
     setError(null);
+    // an untouched or emptied plate isn't a design — file nothing rather
+    // than tripping the server's strict validation with an empty document
+    const filedDesign =
+      design && (design.base !== null || design.strokes.length > 0)
+        ? design
+        : null;
     startTransition(async () => {
       const result = await createConcept({
         title,
@@ -129,7 +135,7 @@ export function DraftingTable({
         feasibility,
         bodyStyle,
         make: chosenMake,
-        design,
+        design: filedDesign,
         specs,
         tags,
       });
@@ -275,9 +281,12 @@ export function DraftingTable({
           </div>
         </fieldset>
 
+        {/* the MACHINE itself — what it is, who builds it, what it looks
+            like. The design bay lives here, front and center: giving the
+            concept a face belongs with naming its body, not in an appendix */}
         <fieldset>
           <legend className="overline mb-4 w-full border-b border-line pb-2.5">
-            The numbers
+            The machine
           </legend>
           <div className="flex flex-col gap-5">
             <label className="flex flex-col gap-1.5">
@@ -349,6 +358,15 @@ export function DraftingTable({
               ) : null}
             </div>
 
+            <DesignStudio design={design} onChange={setDesign} />
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="overline mb-4 w-full border-b border-line pb-2.5">
+            The numbers
+          </legend>
+          <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2.5">
               <span className="overline">Spec sheet (up to 8 rows)</span>
               {specs.map((s, i) => (
@@ -443,16 +461,6 @@ export function DraftingTable({
               ) : null}
             </div>
           </div>
-        </fieldset>
-
-        <fieldset>
-          <legend className="overline mb-4 w-full border-b border-line pb-2.5">
-            The design bay{" "}
-            <span className="normal-case tracking-normal text-ink-3">
-              · optional
-            </span>
-          </legend>
-          <DesignStudio design={design} onChange={setDesign} />
         </fieldset>
 
         <fieldset>

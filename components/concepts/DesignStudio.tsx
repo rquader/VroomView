@@ -9,19 +9,22 @@ import { CloseIcon } from "@/components/ui/Icon";
 import type { ConceptDesign } from "@/types";
 
 /**
- * The design bay — where a proposal gets an elevation of its own. Three
- * moves, all optional and all composable:
+ * The design bay — open on the table by default, because giving the concept
+ * a face is half the fun of filing one. Three moves, all optional:
  *
  *   1. pick a SKELETON: the six board profiles, or the AI-drafted variants
  *      (labelled as such here AND on the published sheet — provenance is
- *      the deal), or a blank plate;
- *   2. set the STANCE: wheel size and ride height, the two knobs that can't
- *      produce a broken drawing;
+ *      the deal), or a blank plate for pure pen work;
+ *   2. set the STANCE: wheel size and ride height — the two knobs that
+ *      can't produce a broken drawing (they only exist once a skeleton is
+ *      on the plate; a blank plate has no body to lift);
  *   3. take the PEN: pointer strokes over the plate, smoothed to quadratics
- *      in the same M/L/Q grammar everything else speaks.
+ *      in the same M/L/Q grammar everything else speaks. Strokes are stored
+ *      in BODY space, so they ride with the body when the stance changes.
  *
- * Controlled component: the drafting table owns the design state and files
- * it with the proposal. Everything here stays inside the validation bounds
+ * Controlled component: the drafting table owns the design state (null =
+ * nothing on the plate yet — untouched, nothing files) and sends it with
+ * the proposal. Everything here stays inside the validation bounds
  * (lib/design.ts) by construction, so what previews is what validates.
  */
 
@@ -70,20 +73,8 @@ export function DesignStudio({
   const [drawing, setDrawing] = useState<[number, number][] | null>(null);
   const surfaceRef = useRef<SVGSVGElement>(null);
 
-  if (!design) {
-    return (
-      <button
-        type="button"
-        onClick={() => onChange({ ...BLANK, base: "sedan" })}
-        className="btn btn-secondary btn-sm min-h-10 self-start"
-      >
-        Open the design bay — draft its elevation
-      </button>
-    );
-  }
-
   const set = (patch: Partial<ConceptDesign>) =>
-    onChange({ ...design, ...patch });
+    onChange({ ...(design ?? BLANK), ...patch });
 
   const toCanvas = (e: React.PointerEvent): [number, number] | null => {
     const rect = surfaceRef.current?.getBoundingClientRect();
@@ -95,7 +86,8 @@ export function DesignStudio({
   };
 
   const penStart = (e: React.PointerEvent) => {
-    if (!penDown || design.strokes.length >= DESIGN_LIMITS.maxStrokes) return;
+    if (!penDown || !design || design.strokes.length >= DESIGN_LIMITS.maxStrokes)
+      return;
     const p = toCanvas(e);
     if (!p) return;
     (e.target as Element).setPointerCapture?.(e.pointerId);
@@ -110,14 +102,18 @@ export function DesignStudio({
     if (dist >= 0.8) setDrawing([...drawing, p]);
   };
   const penEnd = () => {
-    if (!drawing) return;
-    const d = pointsToPath(drawing);
+    if (!drawing || !design) return;
+    // pointer coords are PLATE space; strokes live in BODY space so they
+    // ride with the body when the stance changes — shift by rideHeight
+    const d = pointsToPath(
+      drawing.map(([x, y]) => [x, y + design.rideHeight] as [number, number]),
+    );
     setDrawing(null);
     if (d) set({ strokes: [...design.strokes, { d }] });
   };
 
   const livePreview = drawing ? pointsToPath(drawing) : null;
-  const skeleton = design.base ? skeletonById(design.base) : null;
+  const skeleton = design?.base ? skeletonById(design.base) : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -126,7 +122,7 @@ export function DesignStudio({
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line bg-well/60 px-4 py-2">
           <span className="overline text-[10px] text-ink-2">Design bay</span>
           <span className="dateline text-[10px] text-ink-2">
-            {designProvenance(design)}
+            {design ? designProvenance(design) : "empty plate"}
           </span>
         </div>
         <div className="relative px-4 py-3">
@@ -135,7 +131,18 @@ export function DesignStudio({
             className="drafting-grid pointer-events-none absolute inset-0 opacity-60"
           />
           <div className="relative mx-auto max-w-[420px]">
-            <DesignPlate design={design} className="h-auto w-full text-ink" />
+            {design ? (
+              <DesignPlate design={design} className="h-auto w-full text-ink" />
+            ) : (
+              /* nothing chosen yet — keep the plate's proportions and invite */
+              <div className="flex aspect-[96/40] w-full items-center justify-center">
+                <p className="max-w-[36ch] text-center text-sm leading-relaxed text-ink-2">
+                  Give the concept a face: pick a skeleton below, or take a
+                  blank plate and draw. Skip it entirely — the sheet files
+                  either way.
+                </p>
+              </div>
+            )}
             {/* the pen surface sits over the plate only while drawing */}
             <svg
               ref={surfaceRef}
@@ -148,7 +155,9 @@ export function DesignStudio({
               onPointerCancel={penEnd}
               onPointerLeave={penEnd}
               className={`absolute inset-0 h-full w-full ${
-                penDown ? "cursor-crosshair touch-none" : "pointer-events-none"
+                penDown && design
+                  ? "cursor-crosshair touch-none"
+                  : "pointer-events-none"
               }`}
               fill="none"
               stroke="currentColor"
@@ -172,10 +181,10 @@ export function DesignStudio({
         <div className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1.5 scrollbar-thin">
           <button
             type="button"
-            aria-pressed={design.base === null}
+            aria-pressed={design !== null && design.base === null}
             onClick={() => set({ base: null })}
             className={`flex min-h-11 w-24 shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-btn border px-2 py-2 transition-colors ${
-              design.base === null
+              design !== null && design.base === null
                 ? "border-accent bg-accent/10 text-accent"
                 : "border-control bg-card text-ink-2 hover:bg-well hover:text-ink"
             }`}
@@ -184,7 +193,7 @@ export function DesignStudio({
             <span className="dateline text-[9px]">pen only</span>
           </button>
           {SKELETONS.map((s) => {
-            const selected = design.base === s.id;
+            const selected = design?.base === s.id;
             return (
               <button
                 key={s.id}
@@ -212,101 +221,110 @@ export function DesignStudio({
         </div>
       </div>
 
-      {/* 2 · stance knobs */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1.5">
-          <span className="overline flex items-baseline justify-between text-[10px]">
-            Wheel size
-            <span className="font-mono normal-case tracking-normal text-ink-2">
-              {Math.round(design.wheelScale * 100)}%
-            </span>
-          </span>
-          <input
-            type="range"
-            min={DESIGN_LIMITS.wheelScale.min}
-            max={DESIGN_LIMITS.wheelScale.max}
-            step={0.05}
-            value={design.wheelScale}
-            onChange={(e) => set({ wheelScale: Number(e.target.value) })}
-            className="min-h-9 w-full accent-[var(--accent)]"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="overline flex items-baseline justify-between text-[10px]">
-            Ride height
-            <span className="font-mono normal-case tracking-normal text-ink-2">
-              {design.rideHeight > 0 ? "+" : ""}
-              {design.rideHeight.toFixed(1)}
-            </span>
-          </span>
-          <input
-            type="range"
-            min={DESIGN_LIMITS.rideHeight.min}
-            max={DESIGN_LIMITS.rideHeight.max}
-            step={0.5}
-            value={design.rideHeight}
-            onChange={(e) => set({ rideHeight: Number(e.target.value) })}
-            className="min-h-9 w-full accent-[var(--accent)]"
-          />
-        </label>
-      </div>
+      {design ? (
+        <>
+          {/* 2 · stance knobs — only a body can be lifted or re-shod */}
+          {design.base !== null ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="flex flex-col gap-1.5">
+                <span className="overline flex items-baseline justify-between text-[10px]">
+                  Wheel size
+                  <span className="font-mono normal-case tracking-normal text-ink-2">
+                    {Math.round(design.wheelScale * 100)}%
+                  </span>
+                </span>
+                <input
+                  type="range"
+                  min={DESIGN_LIMITS.wheelScale.min}
+                  max={DESIGN_LIMITS.wheelScale.max}
+                  step={0.05}
+                  value={design.wheelScale}
+                  onChange={(e) => set({ wheelScale: Number(e.target.value) })}
+                  className="min-h-9 w-full accent-[var(--accent)]"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="overline flex items-baseline justify-between text-[10px]">
+                  Ride height
+                  <span className="font-mono normal-case tracking-normal text-ink-2">
+                    {design.rideHeight > 0 ? "+" : ""}
+                    {design.rideHeight.toFixed(1)}
+                  </span>
+                </span>
+                <input
+                  type="range"
+                  min={DESIGN_LIMITS.rideHeight.min}
+                  max={DESIGN_LIMITS.rideHeight.max}
+                  step={0.5}
+                  value={design.rideHeight}
+                  onChange={(e) => set({ rideHeight: Number(e.target.value) })}
+                  className="min-h-9 w-full accent-[var(--accent)]"
+                />
+              </label>
+            </div>
+          ) : null}
 
-      {/* 3 · the pen */}
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          aria-pressed={penDown}
-          onClick={() => setPenDown((v) => !v)}
-          disabled={design.strokes.length >= DESIGN_LIMITS.maxStrokes && !penDown}
-          className={`btn btn-sm min-h-9 border transition-colors ${
-            penDown
-              ? "border-accent bg-accent/10 text-accent"
-              : "border-control bg-card text-ink-2 hover:bg-well hover:text-ink"
-          }`}
-        >
-          {penDown ? "Pen down — draw on the plate" : "Take the pen"}
-        </button>
-        <span className="dateline">
-          {design.strokes.length}/{DESIGN_LIMITS.maxStrokes} strokes
-        </span>
-        {design.strokes.length > 0 ? (
-          <>
+          {/* 3 · the pen */}
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => set({ strokes: design.strokes.slice(0, -1) })}
-              className="btn btn-ghost btn-sm min-h-9"
+              aria-pressed={penDown}
+              onClick={() => setPenDown((v) => !v)}
+              disabled={
+                design.strokes.length >= DESIGN_LIMITS.maxStrokes && !penDown
+              }
+              className={`btn btn-sm min-h-9 border transition-colors ${
+                penDown
+                  ? "border-accent bg-accent/10 text-accent"
+                  : "border-control bg-card text-ink-2 hover:bg-well hover:text-ink"
+              }`}
             >
-              Undo stroke
+              {penDown ? "Pen down — draw on the plate" : "Take the pen"}
             </button>
+            <span className="dateline">
+              {design.strokes.length}/{DESIGN_LIMITS.maxStrokes} strokes
+            </span>
+            {design.strokes.length > 0 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => set({ strokes: design.strokes.slice(0, -1) })}
+                  className="btn btn-ghost btn-sm min-h-9"
+                >
+                  Undo stroke
+                </button>
+                <button
+                  type="button"
+                  onClick={() => set({ strokes: [] })}
+                  className="btn btn-ghost btn-sm min-h-9"
+                >
+                  Clear pen
+                </button>
+              </>
+            ) : null}
             <button
               type="button"
-              onClick={() => set({ strokes: [] })}
-              className="btn btn-ghost btn-sm min-h-9"
+              onClick={() => {
+                setPenDown(false);
+                setDrawing(null);
+                onChange(null);
+              }}
+              className="btn btn-ghost btn-sm ml-auto min-h-9 hover:text-danger"
             >
-              Clear pen
+              <CloseIcon size={13} />
+              Clear the plate
             </button>
-          </>
-        ) : null}
-        <button
-          type="button"
-          onClick={() => {
-            setPenDown(false);
-            setDrawing(null);
-            onChange(null);
-          }}
-          className="btn btn-ghost btn-sm ml-auto min-h-9 hover:text-danger"
-        >
-          <CloseIcon size={13} />
-          Remove design sheet
-        </button>
-      </div>
+          </div>
 
-      {/* the skeleton's own name keeps the provenance honest at a glance */}
-      {skeleton?.origin === "ai" ? (
-        <p className="note text-xs">
-          This skeleton is <strong>AI-drafted</strong> — it was drawn by an AI
-          assistant for the studio library, and sheets that use it say so.
-        </p>
+          {/* the skeleton's own name keeps the provenance honest at a glance */}
+          {skeleton?.origin === "ai" ? (
+            <p className="note text-xs">
+              This skeleton is <strong>AI-drafted</strong> — it was drawn by an
+              AI assistant for the studio library, and sheets that use it say
+              so.
+            </p>
+          ) : null}
+        </>
       ) : null}
     </div>
   );
