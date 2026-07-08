@@ -4,6 +4,7 @@ import { APP_NAME, ROUTES } from "@/constants/app";
 const FOOTER_NAV = [
   { label: "Feed", href: ROUTES.home },
   { label: "Explore", href: ROUTES.explore },
+  { label: "About", href: ROUTES.about },
   { label: "Propose", href: ROUTES.submit },
 ];
 

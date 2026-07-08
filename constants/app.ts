@@ -9,6 +9,7 @@ export const APP_DESCRIPTION =
  */
 export const ROUTES = {
   home: "/",
+  about: "/about",
   login: "/login",
   signup: "/signup",
   feed: "/feed",

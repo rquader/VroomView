@@ -12,6 +12,7 @@ import { ThemeList } from "@/components/ui/ThemeSwitcher";
 const NAV = [
   { label: "Feed", href: ROUTES.home },
   { label: "Explore", href: ROUTES.explore },
+  { label: "About", href: ROUTES.about },
   { label: "Propose a concept", href: ROUTES.submit },
 ];
 

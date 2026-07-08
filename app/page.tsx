@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { FeedView } from "@/components/concepts/FeedView";
 import { SpecList } from "@/components/concepts/SpecList";
-import { HeroSketch } from "@/components/animations/HeroSketch";
 import { listConcepts } from "@/lib/services/concepts.service";
 import { getViewer } from "@/lib/services/viewer.service";
+import { ROUTES } from "@/constants/app";
 import { ALL_TAGS } from "@/constants/lenses";
 
 /**
@@ -10,6 +11,11 @@ import { ALL_TAGS } from "@/constants/lenses";
  * (which reads the session cookie for per-viewer vote state — that's what
  * makes this page dynamically rendered) and hands plain domain objects to the
  * client <FeedView> for filtering/sorting.
+ *
+ * The story hero (headline + elevation studies) lives on /about now — home
+ * is the WORKING board, so the feed leads and the masthead band stays
+ * compact: title, one line, the board's honest numbers, and a door to the
+ * story for newcomers.
  */
 export default async function HomePage({
   searchParams,
@@ -40,38 +46,38 @@ export default async function HomePage({
   ];
 
   return (
-    <main className="relative mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
-      {/* faint graph-vellum grid behind the hero only */}
+    <main className="relative mx-auto max-w-6xl px-5 py-9 sm:px-8 sm:py-12">
+      {/* faint graph-vellum grid behind the masthead band only */}
       <div
         aria-hidden
-        className="drafting-grid pointer-events-none absolute inset-x-0 top-0 h-72"
+        className="drafting-grid pointer-events-none absolute inset-x-0 top-0 h-44"
       />
 
-      <section className="relative lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center lg:gap-16">
-        <div className="max-w-3xl">
+      <section className="relative flex flex-col gap-7 md:flex-row md:items-end md:justify-between md:gap-10">
+        <div className="max-w-2xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
             The proving ground
           </p>
-          <h1 className="mt-3 font-serif text-4xl font-medium leading-[1.08] tracking-[-0.02em] sm:text-5xl">
-            The cars that <em className="font-medium">should</em> exist, argued
-            into shape.
+          <h1 className="mt-2.5 font-serif text-3xl font-medium leading-[1.1] tracking-[-0.02em] sm:text-4xl">
+            The review board
           </h1>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-ink-2">
-            An open review board for automotive concepts — proposals with real
-            numbers, debated like a design review.
+          <p className="mt-2.5 leading-relaxed text-ink-2">
+            Every concept under review, argued with real numbers.{" "}
+            <Link
+              href={ROUTES.about}
+              className="whitespace-nowrap text-accent underline-offset-2 hover:underline"
+            >
+              New here? The story →
+            </Link>
           </p>
-
-          <div className="mt-8 max-w-md">
-            <SpecList specs={boardSpecs} columns={3} />
-          </div>
         </div>
 
-        <div className="mx-auto mt-10 w-full max-w-md lg:mt-0 lg:max-w-none">
-          <HeroSketch />
+        <div className="w-full max-w-sm shrink-0">
+          <SpecList specs={boardSpecs} columns={3} />
         </div>
       </section>
 
-      <section className="mt-12 sm:mt-14">
+      <section className="mt-10 sm:mt-11">
         <FeedView
           concepts={concepts}
           signedIn={viewer !== null}

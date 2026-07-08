@@ -10,6 +10,7 @@ import { AccountMenu } from "./AccountMenu";
 const NAV = [
   { label: "Feed", href: ROUTES.home },
   { label: "Explore", href: ROUTES.explore },
+  { label: "About", href: ROUTES.about },
 ];
 
 /**
