@@ -18,7 +18,11 @@ export type CreateConceptInput = {
   title: string;
   summary: string;
   details: string;
+  /** the production case — optional, like details */
+  feasibility: string;
   bodyStyle: string;
+  /** proposed manufacturer; empty string = deliberate "any maker" (stored NULL) */
+  make: string;
   specs: SpecMetric[];
   tags: string[];
 };
@@ -39,7 +43,9 @@ export async function createConcept(
   const title = input.title.trim();
   const summary = input.summary.trim();
   const details = input.details.trim();
+  const feasibility = input.feasibility.trim();
   const bodyStyle = input.bodyStyle.trim();
+  const make = input.make.trim();
 
   if (title.length < 8 || title.length > 90)
     return { ok: false, error: "Titles run 8–90 characters." };
@@ -47,8 +53,12 @@ export async function createConcept(
     return { ok: false, error: "The summary needs 20–300 characters — one or two real sentences." };
   if (details.length > 2000)
     return { ok: false, error: "The case maxes out at 2,000 characters." };
+  if (feasibility.length > 2000)
+    return { ok: false, error: "The production case maxes out at 2,000 characters." };
   if (bodyStyle.length < 3 || bodyStyle.length > 24)
     return { ok: false, error: "Body style runs 3–24 characters." };
+  if (make.length > 0 && (make.length < 2 || make.length > 40))
+    return { ok: false, error: "Maker names run 2–40 characters — or leave it blank for any maker." };
 
   // keep only complete spec rows, bounded like the DB expects
   const specs = input.specs
@@ -71,7 +81,9 @@ export async function createConcept(
       title,
       summary,
       details: details.length > 0 ? details : null,
+      feasibility: feasibility.length > 0 ? feasibility : null,
       body_style: bodyStyle,
+      make: make.length > 0 ? make : null,
       specs,
       tags,
     })

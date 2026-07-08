@@ -58,8 +58,12 @@ export type Concept = {
   title: string;
   summary: string;
   details: string | null;
+  /** the production case — why the author believes this could be built */
+  feasibility: string | null;
   author: Author;
   bodyStyle: string;
+  /** proposed manufacturer; null is a deliberate "any maker" */
+  make: string | null;
   specs: SpecMetric[];
   tags: ConceptTag[];
   /** directional votes: score = upvotes − downvotes, the number the UI leads with */

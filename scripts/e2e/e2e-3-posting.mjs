@@ -41,9 +41,14 @@ await page
   .getByLabel("Summary")
   .fill("A friendly electric microbus for car-share fleets — flat floor, swappable seats, honest range.");
 await page.getByLabel("Body style").fill("Minivan");
+// default rows are Est. price / Range / Powertrain / Drivetrain now
 await page.getByLabel("Spec 1 value").fill("$26,000");
 await page.getByLabel("Spec 2 value").fill("210 mi");
-await page.getByLabel("Spec 3 value").fill("FWD EV");
+await page.getByLabel("Spec 3 value").fill("EV");
+await page.getByLabel("Spec 4 value").fill("FWD");
+// name a maker through the radio-chip control
+await page.getByRole("radio", { name: "Name a maker" }).check();
+await page.getByLabel("Proposed maker name").fill("Volkswagen");
 await page.getByRole("button", { name: "Price" }).click();
 await page.getByRole("button", { name: "Environment" }).click();
 
@@ -61,6 +66,8 @@ await page.getByRole("heading", { name: TITLE }).waitFor({ timeout: 15000 });
 check(true, "the filed concept renders live");
 await page.getByText("$26,000").first().waitFor({ timeout: 15000 });
 check(true, "spec callouts render from the filed jsonb");
+await page.getByText("Volkswagen").first().waitFor({ timeout: 15000 });
+check(true, "the proposed maker renders on the sheet");
 const conceptUrl = page.url();
 console.log("created:", conceptUrl);
 

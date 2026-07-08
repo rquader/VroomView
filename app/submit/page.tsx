@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ROUTES } from "@/constants/app";
+import { SPEC_PRESET_LABELS } from "@/constants/specs";
 import { getViewer } from "@/lib/services/viewer.service";
+import { listCommunitySpecLabels } from "@/lib/services/concepts.service";
 import { DraftingTable } from "@/components/concepts/DraftingTable";
 import { SpecList } from "@/components/concepts/SpecList";
 import { Silhouette } from "@/components/ui/Silhouette";
@@ -14,7 +16,11 @@ export const metadata: Metadata = { title: "Propose a concept" };
  * is free; filing needs an account — with sign-in carrying them back here.
  */
 export default async function SubmitPage() {
-  const viewer = await getViewer();
+  const [viewer, communityLabels] = await Promise.all([
+    getViewer(),
+    // labels the board's authors use beyond the presets, for the spec picker
+    listCommunitySpecLabels(SPEC_PRESET_LABELS),
+  ]);
 
   return (
     <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
@@ -31,7 +37,10 @@ export default async function SubmitPage() {
 
       <div className="mt-10">
         {viewer ? (
-          <DraftingTable username={viewer.username} />
+          <DraftingTable
+            username={viewer.username}
+            communityLabels={communityLabels}
+          />
         ) : (
           <div className="lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,28rem)] lg:items-start lg:gap-12">
             <div className="sheet overflow-hidden">

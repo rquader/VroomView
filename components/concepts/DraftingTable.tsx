@@ -4,6 +4,11 @@ import { useEffect, useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/app";
 import { createConcept } from "@/lib/actions/concepts";
+import {
+  COMMON_MAKES,
+  SPEC_PRESETS,
+  specPlaceholder,
+} from "@/constants/specs";
 import type { ConceptTag, SpecMetric } from "@/types";
 import { useDialogFocus } from "@/hooks/useDialogFocus";
 import { SpecList } from "./SpecList";
@@ -12,9 +17,12 @@ import { Silhouette } from "@/components/ui/Silhouette";
 import { ChevronUpIcon, CloseIcon, PlusIcon } from "@/components/ui/Icon";
 
 const BODY_STYLES = ["Sedan", "Minivan", "Wagon", "Coupe", "Truck", "Hatchback"];
+// powertrain (how it's powered) and drivetrain (which wheels) are separate
+// facts — the defaults teach the distinction by asking for both
 const DEFAULT_SPECS: SpecMetric[] = [
   { label: "Est. price", value: "" },
   { label: "Range", value: "" },
+  { label: "Powertrain", value: "" },
   { label: "Drivetrain", value: "" },
 ];
 
@@ -27,19 +35,32 @@ const DEFAULT_SPECS: SpecMetric[] = [
  * sheet with the full preview. Filing calls createConcept and lands on the
  * real page.
  */
-export function DraftingTable({ username }: { username: string }) {
+export function DraftingTable({
+  username,
+  communityLabels = [],
+}: {
+  username: string;
+  /** spec labels the board's authors actually use (server-derived, ranked) */
+  communityLabels?: string[];
+}) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [details, setDetails] = useState("");
+  const [feasibility, setFeasibility] = useState("");
   const [bodyStyle, setBodyStyle] = useState("");
+  const [makeMode, setMakeMode] = useState<"any" | "specific">("any");
+  const [make, setMake] = useState("");
   const [specs, setSpecs] = useState<SpecMetric[]>(DEFAULT_SPECS);
   const [tags, setTags] = useState<ConceptTag[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [previewOpen, setPreviewOpen] = useState(false);
   const previewTitleId = useId();
+  const makerGroupId = useId();
   const panelRef = useDialogFocus<HTMLDivElement>(previewOpen);
+
+  const chosenMake = makeMode === "specific" ? make.trim() : "";
 
   // bottom-sheet housekeeping (same pattern as LensDrawer): Escape closes,
   // the page behind doesn't scroll, and crossing into lg closes it because
@@ -71,10 +92,26 @@ export function DraftingTable({ username }: { username: string }) {
     setSpecs((cur) =>
       cur.length >= 8 ? cur : [...cur, { label: "", value: "" }],
     );
+  // quick-add: fill the first blank row before growing the sheet
+  const addLabelledSpec = (label: string) =>
+    setSpecs((cur) => {
+      const blank = cur.findIndex((s) => !s.label.trim() && !s.value.trim());
+      if (blank >= 0)
+        return cur.map((s, n) => (n === blank ? { ...s, label } : s));
+      return cur.length >= 8 ? cur : [...cur, { label, value: "" }];
+    });
   const toggleTag = (tag: ConceptTag) =>
     setTags((cur) =>
       cur.includes(tag) ? cur.filter((t) => t !== tag) : [...cur, tag],
     );
+
+  const usedLabels = new Set(specs.map((s) => s.label.trim().toLowerCase()));
+  const presetSuggestions = SPEC_PRESETS.filter(
+    (p) => !usedLabels.has(p.label.toLowerCase()),
+  ).slice(0, 10);
+  const communitySuggestions = communityLabels
+    .filter((l) => !usedLabels.has(l.toLowerCase()))
+    .slice(0, 6);
 
   const previewSpecs = specs.filter((s) => s.label.trim() && s.value.trim());
   const headline = previewSpecs[0] ?? null;
@@ -86,7 +123,9 @@ export function DraftingTable({ username }: { username: string }) {
         title,
         summary,
         details,
+        feasibility,
         bodyStyle,
+        make: chosenMake,
         specs,
         tags,
       });
@@ -112,6 +151,12 @@ export function DraftingTable({ username }: { username: string }) {
           </span>
           <span className="dateline">
             just now · <span className="normal-case">@{username}</span>
+            {chosenMake ? (
+              <>
+                {" "}
+                · for <span className="normal-case">{chosenMake}</span>
+              </>
+            ) : null}
           </span>
         </div>
         <h2 className="mt-2.5 font-serif text-[1.4rem] font-medium leading-snug tracking-[-0.01em]">
@@ -199,6 +244,22 @@ export function DraftingTable({ username }: { username: string }) {
                 className="field resize-none"
               />
             </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="overline">
+                The production case{" "}
+                <span className="normal-case tracking-normal text-ink-3">
+                  · optional
+                </span>
+              </span>
+              <textarea
+                value={feasibility}
+                onChange={(e) => setFeasibility(e.target.value)}
+                rows={3}
+                maxLength={2000}
+                placeholder="Why could this actually be built? Existing platforms, parts-bin components, a price that pencils out…"
+                className="field resize-none"
+              />
+            </label>
           </div>
         </fieldset>
 
@@ -224,6 +285,58 @@ export function DraftingTable({ username }: { username: string }) {
               </datalist>
             </label>
 
+            {/* who should build it — "any maker" is a real answer, so it gets
+                a real control instead of a meaningfully-empty text field */}
+            <div className="flex flex-col gap-1.5">
+              <span className="overline" id={makerGroupId}>
+                Proposed maker
+              </span>
+              <div
+                role="radiogroup"
+                aria-labelledby={makerGroupId}
+                className="flex flex-wrap gap-2"
+              >
+                {(
+                  [
+                    ["any", "Any maker"],
+                    ["specific", "Name a maker"],
+                  ] as const
+                ).map(([mode, label]) => (
+                  <label key={mode} className="cursor-pointer">
+                    <input
+                      type="radio"
+                      name="maker-mode"
+                      value={mode}
+                      checked={makeMode === mode}
+                      onChange={() => setMakeMode(mode)}
+                      className="peer sr-only"
+                    />
+                    <span className="inline-flex min-h-9 items-center rounded-btn border border-control bg-card px-3 text-sm text-ink-2 transition-colors hover:text-ink peer-checked:border-accent peer-checked:bg-accent/10 peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-rubric">
+                      {label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {makeMode === "specific" ? (
+                <>
+                  <input
+                    value={make}
+                    onChange={(e) => setMake(e.target.value)}
+                    maxLength={40}
+                    list="common-makes"
+                    placeholder="e.g. Volvo"
+                    aria-label="Proposed maker name"
+                    className="field"
+                  />
+                  <datalist id="common-makes">
+                    {COMMON_MAKES.map((m) => (
+                      <option key={m} value={m} />
+                    ))}
+                  </datalist>
+                </>
+              ) : null}
+            </div>
+
             <div className="flex flex-col gap-2.5">
               <span className="overline">Spec sheet (up to 8 rows)</span>
               {specs.map((s, i) => (
@@ -232,6 +345,7 @@ export function DraftingTable({ username }: { username: string }) {
                     value={s.label}
                     onChange={(e) => setSpec(i, { label: e.target.value })}
                     maxLength={24}
+                    list="spec-labels"
                     placeholder="e.g. Payload"
                     aria-label={`Spec ${i + 1} label`}
                     className="field flex-1"
@@ -240,7 +354,9 @@ export function DraftingTable({ username }: { username: string }) {
                     value={s.value}
                     onChange={(e) => setSpec(i, { value: e.target.value })}
                     maxLength={24}
-                    placeholder="e.g. 1,400 lb"
+                    // the value hint follows the label: Range suggests miles,
+                    // not the same "1,400 lb" for every row
+                    placeholder={specPlaceholder(s.label)}
                     aria-label={`Spec ${i + 1} value`}
                     className="field flex-1 font-mono text-sm"
                   />
@@ -254,6 +370,14 @@ export function DraftingTable({ username }: { username: string }) {
                   </button>
                 </div>
               ))}
+              <datalist id="spec-labels">
+                {SPEC_PRESETS.map((p) => (
+                  <option key={p.label} value={p.label} />
+                ))}
+                {communityLabels.map((l) => (
+                  <option key={l} value={l} />
+                ))}
+              </datalist>
               {specs.length < 8 ? (
                 <button
                   type="button"
@@ -263,6 +387,47 @@ export function DraftingTable({ username }: { username: string }) {
                   <PlusIcon size={14} />
                   Add a number
                 </button>
+              ) : null}
+
+              {/* the measured vocabulary, one tap away — presets first, then
+                  labels the community has already used */}
+              {specs.length < 8 && presetSuggestions.length > 0 ? (
+                <div className="mt-1.5">
+                  <p className="dateline mb-1.5 text-[10px]">Quick add</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {presetSuggestions.map((p) => (
+                      <button
+                        key={p.label}
+                        type="button"
+                        onClick={() => addLabelledSpec(p.label)}
+                        className="inline-flex min-h-8 items-center gap-1 rounded-btn border border-line bg-card px-2 text-xs text-ink-2 transition-colors hover:border-control hover:text-ink"
+                      >
+                        <PlusIcon size={11} />
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {specs.length < 8 && communitySuggestions.length > 0 ? (
+                <div className="mt-1">
+                  <p className="dateline mb-1.5 text-[10px]">
+                    Seen on the board
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {communitySuggestions.map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() => addLabelledSpec(l)}
+                        className="inline-flex min-h-8 items-center gap-1 rounded-btn border border-line bg-card px-2 text-xs text-ink-2 transition-colors hover:border-control hover:text-ink"
+                      >
+                        <PlusIcon size={11} />
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ) : null}
             </div>
           </div>

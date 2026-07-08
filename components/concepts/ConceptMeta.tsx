@@ -24,6 +24,8 @@ export function ConceptMeta({ concept }: { concept: Concept }) {
           ["Sheet", sheetNo(concept.id)],
           ["Filed by", `@${concept.author.username}`],
           ["Filed", filed],
+          // "any maker" is the deliberate reading of NULL, not missing data
+          ["Maker", concept.make ?? "Any maker"],
           // the running balance of the argument, with its parts shown
           [
             "Score",

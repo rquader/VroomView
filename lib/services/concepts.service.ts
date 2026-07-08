@@ -20,8 +20,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // profiles is reachable two ways (author FK, and through concept_votes), so
 // PostgREST needs the exact FK named — `profiles!concepts_author_id_fkey` —
 // or it refuses the embed as ambiguous.
-const CONCEPT_SELECT = `id, title, summary, details, body_style, specs, tags,
-  created_at, author:profiles!concepts_author_id_fkey(id, username, display_name),
+const CONCEPT_SELECT = `id, title, summary, details, feasibility, body_style, make,
+  specs, tags, created_at,
+  author:profiles!concepts_author_id_fkey(id, username, display_name),
   up:concept_votes(count), down:concept_votes(count), comments(count)` as const;
 
 /** The select + the embed filters that make `up`/`down` mean what they say. */
@@ -38,7 +39,9 @@ type ConceptRow = {
   title: string;
   summary: string;
   details: string | null;
+  feasibility: string | null;
   body_style: string;
+  make: string | null;
   specs: unknown;
   tags: string[];
   created_at: string;
@@ -72,12 +75,14 @@ function mapConcept(
     title: row.title,
     summary: row.summary,
     details: row.details,
+    feasibility: row.feasibility,
     author: {
       id: row.author.id,
       username: row.author.username,
       displayName: row.author.display_name,
     },
     bodyStyle: row.body_style,
+    make: row.make,
     specs: parseSpecs(row.specs),
     tags: row.tags as ConceptTag[],
     upvotes,
@@ -151,6 +156,37 @@ export async function getConcept(id: string): Promise<Concept | null> {
  * lenses they share, then by support. The overlap filter uses the GIN index;
  * the (tiny) candidate set is ranked here in code.
  */
+/**
+ * Spec labels the community actually uses, most-used first — feeds the
+ * drafting table's label suggestions alongside the developer presets.
+ * Case-insensitive counting, first-seen casing wins; labels already in
+ * `exclude` (the presets) are skipped so suggestions are genuinely new.
+ */
+export async function listCommunitySpecLabels(
+  exclude: string[],
+  limit = 8,
+): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("concepts").select("specs");
+  if (error) throw new Error(`listCommunitySpecLabels failed: ${error.message}`);
+
+  const excluded = new Set(exclude.map((l) => l.toLowerCase()));
+  const counts = new Map<string, { label: string; n: number }>();
+  for (const row of data ?? []) {
+    for (const spec of parseSpecs(row.specs)) {
+      const key = spec.label.toLowerCase();
+      if (excluded.has(key)) continue;
+      const entry = counts.get(key);
+      if (entry) entry.n += 1;
+      else counts.set(key, { label: spec.label, n: 1 });
+    }
+  }
+  return [...counts.values()]
+    .sort((a, b) => b.n - a.n || a.label.localeCompare(b.label))
+    .slice(0, limit)
+    .map((e) => e.label);
+}
+
 export async function getRelated(concept: Concept, limit = 3): Promise<Concept[]> {
   if (concept.tags.length === 0) return [];
   const supabase = await createClient();

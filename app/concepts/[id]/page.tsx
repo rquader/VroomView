@@ -83,6 +83,13 @@ export default async function ConceptDetailPage({
                     <span className="normal-case">
                       @{concept.author.username}
                     </span>
+                    {concept.make ? (
+                      <>
+                        {" "}
+                        · for{" "}
+                        <span className="normal-case">{concept.make}</span>
+                      </>
+                    ) : null}
                   </span>
                 </div>
                 <span className="dateline text-ink-2">
@@ -150,6 +157,13 @@ export default async function ConceptDetailPage({
                 {/* same label the drafting table uses — filing and reading rhyme */}
                 <h2 className="overline">The case for it</h2>
                 <p className="mt-3 leading-relaxed">{concept.details}</p>
+              </div>
+            ) : null}
+
+            {concept.feasibility ? (
+              <div className="mt-8 max-w-3xl">
+                <h2 className="overline">The production case</h2>
+                <p className="mt-3 leading-relaxed">{concept.feasibility}</p>
               </div>
             ) : null}
           </article>
