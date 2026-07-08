@@ -33,7 +33,12 @@ export type SpecMetric = { label: string; value: string };
 /** A viewer's standing vote on a concept: backed, none, or voted down. */
 export type VoteDirection = -1 | 0 | 1;
 
-/** Comment/concept filter tags (the 8 discussion lenses). */
+/**
+ * Comment/concept filter tags (the 11 discussion lenses). Each lens family
+ * carries an "Other" catch-all; the family name is baked into the stored
+ * string so the flat tags stay unambiguous — the UI shortens them to
+ * "Other" inside their group (see lensLabel in constants/lenses.ts).
+ */
 export type ConceptTag =
   | "Mileage"
   | "Price"
@@ -42,7 +47,10 @@ export type ConceptTag =
   | "Performance"
   | "Reliability"
   | "Safety"
-  | "Market fit";
+  | "Market fit"
+  | "Other (practicality)"
+  | "Other (engineering)"
+  | "Other (design)";
 
 /** A proposed vehicle concept post (the core domain object of the board). */
 export type Concept = {

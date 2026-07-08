@@ -33,7 +33,8 @@ async function getSessionUser() {
 
 function validTags(tags: string[]): tags is ConceptTag[] {
   return (
-    tags.length <= 8 && tags.every((t) => (ALL_TAGS as string[]).includes(t))
+    tags.length <= ALL_TAGS.length &&
+    tags.every((t) => (ALL_TAGS as string[]).includes(t))
   );
 }
 

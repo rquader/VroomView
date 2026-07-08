@@ -1,10 +1,10 @@
 "use client";
 
 import type { ConceptTag } from "@/types";
-import { LENS_GROUPS } from "@/constants/lenses";
+import { LENS_GROUPS, lensLabel } from "@/constants/lenses";
 
 /**
- * The "review lenses" — the 8 tags grouped into meaningful families and
+ * The "review lenses" — the 11 tags grouped into meaningful families and
  * rendered as ink-stamp checkboxes with live counts. Presentational; the
  * parent owns the state. One implementation serves both the desktop rail
  * (compact) and the mobile drawer (`roomy` → 44px touch rows).
@@ -44,7 +44,14 @@ export function LensControls({
                     checked={active.includes(tag)}
                     onChange={() => onToggle(tag)}
                   />
-                  <span className="flex-1">{tag}</span>
+                  {/* "Other" reads plainly inside its family; screen readers
+                      still get the disambiguated name */}
+                  <span className="flex-1">
+                    {lensLabel(tag)}
+                    {lensLabel(tag) !== tag ? (
+                      <span className="sr-only"> ({group.label})</span>
+                    ) : null}
+                  </span>
                   <span className="font-mono text-xs text-ink-3">
                     {counts[tag] ?? 0}
                   </span>

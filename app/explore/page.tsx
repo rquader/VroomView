@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ROUTES } from "@/constants/app";
-import { ALL_TAGS, LENS_GROUPS } from "@/constants/lenses";
+import { ALL_TAGS, LENS_GROUPS, lensLabel } from "@/constants/lenses";
 import { listConcepts } from "@/lib/services/concepts.service";
 import { Silhouette } from "@/components/ui/Silhouette";
 
@@ -103,7 +103,7 @@ export default async function ExplorePage() {
                     key={tag}
                     className="flex items-baseline justify-between border-b border-line py-2 text-sm text-ink-2 last:border-b-0"
                   >
-                    {tag}
+                    {lensLabel(tag)}
                     <span className="font-mono text-xs text-ink-3">
                       {lensCounts[tag]}
                     </span>
