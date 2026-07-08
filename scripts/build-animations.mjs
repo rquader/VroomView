@@ -258,10 +258,14 @@ const error = comp({
 });
 
 // empty: the blank sheet — the border draws itself, a wagon elevation is
-// sketched on, wheels land, a dimension rule underlines it; holds, then
-// fades and redraws (it loops).
+// sketched on (body, then glass, then seams), wheels land, a dimension rule
+// underlines it; holds, then fades and redraws (it loops). Geometry mirrors
+// components/ui/Silhouette.tsx (canonical source — keep in sync).
 const WAGON_BODY =
-  "M3,29 L3,25 Q3,22.5 6,22 L15,20.5 L24,13 Q25.5,12 28,12 L80,12 Q84,12 84.5,14.5 L85.5,26 Q85.7,29 82.5,29 Z";
+  "M5.5,33.5 L4,31 Q3,30 3,27.5 L3,25 Q3,22.6 6.5,22.2 L10.5,21.8 Q20,20.5 31,19.6 L33,19.4 L45,10.6 Q48,9.8 52.5,9.7 L83.5,10 Q86.3,10.2 87.7,11.8 L91.5,17.6 Q93,18.4 93,20.5 L93,27.5 Q93,31.5 90.5,33.5 L83.8,33.5 Q83.3,25.2 75,25.2 Q66.7,25.2 66.2,33.5 L28.8,33.5 Q28.3,25.2 20,25.2 Q11.7,25.2 11.2,33.5 Z";
+const WAGON_DLO =
+  "M34.7,19 L45.8,11.2 Q48.5,10.5 52.5,10.4 L82.8,10.7 Q85.2,10.9 86.3,12.2 L89.7,17.3 L58,18.2 L34.7,19 Z";
+const WAGON_SEAMS = ["M58,10.4 L59.5,33", "M79,10.6 L80,17.7", "M34.9,19.4 L35.9,33"];
 const fadeOut = (from = 100) => anim([[0, from], [318, from], [344, 0]]);
 const wagonTransform = {
   p: stat([160, 96, 0]),
@@ -294,12 +298,22 @@ const empty = comp({
       ],
     }),
     layer({
-      name: "seam", cl: "vv-ink-2", op: 360,
-      opacity: anim([[112, 0], [124, 55], [318, 55], [344, 0]]),
+      name: "dlo", cl: "vv-ink-2", op: 360,
+      opacity: anim([[100, 0], [106, 75], [318, 75], [344, 0]]),
       transform: wagonTransform,
-      items: [line([62, 12.5], [62, 28]), strokeItem("vv-ink-2", 1.1)],
+      items: [
+        pathFromSvg(WAGON_DLO),
+        trim(stat(0), anim([[104, 0], [136, 100]])),
+        strokeItem("vv-ink-2", 1.15),
+      ],
     }),
-    ...[25, 72].map((cx, n) =>
+    layer({
+      name: "seams", cl: "vv-ink-2", op: 360,
+      opacity: anim([[132, 0], [146, 50], [318, 50], [344, 0]]),
+      transform: wagonTransform,
+      items: [...WAGON_SEAMS.map(pathFromSvg), strokeItem("vv-ink-2", 1.1)],
+    }),
+    ...[20, 75].map((cx, n) =>
       layer({
         name: `wheel-${n}`, cl: "vv-ink-2", op: 360,
         opacity: fadeOut(100),
@@ -311,7 +325,12 @@ const empty = comp({
             [138 + n * 8, [100, 100, 100]],
           ]),
         },
-        items: [ellipse(0, 0, 26.4), ellipse(0, 0, 4), strokeItem("vv-ink-2", 1.6 * 2.4)],
+        items: [
+          ellipse(0, 0, 26.4),
+          ellipse(0, 0, 15.3),
+          ellipse(0, 0, 3),
+          strokeItem("vv-ink-2", 1.6 * 2.4),
+        ],
       }),
     ),
     layer({
@@ -333,21 +352,27 @@ const empty = comp({
 // mirror components/ui/Silhouette.tsx (canonical source — keep in sync).
 const PROFILES = {
   sedan: {
-    body: "M3,29 L3,25.5 Q3,23.5 6,23 L15,21.5 L25,14.5 Q26.5,13.5 29,13.5 L54,13.5 Q57,13.5 59.5,15 L67,21 L85,23.5 Q93,24.5 93,26.5 L93,29 Z",
-    detail: "M30,14 L28,21.5",
-    wheels: [25, 73],
+    body: "M5.5,33.5 L4,31 Q3,30 3,27.5 L3,25 Q3,22.6 6.5,22.2 L10.5,21.8 Q20,20.4 32.5,19.5 L34.5,19.3 L47,10.4 Q50,9.7 53,9.6 L66,9.6 Q70.5,9.8 73.5,11.2 L82,16.4 Q86.5,17 90.5,17.6 Q93,18 93,20 L93,27.5 Q93,31.5 90.5,33.5 L84.3,33.5 Q83.8,25.2 75.5,25.2 Q67.2,25.2 66.7,33.5 L29.3,33.5 Q28.8,25.2 20.5,25.2 Q12.2,25.2 11.7,33.5 Z",
+    dlo: "M36.2,18.9 L47.6,10.9 Q50.2,10.5 53,10.4 L65.5,10.4 Q69.5,10.6 72.3,11.9 L80,16.2 L36.2,18.9 Z",
+    seams: ["M58.5,10.4 L60,33", "M36.4,19.3 L37.4,33", "M4,22.9 L10,22.3", "M89,18.4 L92.6,19.2"],
+    wheels: [20.5, 75.5],
+    wheelR: 5.5,
     span: [3, 93],
   },
   truck: {
-    body: "M3,29 L3,24.5 Q3,22.5 6,22 L14,20.5 L22,12 Q23.5,11 26,11 L44,11 Q47,11 47,13.5 L47,19.5 L88,19.5 Q90,19.5 90,21.5 L90,29 Z",
-    detail: "M87.5,20 L87.5,28.5",
-    wheels: [24, 76],
-    span: [3, 90],
+    body: "M5,32 L4,30 Q3.5,29 3.5,27 L3.5,19.5 Q3.5,17.4 6.5,17.2 L24.5,16.3 Q26.5,16.1 27.5,15.4 L33.5,7.3 Q34.8,6 37.5,6 L59.5,6 Q62.2,6.2 62.7,8.5 L63.2,12.5 L91,12.5 Q93,12.7 93,14.7 L93,27 Q93,30.5 91,32 L84.5,32 Q84,25 76,25 Q68,25 67.5,32 L26.5,32 Q26,24.6 18,24.6 Q10,24.6 9.5,32 Z",
+    dlo: "M29.8,15.2 L34.3,7.7 Q35.3,7 37.5,7 L58.7,7 Q61.2,7.2 61.6,9 L62,14.6 L44,14.9 L29.8,15.2 Z",
+    seams: ["M45.5,7 L46,15 L46.5,31.6", "M63.5,12.7 L63.8,31.8", "M91.5,13 L91.8,31.5", "M64,14.5 L92,14.5"],
+    wheels: [18, 75.5],
+    wheelR: 6.2,
+    span: [3.5, 93],
   },
   minivan: {
-    body: "M3,29 L3,23 Q3,19.5 7,18.5 L12,17 L20,10 Q21.5,8.5 24,8.5 L78,8.5 Q84,8.5 87,11.5 L91,19 Q93,21 93,25 L93,29 Z",
-    detail: "M57,9 L57,28",
-    wheels: [24, 74],
+    body: "M5.5,33.5 L4,31.5 Q3,30.5 3,28 L3,25.5 Q3,23.2 6.5,22.9 L9,22.7 Q14,22.1 19.5,21.4 L22.5,20.9 L37.5,7.6 Q39.5,6.1 42.5,6 L83,6 Q86.5,6.1 88.5,7.6 L91,10.5 Q92.8,12.7 93,17 L93,27.5 Q93,31.5 90.5,33.5 L83.8,33.5 Q83.3,25.2 75,25.2 Q66.7,25.2 66.2,33.5 L29.3,33.5 Q28.8,25.2 20.5,25.2 Q12.2,25.2 11.7,33.5 Z",
+    dlo: "M25.5,19.6 L38.5,8.2 Q40.3,7 42.8,7 L82.5,7 Q85.5,7.1 87,8.6 L89.5,11.5 Q90.8,13.2 91,16 L91.2,18 L64,18.9 L25.5,19.6 Z",
+    seams: ["M47.5,7 L48.2,19.2", "M67.5,7 L68.2,18.8", "M48.2,19.4 L48.8,33", "M68.2,19 L68.8,33", "M69.5,23.8 L88.5,23.3"],
+    wheels: [20.5, 75],
+    wheelR: 5.5,
     span: [3, 93],
   },
 };
@@ -375,11 +400,22 @@ function heroSegment(profile, t) {
         strokeItem("vv-ink-2", 1.55),
       ],
     }),
+    // the glass band inks itself once the body is mostly there
     layer({
-      name: `seam-${t}`, cl: "vv-ink-2", op: t + seg,
-      opacity: anim([[t + 64, 0], [t + 78, 55], [t + seg - 22, 55], [t + seg - 4, 0]]),
+      name: `dlo-${t}`, cl: "vv-ink-2", op: t + seg,
+      opacity: anim([[t + 46, 0], [t + 52, 75], [t + seg - 22, 75], [t + seg - 4, 0]]),
       transform: carTransform,
-      items: [line(...profile.detail.match(/-?[\d.]+/g).reduce((a, n, i) => (i % 2 ? a[a.length - 1].push(+n) : a.push([+n]), a), [])), strokeItem("vv-ink-2", 1.1)],
+      items: [
+        pathFromSvg(profile.dlo),
+        trim(stat(0), anim([[t + 50, 0], [t + 82, 100]])),
+        strokeItem("vv-ink-2", 1.12),
+      ],
+    }),
+    layer({
+      name: `seams-${t}`, cl: "vv-ink-2", op: t + seg,
+      opacity: anim([[t + 74, 0], [t + 88, 50], [t + seg - 22, 50], [t + seg - 4, 0]]),
+      transform: carTransform,
+      items: [...profile.seams.map(pathFromSvg), strokeItem("vv-ink-2", 1.05)],
     }),
     ...profile.wheels.map((cx, n) =>
       layer({
@@ -394,8 +430,9 @@ function heroSegment(profile, t) {
           ]),
         },
         items: [
-          ellipse(0, 0, 11 * HERO.scale),
-          ellipse(0, 0, 2.9 * HERO.scale),
+          ellipse(0, 0, profile.wheelR * 2 * HERO.scale),
+          ellipse(0, 0, profile.wheelR * 1.16 * HERO.scale),
+          ellipse(0, 0, 2.2 * HERO.scale),
           strokeItem("vv-ink-2", 1.55 * HERO.scale),
         ],
       }),
