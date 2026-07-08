@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/app";
 import { controversyScore, hotScore, referenceClock } from "@/utils/rank";
 import type { Concept, ConceptTag } from "@/types";
+import { BodyStyleStrip } from "./BodyStyleStrip";
 import { ConceptCard } from "./ConceptCard";
 import { LensControls } from "./LensControls";
 import { LensDrawer } from "./LensDrawer";
+import { SortMenu, type SortOption } from "./SortMenu";
 import { EmptyState } from "@/components/animations";
-import { SlidersIcon, ChevronDownIcon, CloseIcon } from "@/components/ui/Icon";
+import { CloseIcon, SlidersIcon } from "@/components/ui/Icon";
 
 type SortKey =
   | "trending"
@@ -20,14 +21,22 @@ type SortKey =
   | "controversial"
   | "discussed";
 
-const SORTS: { key: SortKey; label: string }[] = [
-  { key: "trending", label: "Trending" },
-  { key: "newest", label: "Newest" },
-  { key: "oldest", label: "Oldest" },
-  { key: "popular", label: "Most popular" },
-  { key: "unpopular", label: "Least popular" },
-  { key: "controversial", label: "Most controversial" },
-  { key: "discussed", label: "Most discussed" },
+const SORTS: SortOption<SortKey>[] = [
+  { key: "trending", label: "Trending", description: "Fresh support first" },
+  { key: "newest", label: "Newest", description: "Latest filings" },
+  { key: "oldest", label: "Oldest", description: "The register, front to back" },
+  { key: "popular", label: "Most popular", description: "Highest score" },
+  { key: "unpopular", label: "Least popular", description: "Lowest score" },
+  {
+    key: "controversial",
+    label: "Most controversial",
+    description: "Big, split arguments",
+  },
+  {
+    key: "discussed",
+    label: "Most discussed",
+    description: "Most notes filed",
+  },
 ];
 
 /**
@@ -49,15 +58,20 @@ export function FeedView({
   /** validated ?body= deep link (Explore's shelves land here) */
   initialBody?: string | null;
 }) {
-  const router = useRouter();
   const [active, setActive] = useState<ConceptTag[]>([]);
   const [bodyFilter, setBodyFilter] = useState<string | null>(initialBody);
   const [sort, setSort] = useState<SortKey>("trending");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const clearBody = () => {
-    setBodyFilter(null);
-    router.replace(ROUTES.home, { scroll: false }); // drop ?body= from the URL
+  // keep ?body= shareable without paying a server round-trip per tap:
+  // shallow history update — client state is the source of truth here
+  const selectBody = (style: string | null) => {
+    setBodyFilter(style);
+    window.history.replaceState(
+      null,
+      "",
+      style ? `${ROUTES.home}?body=${encodeURIComponent(style)}` : ROUTES.home,
+    );
   };
 
   // The drawer trigger hides at lg (the rail takes over) — close on crossing
@@ -80,6 +94,15 @@ export function FeedView({
     const m: Partial<Record<ConceptTag, number>> = {};
     for (const c of concepts) for (const t of c.tags) m[t] = (m[t] ?? 0) + 1;
     return m;
+  }, [concepts]);
+
+  // the shelf strip: every body style on the board with its live count
+  const shelves = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const c of concepts) m.set(c.bodyStyle, (m.get(c.bodyStyle) ?? 0) + 1);
+    return [...m.entries()]
+      .map(([style, count]) => ({ style, count }))
+      .sort((a, b) => b.count - a.count || a.style.localeCompare(b.style));
   }, [concepts]);
 
   const visible = useMemo(() => {
@@ -128,9 +151,24 @@ export function FeedView({
         </div>
       </aside>
 
-      <div>
-        {/* Toolbar: count · (lenses on small screens) · sort */}
-        <div className="mb-6 flex items-center gap-3 border-b border-line pb-3">
+      {/* min-w-0: the shelf strip inside is a scroll container, and a grid
+          item's default min-width:auto would let it stretch the track instead
+          of scrolling */}
+      <div className="min-w-0">
+        {/* the shelf strip — body styles as drawn, tappable chips. Replaces
+            the old lone "?body= chip": the filter state is always visible,
+            not just when set, and Explore's deep links land on it selected */}
+        <div className="mb-5">
+          <BodyStyleStrip
+            shelves={shelves}
+            active={bodyFilter}
+            onSelect={selectBody}
+          />
+        </div>
+
+        {/* Toolbar: count · (lenses on small screens) · sort. Wraps rather
+            than overflowing on narrow phones */}
+        <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line pb-3">
           <p className="dateline">
             {visible.length} {visible.length === 1 ? "concept" : "concepts"}
             {active.length || bodyFilter ? " · narrowed" : ""}
@@ -153,42 +191,9 @@ export function FeedView({
               ) : null}
             </button>
 
-            <label className="relative inline-flex items-center">
-              <span className="sr-only">Sort concepts</span>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortKey)}
-                className="btn btn-sm min-h-9 cursor-pointer appearance-none border border-control bg-card pr-7 pl-2.5 text-ink-2 hover:bg-well"
-              >
-                {SORTS.map((s) => (
-                  <option key={s.key} value={s.key}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDownIcon
-                size={13}
-                className="pointer-events-none absolute right-2 text-ink-3"
-              />
-            </label>
+            <SortMenu value={sort} options={SORTS} onChange={setSort} />
           </div>
         </div>
-
-        {/* The body-style deep link (from Explore) shows at every size —
-            it's URL state, not rail state, so it must never hide */}
-        {bodyFilter ? (
-          <div className="mb-5 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={clearBody}
-              aria-label={`Stop filtering by ${bodyFilter}`}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-btn border border-accent bg-accent/10 px-2.5 text-xs text-accent transition-colors hover:bg-accent/20"
-            >
-              {bodyFilter} shelf
-              <CloseIcon size={11} />
-            </button>
-          </div>
-        ) : null}
 
         {/* Active lenses echoed as dismissible chips where the rail is hidden */}
         {active.length > 0 ? (
@@ -218,7 +223,7 @@ export function FeedView({
                 type="button"
                 onClick={() => {
                   setActive([]);
-                  if (bodyFilter) clearBody();
+                  if (bodyFilter) selectBody(null);
                 }}
                 className="btn btn-secondary btn-sm min-h-10"
               >
