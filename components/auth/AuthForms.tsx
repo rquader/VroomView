@@ -10,7 +10,7 @@ import {
   updatePasswordAction,
   type AuthState,
 } from "@/lib/actions/auth";
-import { EmailField, PasswordField } from "./fields";
+import { EmailField, PasswordField, UsernameField } from "./fields";
 import { SuccessAnimation } from "@/components/animations";
 
 /**
@@ -89,10 +89,8 @@ export function SignupForm({ next }: { next: string }) {
     <form action={action} className="flex flex-col gap-5">
       <input type="hidden" name="next" value={next} />
       <EmailField autoFocus />
-      <PasswordField
-        autoComplete="new-password"
-        hint="At least 8 characters. Your handle comes from your email — change it later."
-      />
+      <UsernameField />
+      <PasswordField autoComplete="new-password" hint="At least 8 characters." />
       <ErrorNote state={state} />
       <SubmitButton pending={pending}>Create account</SubmitButton>
     </form>

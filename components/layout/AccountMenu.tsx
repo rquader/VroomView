@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ROUTES } from "@/constants/app";
 import { signOutAction } from "@/lib/actions/auth";
 
 /**
@@ -70,6 +72,14 @@ export function AccountMenu({
               <p className="dateline text-[10px] text-ink-2 normal-case">
                 @{username}
               </p>
+            </div>
+            <div className="border-b border-line py-1.5">
+              <Link
+                href={ROUTES.account}
+                className="flex min-h-10 items-center px-4 text-sm text-ink-2 transition-colors hover:bg-well hover:text-ink"
+              >
+                Account settings
+              </Link>
             </div>
             <form action={signOutAction} className="flex flex-col py-1.5">
               <button

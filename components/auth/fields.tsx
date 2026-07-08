@@ -31,6 +31,40 @@ export function EmailField({ autoFocus = false }: { autoFocus?: boolean }) {
   );
 }
 
+/** Optional handle picker for signup. Blank is a real choice — the server
+ *  drafts one from the email — so this stays required-free. */
+export function UsernameField() {
+  const id = useId();
+  const hintId = useId();
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="overline">
+        Handle{" "}
+        <span className="normal-case tracking-normal text-ink-3">
+          · optional
+        </span>
+      </label>
+      <input
+        id={id}
+        name="username"
+        type="text"
+        autoComplete="username"
+        autoCapitalize="none"
+        spellCheck={false}
+        maxLength={24}
+        pattern="[a-zA-Z0-9_]{3,24}"
+        placeholder="e.g. wagon_partisan"
+        aria-describedby={hintId}
+        className="field"
+      />
+      <span id={hintId} className="text-xs text-ink-3">
+        3–24 characters: a–z, 0–9, underscore. Leave blank and we&apos;ll
+        draft one from your email — you can change it later either way.
+      </span>
+    </div>
+  );
+}
+
 /** Password input with a show/hide toggle — visibility beats a confirm-field
  *  for typo safety without doubling the friction. */
 export function PasswordField({

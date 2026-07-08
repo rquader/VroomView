@@ -8,8 +8,8 @@ export const metadata: Metadata = { title: "Set a new password" };
 
 /**
  * Where the recovery-email link lands (after /auth/callback signs the user
- * in). Requires that session — walking here logged-out just bounces to the
- * request form.
+ * in) — and where the account page sends routine password changes. Requires
+ * a session either way; walking here logged-out bounces to the request form.
  */
 export default async function UpdatePasswordPage() {
   const viewer = await getViewer();
@@ -17,9 +17,9 @@ export default async function UpdatePasswordPage() {
 
   return (
     <AuthShell
-      kicker="Reset"
+      kicker="Password"
       title="Set a new password"
-      lede={`Signed in as @${viewer.username} via the recovery link — choose the replacement.`}
+      lede={`Signed in as @${viewer.username} — the new password takes over everywhere, and every other device is signed out.`}
     >
       <UpdatePasswordForm />
     </AuthShell>

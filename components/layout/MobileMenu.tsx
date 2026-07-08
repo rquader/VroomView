@@ -110,21 +110,29 @@ export function MobileMenu({ username }: { username: string | null }) {
 
               <p className="overline mt-5 mb-2">Account</p>
               {username ? (
-                <div className="flex items-center justify-between gap-3 pb-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
                   <span className="text-sm text-ink-2">
                     Signed in as{" "}
                     <span className="font-medium text-ink">@{username}</span>
                   </span>
-                  <form action={signOutAction}>
-                    <button
-                      type="submit"
-                      name="scope"
-                      value="local"
-                      className="btn btn-secondary btn-sm min-h-10"
+                  <span className="flex items-center gap-2">
+                    <Link
+                      href={ROUTES.account}
+                      className="btn btn-ghost btn-sm min-h-10"
                     >
-                      Sign out
-                    </button>
-                  </form>
+                      Account settings
+                    </Link>
+                    <form action={signOutAction}>
+                      <button
+                        type="submit"
+                        name="scope"
+                        value="local"
+                        className="btn btn-secondary btn-sm min-h-10"
+                      >
+                        Sign out
+                      </button>
+                    </form>
+                  </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-3 pb-2">

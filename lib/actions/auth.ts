@@ -43,6 +43,9 @@ export async function signUpAction(
 ): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const username = String(formData.get("username") ?? "")
+    .trim()
+    .toLowerCase();
 
   if (!/^\S+@\S+\.\S+$/.test(email)) {
     return { status: "error", message: "That email doesn't look right." };
@@ -55,6 +58,31 @@ export async function signUpAction(
   }
 
   const supabase = await createClient();
+
+  // A chosen handle is validated HERE, before the confirmation email is
+  // burned: format first, then availability (profiles is publicly readable,
+  // so this leaks nothing new). The DB trigger re-checks both — a signup
+  // race degrades to a suffixed handle, never a failed registration.
+  if (username.length > 0) {
+    if (!/^[a-z0-9_]{3,24}$/.test(username)) {
+      return {
+        status: "error",
+        message: "Handles are 3–24 characters of a–z, 0–9, or underscore.",
+      };
+    }
+    const { data: taken } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("username", username)
+      .maybeSingle();
+    if (taken) {
+      return {
+        status: "error",
+        message: "That handle is taken — pick another (or leave it blank).",
+      };
+    }
+  }
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -63,6 +91,8 @@ export async function signUpAction(
       emailRedirectTo: `${await origin()}/auth/callback?next=${encodeURIComponent(
         safeNext(formData.get("next")),
       )}`,
+      // the handle rides the signup metadata; handle_new_user honors it
+      ...(username.length > 0 ? { data: { username } } : {}),
     },
   });
 
@@ -149,8 +179,8 @@ export async function updatePasswordAction(
     };
   }
 
-  // Works because the recovery link signed the user in (via /auth/callback)
-  // before they reached the form.
+  // Works because the caller is signed in — either normally (the account
+  // page links here) or via the recovery link (/auth/callback).
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password });
   if (error) {
@@ -159,6 +189,10 @@ export async function updatePasswordAction(
       message: "Couldn't set that password — request a new reset link.",
     };
   }
+
+  // A new password should mean a clean slate: revoke every OTHER session so
+  // anyone holding the old credentials is signed out everywhere but here.
+  await supabase.auth.signOut({ scope: "others" });
 
   redirect("/?password-updated");
 }
