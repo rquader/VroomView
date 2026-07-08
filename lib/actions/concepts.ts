@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { ALL_TAGS } from "@/constants/lenses";
+import { DESIGN_LIMITS, parseDesign } from "@/lib/design";
 import type { SpecMetric } from "@/types";
 
 /**
@@ -23,6 +24,8 @@ export type CreateConceptInput = {
   bodyStyle: string;
   /** proposed manufacturer; empty string = deliberate "any maker" (stored NULL) */
   make: string;
+  /** studio design document, if the author drafted one (validated here) */
+  design?: unknown;
   specs: SpecMetric[];
   tags: string[];
 };
@@ -74,6 +77,18 @@ export async function createConcept(
   if (tags.length === 0)
     return { ok: false, error: "Pick at least one lens so reviewers know where to look." };
 
+  // the studio design: strictly parsed (grammar, bounds, known skeletons) —
+  // anything malformed is refused rather than silently stripped, and a
+  // parsed-clean copy is what gets stored, never the raw client object
+  let design = null;
+  if (input.design !== undefined && input.design !== null) {
+    design = parseDesign(input.design);
+    if (!design)
+      return { ok: false, error: "That design sheet didn't validate — redraw and try again." };
+    if (JSON.stringify(design).length > DESIGN_LIMITS.maxJsonChars)
+      return { ok: false, error: "That design sheet is too heavy — fewer strokes, same idea." };
+  }
+
   const { data, error } = await supabase
     .from("concepts")
     .insert({
@@ -84,6 +99,7 @@ export async function createConcept(
       feasibility: feasibility.length > 0 ? feasibility : null,
       body_style: bodyStyle,
       make: make.length > 0 ? make : null,
+      design,
       specs,
       tags,
     })

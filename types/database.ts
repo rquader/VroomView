@@ -145,6 +145,7 @@ export type Database = {
           author_id: string
           body_style: string
           created_at: string
+          design: Json | null
           details: string | null
           feasibility: string | null
           id: string
@@ -159,6 +160,7 @@ export type Database = {
           author_id: string
           body_style: string
           created_at?: string
+          design?: Json | null
           details?: string | null
           feasibility?: string | null
           id?: string
@@ -173,6 +175,7 @@ export type Database = {
           author_id?: string
           body_style?: string
           created_at?: string
+          design?: Json | null
           details?: string | null
           feasibility?: string | null
           id?: string

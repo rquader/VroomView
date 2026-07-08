@@ -3,6 +3,7 @@ import { ViewTransition } from "react";
 import type { Concept } from "@/types";
 import { ROUTES } from "@/constants/app";
 import { timeAgo } from "@/utils/time";
+import { DesignPlate } from "./DesignPlate";
 import { SpecList } from "./SpecList";
 import { VoteControl } from "./VoteControl";
 import { Silhouette } from "@/components/ui/Silhouette";
@@ -26,11 +27,19 @@ export function ConceptCard({
 }) {
   return (
     <article className="sheet sheet-hover group relative overflow-hidden p-5 sm:p-6">
-      <Silhouette
-        bodyStyle={concept.bodyStyle}
-        aria-hidden
-        className="pointer-events-none absolute -right-3 top-5 hidden w-44 translate-x-3 text-ink opacity-0 transition-[opacity,transform] duration-300 ease-[var(--ease-out-soft)] group-hover:translate-x-0 group-hover:opacity-10 lg:block"
-      />
+      {/* hover ghost: the author's own design when they drafted one */}
+      {concept.design ? (
+        <DesignPlate
+          design={concept.design}
+          className="pointer-events-none absolute -right-3 top-5 hidden w-44 translate-x-3 text-ink opacity-0 transition-[opacity,transform] duration-300 ease-[var(--ease-out-soft)] group-hover:translate-x-0 group-hover:opacity-10 lg:block"
+        />
+      ) : (
+        <Silhouette
+          bodyStyle={concept.bodyStyle}
+          aria-hidden
+          className="pointer-events-none absolute -right-3 top-5 hidden w-44 translate-x-3 text-ink opacity-0 transition-[opacity,transform] duration-300 ease-[var(--ease-out-soft)] group-hover:translate-x-0 group-hover:opacity-10 lg:block"
+        />
+      )}
 
       <div className="flex items-center gap-2.5 text-[11px]">
         {typeof index === "number" ? (

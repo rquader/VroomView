@@ -34,6 +34,24 @@ export type SpecMetric = { label: string; value: string };
 export type VoteDirection = -1 | 0 | 1;
 
 /**
+ * The Design Studio's output — a versioned design document (concepts.design
+ * JSONB). Parsed STRICTLY on write and read by lib/design.ts; kind:"studio"
+ * is the only kind today, "image" is reserved for the future photo pipeline.
+ */
+export type ConceptDesign = {
+  v: 1;
+  kind: "studio";
+  /** skeleton id from constants/profiles.ts, or null for a blank plate */
+  base: string | null;
+  /** tire/rim radius multiplier */
+  wheelScale: number;
+  /** canvas units the body rides above the axles */
+  rideHeight: number;
+  /** author pen strokes, M/L/Q path data on the 96×40 canvas */
+  strokes: { d: string }[];
+};
+
+/**
  * Comment/concept filter tags (the 11 discussion lenses). Each lens family
  * carries an "Other" catch-all; the family name is baked into the stored
  * string so the flat tags stay unambiguous — the UI shortens them to
@@ -64,6 +82,8 @@ export type Concept = {
   bodyStyle: string;
   /** proposed manufacturer; null is a deliberate "any maker" */
   make: string | null;
+  /** the author's studio design, already strictly parsed (null = none) */
+  design: ConceptDesign | null;
   specs: SpecMetric[];
   tags: ConceptTag[];
   /** directional votes: score = upvotes − downvotes, the number the UI leads with */

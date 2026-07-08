@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { parseDesign } from "@/lib/design";
 import type { Concept, ConceptTag, SpecMetric, VoteDirection } from "@/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -21,7 +22,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // PostgREST needs the exact FK named — `profiles!concepts_author_id_fkey` —
 // or it refuses the embed as ambiguous.
 const CONCEPT_SELECT = `id, title, summary, details, feasibility, body_style, make,
-  specs, tags, created_at,
+  design, specs, tags, created_at,
   author:profiles!concepts_author_id_fkey(id, username, display_name),
   up:concept_votes(count), down:concept_votes(count), comments(count)` as const;
 
@@ -42,6 +43,7 @@ type ConceptRow = {
   feasibility: string | null;
   body_style: string;
   make: string | null;
+  design: unknown;
   specs: unknown;
   tags: string[];
   created_at: string;
@@ -83,6 +85,8 @@ function mapConcept(
     },
     bodyStyle: row.body_style,
     make: row.make,
+    // strict re-parse on read: JSONB is user-authored, trust nothing
+    design: parseDesign(row.design),
     specs: parseSpecs(row.specs),
     tags: row.tags as ConceptTag[],
     upvotes,

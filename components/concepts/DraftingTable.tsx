@@ -9,8 +9,10 @@ import {
   SPEC_PRESETS,
   specPlaceholder,
 } from "@/constants/specs";
-import type { ConceptTag, SpecMetric } from "@/types";
+import type { ConceptDesign, ConceptTag, SpecMetric } from "@/types";
 import { useDialogFocus } from "@/hooks/useDialogFocus";
+import { DesignPlate } from "./DesignPlate";
+import { DesignStudio } from "./DesignStudio";
 import { SpecList } from "./SpecList";
 import { TagFilterBar } from "./TagFilterBar";
 import { Silhouette } from "@/components/ui/Silhouette";
@@ -52,6 +54,7 @@ export function DraftingTable({
   const [makeMode, setMakeMode] = useState<"any" | "specific">("any");
   const [make, setMake] = useState("");
   const [specs, setSpecs] = useState<SpecMetric[]>(DEFAULT_SPECS);
+  const [design, setDesign] = useState<ConceptDesign | null>(null);
   const [tags, setTags] = useState<ConceptTag[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -126,6 +129,7 @@ export function DraftingTable({
         feasibility,
         bodyStyle,
         make: chosenMake,
+        design,
         specs,
         tags,
       });
@@ -170,7 +174,15 @@ export function DraftingTable({
           )}
         </p>
 
-        {bodyStyle.trim() ? (
+        {design ? (
+          /* the author's own design outranks the generic body-style plate */
+          <div className="mt-4 rounded-[8px] border border-line bg-well/60 px-4 pt-3 pb-2">
+            <DesignPlate
+              design={design}
+              className="mx-auto h-auto w-full max-w-[190px] text-ink-2"
+            />
+          </div>
+        ) : bodyStyle.trim() ? (
           <div className="mt-4 rounded-[8px] border border-line bg-well/60 px-4 pt-3 pb-2">
             <Silhouette
               bodyStyle={bodyStyle}
@@ -431,6 +443,16 @@ export function DraftingTable({
               ) : null}
             </div>
           </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="overline mb-4 w-full border-b border-line pb-2.5">
+            The design bay{" "}
+            <span className="normal-case tracking-normal text-ink-3">
+              · optional
+            </span>
+          </legend>
+          <DesignStudio design={design} onChange={setDesign} />
         </fieldset>
 
         <fieldset>

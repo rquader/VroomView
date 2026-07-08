@@ -8,6 +8,8 @@ import { listCommentsByConcept } from "@/lib/services/comments.service";
 import { getViewer } from "@/lib/services/viewer.service";
 import { timeAgo } from "@/utils/time";
 import { sheetNo } from "@/utils/sheet";
+import { designProvenance } from "@/lib/design";
+import { DesignSheet } from "@/components/concepts/DesignSheet";
 import { SpecList } from "@/components/concepts/SpecList";
 import { VoteControl } from "@/components/concepts/VoteControl";
 import { CommentThread } from "@/components/concepts/CommentThread";
@@ -112,18 +114,40 @@ export default async function ConceptDetailPage({
                   </p>
                 </div>
                 <div className="lg:border-l lg:border-line lg:pl-10">
-                  <Silhouette
-                    bodyStyle={concept.bodyStyle}
-                    strokeWidth={1.25}
-                    className="mx-auto h-auto w-full max-w-[260px] text-ink lg:max-w-none"
-                  />
-                  <div
-                    className="dim-rule mx-auto mt-3 max-w-[260px] lg:max-w-none"
-                    aria-hidden
-                  />
-                  <p className="dateline mt-2 text-center text-ink-2">
-                    {concept.bodyStyle} · elevation
-                  </p>
+                  {concept.design ? (
+                    /* the author's own elevation drafts itself; the caption
+                       carries the studio provenance (AI-drafted skeletons
+                       are labelled — that's the deal) */
+                    <>
+                      <DesignSheet
+                        design={concept.design}
+                        className="mx-auto h-auto w-full max-w-[260px] text-ink lg:max-w-none"
+                      />
+                      <div
+                        className="dim-rule mx-auto mt-3 max-w-[260px] lg:max-w-none"
+                        aria-hidden
+                      />
+                      <p className="dateline mt-2 text-center text-ink-2">
+                        Author&apos;s elevation ·{" "}
+                        {designProvenance(concept.design)}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Silhouette
+                        bodyStyle={concept.bodyStyle}
+                        strokeWidth={1.25}
+                        className="mx-auto h-auto w-full max-w-[260px] text-ink lg:max-w-none"
+                      />
+                      <div
+                        className="dim-rule mx-auto mt-3 max-w-[260px] lg:max-w-none"
+                        aria-hidden
+                      />
+                      <p className="dateline mt-2 text-center text-ink-2">
+                        {concept.bodyStyle} · elevation
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
 
