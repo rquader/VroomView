@@ -37,27 +37,58 @@ function validTags(tags: string[]): tags is ConceptTag[] {
   );
 }
 
-export async function toggleConceptVote(
+/**
+ * Set the caller's standing vote on a concept: +1 (back it), -1 (vote it
+ * down), or 0 (withdraw). Not a toggle — the client states the desired end
+ * state, so a stale/raced call converges on what the user last asked for.
+ */
+export async function setConceptVote(
   conceptId: string,
-  currentlyVoted: boolean,
+  next: number,
 ): Promise<ActionResult> {
   const { supabase, user } = await getSessionUser();
   if (!user) return { ok: false, error: SIGN_IN_FIRST };
-
-  const result = currentlyVoted
-    ? await supabase
-        .from("concept_votes")
-        .delete()
-        .eq("concept_id", conceptId)
-        .eq("voter_id", user.id)
-    : await supabase
-        .from("concept_votes")
-        .insert({ concept_id: conceptId, voter_id: user.id });
-
-  // 23505 = unique violation: a double-tap raced us; the vote already exists,
-  // which is the state the user asked for — treat as success.
-  if (result.error && result.error.code !== "23505") {
+  // client input is untrusted — the DB CHECK would also refuse, but say it nicely
+  if (next !== -1 && next !== 0 && next !== 1) {
     return { ok: false, error: "That vote didn't stick — try again." };
+  }
+
+  if (next === 0) {
+    const { error } = await supabase
+      .from("concept_votes")
+      .delete()
+      .eq("concept_id", conceptId)
+      .eq("voter_id", user.id);
+    if (error) return { ok: false, error: "That vote didn't stick — try again." };
+  } else {
+    // update-first (direction changes are UPDATEs — the grant only allows
+    // touching `value`); insert when no row exists yet. 23505 = an insert
+    // race with ourselves — the row exists now, so update wins the argument.
+    const { data: updated, error: updateError } = await supabase
+      .from("concept_votes")
+      .update({ value: next })
+      .eq("concept_id", conceptId)
+      .eq("voter_id", user.id)
+      .select("concept_id");
+    if (updateError)
+      return { ok: false, error: "That vote didn't stick — try again." };
+
+    if (!updated || updated.length === 0) {
+      const { error: insertError } = await supabase
+        .from("concept_votes")
+        .insert({ concept_id: conceptId, voter_id: user.id, value: next });
+      if (insertError?.code === "23505") {
+        const { error: retryError } = await supabase
+          .from("concept_votes")
+          .update({ value: next })
+          .eq("concept_id", conceptId)
+          .eq("voter_id", user.id);
+        if (retryError)
+          return { ok: false, error: "That vote didn't stick — try again." };
+      } else if (insertError) {
+        return { ok: false, error: "That vote didn't stick — try again." };
+      }
+    }
   }
 
   revalidatePath("/");

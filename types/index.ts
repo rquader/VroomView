@@ -30,6 +30,9 @@ export type Author = {
 /** A single label/value row in a concept's "spec sheet". */
 export type SpecMetric = { label: string; value: string };
 
+/** A viewer's standing vote on a concept: backed, none, or voted down. */
+export type VoteDirection = -1 | 0 | 1;
+
 /** Comment/concept filter tags (the 8 discussion lenses). */
 export type ConceptTag =
   | "Mileage"
@@ -51,9 +54,12 @@ export type Concept = {
   bodyStyle: string;
   specs: SpecMetric[];
   tags: ConceptTag[];
-  votes: number;
+  /** directional votes: score = upvotes − downvotes, the number the UI leads with */
+  upvotes: number;
+  downvotes: number;
+  score: number;
   comments: number;
-  viewerHasVoted: boolean;
+  viewerVote: VoteDirection;
   isOwn: boolean;
   postedAt: string; // ISO (created_at)
 };

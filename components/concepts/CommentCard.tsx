@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import type { ConceptComment } from "@/types";
 import { timeAgo } from "@/utils/time";
 import { deleteComment } from "@/lib/actions/engagement";
-import { VoteControl } from "./VoteControl";
+import { CommentSupport } from "./VoteControl";
 import { CommentComposer } from "./CommentComposer";
 
 /**
@@ -107,12 +107,9 @@ export function CommentCard({
             ) : null}
             {pending ? null : (
               <div className="ml-auto">
-                <VoteControl
-                  target={{
-                    kind: "comment",
-                    commentId: comment.id,
-                    conceptId: comment.conceptId,
-                  }}
+                <CommentSupport
+                  commentId={comment.id}
+                  conceptId={comment.conceptId}
                   votes={comment.votes}
                   voted={comment.viewerHasVoted}
                   signedIn={signedIn}

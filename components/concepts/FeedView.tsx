@@ -79,7 +79,7 @@ export function FeedView({
       ? byLens.filter((c) => c.bodyStyle === bodyFilter)
       : byLens;
     const bySort: Record<SortKey, (a: Concept, b: Concept) => number> = {
-      support: (a, b) => b.votes - a.votes,
+      support: (a, b) => b.score - a.score,
       newest: (a, b) => b.postedAt.localeCompare(a.postedAt),
       discussed: (a, b) => b.comments - a.comments,
     };

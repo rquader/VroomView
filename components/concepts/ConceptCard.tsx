@@ -85,9 +85,9 @@ export function ConceptCard({
             <span className="font-mono tabular-nums">{concept.comments}</span>
           </Link>
           <VoteControl
-            target={{ kind: "concept", conceptId: concept.id }}
-            votes={concept.votes}
-            voted={concept.viewerHasVoted}
+            conceptId={concept.id}
+            score={concept.score}
+            viewerVote={concept.viewerVote}
             signedIn={signedIn}
           />
         </div>

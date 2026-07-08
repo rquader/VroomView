@@ -24,7 +24,11 @@ export function ConceptMeta({ concept }: { concept: Concept }) {
           ["Sheet", sheetNo(concept.id)],
           ["Filed by", `@${concept.author.username}`],
           ["Filed", filed],
-          ["Support", `${concept.votes} ${concept.votes === 1 ? "vote" : "votes"}`],
+          // the running balance of the argument, with its parts shown
+          [
+            "Score",
+            `${concept.score > 0 ? `+${concept.score}` : concept.score} (${concept.upvotes} up · ${concept.downvotes} down)`,
+          ],
         ].map(([label, value]) => (
           <div
             key={label}

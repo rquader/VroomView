@@ -31,9 +31,9 @@ export function RelatedConcepts({ concepts }: { concepts: Concept[] }) {
                   <span className="font-semibold uppercase tracking-[0.14em] text-accent">
                     {c.bodyStyle}
                   </span>
-                  {c.votes > 0 ? (
+                  {c.score !== 0 ? (
                     <span className="dateline text-[10px]">
-                      {c.votes} {c.votes === 1 ? "vote" : "votes"}
+                      {c.score > 0 ? `+${c.score}` : c.score}
                     </span>
                   ) : null}
                 </span>

@@ -19,7 +19,7 @@ export default async function ExplorePage() {
   const shelves = [...new Set(concepts.map((c) => c.bodyStyle))]
     .map((style) => {
       const inShelf = concepts.filter((c) => c.bodyStyle === style);
-      const leading = [...inShelf].sort((a, b) => b.votes - a.votes)[0];
+      const leading = [...inShelf].sort((a, b) => b.score - a.score)[0];
       return { style, count: inShelf.length, leading };
     })
     .sort((a, b) => b.count - a.count || a.style.localeCompare(b.style));
@@ -76,11 +76,11 @@ export default async function ExplorePage() {
                 className="mt-1 line-clamp-2 text-sm leading-snug text-ink-2 transition-colors hover:text-accent"
               >
                 {leading.title}
-                {/* only claim votes that exist — a column of zeros reads as a
-                    dead board, and silence is honest too */}
-                {leading.votes > 0 ? (
+                {/* only claim a score that exists — a column of zeros reads
+                    as a dead board, and silence is honest too */}
+                {leading.score !== 0 ? (
                   <span className="ml-2 font-mono text-xs text-ink-3">
-                    {leading.votes} {leading.votes === 1 ? "vote" : "votes"}
+                    {leading.score > 0 ? `+${leading.score}` : leading.score}
                   </span>
                 ) : null}
               </Link>

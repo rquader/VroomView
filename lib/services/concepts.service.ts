@@ -1,17 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Concept, ConceptTag, SpecMetric } from "@/types";
+import type { Concept, ConceptTag, SpecMetric, VoteDirection } from "@/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Concepts data access (server-side only — it imports the server client,
  * which reads request cookies, so pages using it render dynamically).
  *
  * HOW THE READ WORKS: one PostgREST request embeds everything the UI needs —
- * the author profile via the FK join and vote/comment COUNTS via the
- * aggregate embed (`concept_votes(count)` returns `[{ count }]` without
- * fetching rows). RLS runs inside that same query, so this code never
- * "adds" security — it inherits it. The viewer's own votes are a second
- * cheap indexed query, merged here so components receive complete domain
- * objects and never touch Supabase themselves.
+ * the author profile via the FK join and vote/comment COUNTS via aggregate
+ * embeds. Votes are DIRECTIONAL (value ±1), so the same votes table is
+ * embedded twice under aliases with independent filters (`up.value=eq.1`,
+ * `down.value=eq.-1`) — each returns `[{ count }]` without fetching rows.
+ * RLS runs inside that same query, so this code never "adds" security — it
+ * inherits it. The viewer's own votes are a second cheap indexed query,
+ * merged here so components receive complete domain objects and never touch
+ * Supabase themselves.
  */
 
 // profiles is reachable two ways (author FK, and through concept_votes), so
@@ -19,7 +22,16 @@ import type { Concept, ConceptTag, SpecMetric } from "@/types";
 // or it refuses the embed as ambiguous.
 const CONCEPT_SELECT = `id, title, summary, details, body_style, specs, tags,
   created_at, author:profiles!concepts_author_id_fkey(id, username, display_name),
-  concept_votes(count), comments(count)` as const;
+  up:concept_votes(count), down:concept_votes(count), comments(count)` as const;
+
+/** The select + the embed filters that make `up`/`down` mean what they say. */
+function conceptQuery(supabase: SupabaseClient) {
+  return supabase
+    .from("concepts")
+    .select(CONCEPT_SELECT)
+    .eq("up.value", 1)
+    .eq("down.value", -1);
+}
 
 type ConceptRow = {
   id: string;
@@ -31,7 +43,8 @@ type ConceptRow = {
   tags: string[];
   created_at: string;
   author: { id: string; username: string; display_name: string | null };
-  concept_votes: { count: number }[];
+  up: { count: number }[];
+  down: { count: number }[];
   comments: { count: number }[];
 };
 
@@ -50,8 +63,10 @@ function parseSpecs(raw: unknown): SpecMetric[] {
 function mapConcept(
   row: ConceptRow,
   viewerId: string | null,
-  votedIds: Set<string>,
+  viewerVotes: Map<string, VoteDirection>,
 ): Concept {
+  const upvotes = row.up[0]?.count ?? 0;
+  const downvotes = row.down[0]?.count ?? 0;
   return {
     id: row.id,
     title: row.title,
@@ -65,9 +80,11 @@ function mapConcept(
     bodyStyle: row.body_style,
     specs: parseSpecs(row.specs),
     tags: row.tags as ConceptTag[],
-    votes: row.concept_votes[0]?.count ?? 0,
+    upvotes,
+    downvotes,
+    score: upvotes - downvotes,
     comments: row.comments[0]?.count ?? 0,
-    viewerHasVoted: votedIds.has(row.id),
+    viewerVote: viewerVotes.get(row.id) ?? 0,
     isOwn: viewerId !== null && row.author.id === viewerId,
     postedAt: row.created_at,
   };
@@ -82,28 +99,29 @@ async function getViewerId(): Promise<string | null> {
   return user?.id ?? null;
 }
 
-/** Which of these concepts has the viewer voted for? (One indexed query.) */
+/** The viewer's standing vote (±1) on each of these concepts. (One indexed query.) */
 async function getViewerVotes(
   viewerId: string | null,
   conceptIds: string[],
-): Promise<Set<string>> {
-  if (!viewerId || conceptIds.length === 0) return new Set();
+): Promise<Map<string, VoteDirection>> {
+  if (!viewerId || conceptIds.length === 0) return new Map();
   const supabase = await createClient();
   const { data } = await supabase
     .from("concept_votes")
-    .select("concept_id")
+    .select("concept_id, value")
     .eq("voter_id", viewerId)
     .in("concept_id", conceptIds);
-  return new Set((data ?? []).map((v) => v.concept_id));
+  return new Map(
+    (data ?? []).map((v) => [v.concept_id, v.value as VoteDirection]),
+  );
 }
 
 /** The whole board, newest first. */
 export async function listConcepts(): Promise<Concept[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("concepts")
-    .select(CONCEPT_SELECT)
-    .order("created_at", { ascending: false });
+  const { data, error } = await conceptQuery(supabase).order("created_at", {
+    ascending: false,
+  });
   if (error) throw new Error(`listConcepts failed: ${error.message}`);
 
   const rows = (data ?? []) as unknown as ConceptRow[];
@@ -118,11 +136,7 @@ export async function listConcepts(): Promise<Concept[]> {
 /** One concept, or null if it doesn't exist. */
 export async function getConcept(id: string): Promise<Concept | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("concepts")
-    .select(CONCEPT_SELECT)
-    .eq("id", id)
-    .maybeSingle();
+  const { data, error } = await conceptQuery(supabase).eq("id", id).maybeSingle();
   if (error) throw new Error(`getConcept failed: ${error.message}`);
   if (!data) return null;
 
@@ -140,9 +154,7 @@ export async function getConcept(id: string): Promise<Concept | null> {
 export async function getRelated(concept: Concept, limit = 3): Promise<Concept[]> {
   if (concept.tags.length === 0) return [];
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("concepts")
-    .select(CONCEPT_SELECT)
+  const { data, error } = await conceptQuery(supabase)
     .neq("id", concept.id)
     .overlaps("tags", concept.tags)
     .limit(12);
@@ -159,7 +171,7 @@ export async function getRelated(concept: Concept, limit = 3): Promise<Concept[]
     .sort((a, b) => {
       const shared = (c: Concept) =>
         c.tags.filter((t) => concept.tags.includes(t)).length;
-      return shared(b) - shared(a) || b.votes - a.votes;
+      return shared(b) - shared(a) || b.score - a.score;
     })
     .slice(0, limit);
 }

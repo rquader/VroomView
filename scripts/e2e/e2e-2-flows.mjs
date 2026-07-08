@@ -45,21 +45,38 @@ check(
   "masthead shows the account menu",
 );
 
-// vote on the truck concept
+// back the truck concept (votes are directional now: up = back, down = red-pencil)
 await a.goto(TRUCK, { waitUntil: "networkidle" });
-const vote = a.getByRole("button", { name: /Support this|Remove your support/ }).first();
+const vote = a.getByRole("button", { name: /Back this concept|Remove your backing/ }).first();
 const before = parseInt(await vote.locator("span").first().innerText(), 10);
 await vote.click();
 await a.waitForTimeout(1500);
 const after = parseInt(await vote.locator("span").first().innerText(), 10);
-check(after === before + 1, `vote count ${before} → ${after} (optimistic + settled)`);
+check(after === before + 1, `score ${before} → ${after} (optimistic + settled)`);
 
 await a.reload({ waitUntil: "networkidle" });
 const votedState = await a
-  .getByRole("button", { name: "Remove your support" })
+  .getByRole("button", { name: "Remove your backing" })
   .first()
   .getAttribute("aria-pressed");
 check(votedState === "true", "vote persists across reload (server truth)");
+
+// switch the SAME standing vote to a downvote: net score swings by 2
+await a.getByRole("button", { name: "Vote this concept down" }).first().click();
+await a.waitForTimeout(1500);
+const swung = parseInt(
+  await a
+    .getByRole("button", { name: /Back this concept/ })
+    .first()
+    .locator("span")
+    .first()
+    .innerText(),
+  10,
+);
+check(swung === after - 2, `direction switch swings the score by 2 (${after} → ${swung})`);
+// and back to a backing vote for the rest of the flow
+await a.getByRole("button", { name: "Back this concept" }).first().click();
+await a.waitForTimeout(1500);
 
 // comment: compose with a lens tag
 await a.getByPlaceholder("Add your take on this proposal…").fill(NOTE);
@@ -118,7 +135,7 @@ check(
   "device B sees the note written on device A",
 );
 const bVoted = await b
-  .getByRole("button", { name: "Remove your support" })
+  .getByRole("button", { name: "Remove your backing" })
   .first()
   .getAttribute("aria-pressed");
 check(bVoted === "true", "device B sees the vote from device A (account state, not device state)");
@@ -148,7 +165,7 @@ check(
 );
 
 // un-vote to leave the seed data tidy, then sign out on A
-await a.getByRole("button", { name: "Remove your support" }).first().click();
+await a.getByRole("button", { name: "Remove your backing" }).first().click();
 await a.waitForTimeout(1200);
 await a.getByRole("button", { name: /Account: @/ }).click();
 await a.getByRole("button", { name: "Sign out", exact: true }).click();

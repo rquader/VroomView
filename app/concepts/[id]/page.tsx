@@ -136,9 +136,9 @@ export default async function ConceptDetailPage({
                 </div>
                 <VoteControl
                   variant="stamp"
-                  target={{ kind: "concept", conceptId: concept.id }}
-                  votes={concept.votes}
-                  voted={concept.viewerHasVoted}
+                  conceptId={concept.id}
+                  score={concept.score}
+                  viewerVote={concept.viewerVote}
                   signedIn={signedIn}
                   className="w-full sm:ml-auto sm:w-auto"
                 />
