@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/app";
+import { controversyScore, hotScore, referenceClock } from "@/utils/rank";
 import type { Concept, ConceptTag } from "@/types";
 import { ConceptCard } from "./ConceptCard";
 import { LensControls } from "./LensControls";
@@ -10,11 +11,22 @@ import { LensDrawer } from "./LensDrawer";
 import { EmptyState } from "@/components/animations";
 import { SlidersIcon, ChevronDownIcon, CloseIcon } from "@/components/ui/Icon";
 
-type SortKey = "support" | "newest" | "discussed";
+type SortKey =
+  | "trending"
+  | "newest"
+  | "oldest"
+  | "popular"
+  | "unpopular"
+  | "controversial"
+  | "discussed";
 
 const SORTS: { key: SortKey; label: string }[] = [
-  { key: "support", label: "Most support" },
+  { key: "trending", label: "Trending" },
   { key: "newest", label: "Newest" },
+  { key: "oldest", label: "Oldest" },
+  { key: "popular", label: "Most popular" },
+  { key: "unpopular", label: "Least popular" },
+  { key: "controversial", label: "Most controversial" },
   { key: "discussed", label: "Most discussed" },
 ];
 
@@ -40,7 +52,7 @@ export function FeedView({
   const router = useRouter();
   const [active, setActive] = useState<ConceptTag[]>([]);
   const [bodyFilter, setBodyFilter] = useState<string | null>(initialBody);
-  const [sort, setSort] = useState<SortKey>("support");
+  const [sort, setSort] = useState<SortKey>("trending");
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const clearBody = () => {
@@ -78,10 +90,19 @@ export function FeedView({
     const filtered = bodyFilter
       ? byLens.filter((c) => c.bodyStyle === bodyFilter)
       : byLens;
+    // ties fall through to recency so equal-primary orderings stay stable
+    const newest = (a: Concept, b: Concept) =>
+      b.postedAt.localeCompare(a.postedAt);
+    const ref = referenceClock(concepts);
     const bySort: Record<SortKey, (a: Concept, b: Concept) => number> = {
-      support: (a, b) => b.score - a.score,
-      newest: (a, b) => b.postedAt.localeCompare(a.postedAt),
-      discussed: (a, b) => b.comments - a.comments,
+      trending: (a, b) => hotScore(b, ref) - hotScore(a, ref) || newest(a, b),
+      newest,
+      oldest: (a, b) => -newest(a, b),
+      popular: (a, b) => b.score - a.score || newest(a, b),
+      unpopular: (a, b) => a.score - b.score || newest(a, b),
+      controversial: (a, b) =>
+        controversyScore(b) - controversyScore(a) || newest(a, b),
+      discussed: (a, b) => b.comments - a.comments || newest(a, b),
     };
     return [...filtered].sort(bySort[sort]);
   }, [concepts, active, bodyFilter, sort]);
