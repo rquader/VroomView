@@ -30,9 +30,9 @@ Keep state close to each feed or form. Do not add a state library, repository fr
 - [x] Final production build passed all 13 routes on Node 22.23.3 with Next.js 16.3.6. Targeted browser and local sketch-harness checks are recorded in docs/architecture.md.
 - [x] Coordinate-based sketch input serialization was checked in an isolated local harness; no proposal was published.
 - [ ] Authenticated live writes, cross-browser behavior, and manual screen-reader review remain untested. Do not claim full accessibility certification.
-- [ ] Refresh the staged VroomViewNotes copies after current branch/build/browser results are settled; do not write those notes directly from this workspace.
+- [x] Refresh VroomViewNotes with current architecture, UI, security, and verification evidence; commit and push from its existing repository.
 - [x] Independent security review of integrated changes; malformed submission guards and focused tests added.
-- [ ] Publish the verified application and notes branches with review links.
+- [x] Publish the verified application and notes branches with draft pull requests. Neither branch has been merged into main.
 
 ## Runtime and dependency notes
 
