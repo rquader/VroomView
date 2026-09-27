@@ -50,7 +50,25 @@ Do not test this flow by writing to production. A write integration test needs a
 - `lib/supabase/`: runtime-specific client creation.
 - `types/`: domain contracts and generated database types.
 
-The app should remain understandable without a backend migration. If a future Python or Java service becomes useful, adapt it behind the service/action boundary and keep the UI speaking the same domain types. Until then, Supabase remains the only persistence system; avoid speculative adapters.
+## Component and style ownership
+
+`DraftingTable` coordinates draft state and submission. Its four sections in `components/concepts/proposal/` receive state and callbacks through props: idea fields, vehicle fields, specification editing, and preview. This lets a contributor change one section without duplicating draft state or introducing a global store.
+
+The feed follows the same separation: `FeedView` handles controls, URL updates, and rendering; `lib/domain/feed.ts` handles the selection and ordering rules. Existing ranking math remains in `utils/rank.ts`. Database-to-domain checks for specifications, topics, and vote directions are shared in `lib/domain/concept-mapping.ts`.
+
+`app/globals.css` imports five style sheets: `styles/themes.css` for palettes, `base.css` for document defaults and focus, `components.css` for shared controls, `community.css` for gallery composition, and `motion.css` for animations and reduced-motion behavior. Change a semantic token at its definition and run the contrast check rather than copying color values into a component.
+
+## Extending the backend boundary
+
+The service/action convention predates the gallery refresh; the refactor strengthens its contracts and mapping. Services still contain Supabase queries, and actions still use Next.js Server Actions. There is no formal adapter interface or implemented Python/Java backend.
+
+If an external ranking or analysis service becomes useful, call it from an appropriate server-side service/action and map its response into the app's domain types. Keep transport details out of presentation components. The integration must still define authorization, response validation, timeouts and failure behavior, and integration tests. A write integration must also preserve the database's authorization and integrity rules. Until a concrete need appears, Supabase remains the persistence system.
+
+## Local test boundaries
+
+`npm run check` runs ESLint, TypeScript, the Node test suite, and theme contrast checks. Tests exercise pure domain rules and real action logic with framework/database dependencies replaced by test helpers; they do not contact a live database. `npm run format:check` verifies formatting, while `npm run build` verifies production compilation.
+
+The board and comment services each cap reads at 1,000 rows. A future pagination design must address selection, ranking, counts, and ordering across pages. Local unit checks do not validate deployed RLS, authenticated end-to-end writes, or external-service behavior. No CI workflow or database integration-test environment was added by the refresh.
 
 ## Board presentation and interactions
 

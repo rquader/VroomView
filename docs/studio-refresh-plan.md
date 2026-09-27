@@ -32,7 +32,7 @@ Keep state close to each feed or form. Do not add a state library, repository fr
 - [ ] Authenticated live writes, cross-browser behavior, and manual screen-reader review remain untested. Do not claim full accessibility certification.
 - [x] Refresh VroomViewNotes with current architecture, UI, security, and verification evidence; commit and push from its existing repository.
 - [x] Independent security review of integrated changes; malformed submission guards and focused tests added.
-- [x] Publish the verified application and notes branches with draft pull requests. Neither branch has been merged into main.
+- [x] Publish the verified application and notes branches for review. Both PRs were merged on 2026-09-27: application PR #1 (`04dd7d7`) and notes PR #1 (`391fc22`). Merge status does not establish production deployment success; deployment was not checked in this documentation follow-up.
 
 ## Runtime and dependency notes
 
