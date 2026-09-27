@@ -46,7 +46,11 @@ export function CommentComposer({
         onOptimistic({
           id: `optimistic-${Date.now()}`,
           conceptId,
-          author: { id: viewer.id, username: viewer.username, displayName: null },
+          author: {
+            id: viewer.id,
+            username: viewer.username,
+            displayName: null,
+          },
           body: body.trim(),
           tags,
           votes: 0,
@@ -74,14 +78,17 @@ export function CommentComposer({
 
   return (
     <div className={editing ? "" : "sheet p-4"}>
-      <label className="sr-only" htmlFor={`composer-${editing?.id ?? conceptId}`}>
-        {editing ? "Edit your note" : "Add your take on this proposal"}
+      <label
+        className="sr-only"
+        htmlFor={`composer-${editing?.id ?? conceptId}`}
+      >
+        {editing ? "Edit your comment" : "Add a comment"}
       </label>
       <textarea
         id={`composer-${editing?.id ?? conceptId}`}
         rows={editing ? 3 : 2}
         maxLength={2000}
-        placeholder="Add your take on this proposal…"
+        placeholder="Add a comment…"
         value={body}
         onChange={(e) => setBody(e.target.value)}
         disabled={pending}
@@ -89,7 +96,7 @@ export function CommentComposer({
       />
 
       <div className="mt-3 flex flex-col gap-2.5">
-        <p className="overline text-[10px]">Lenses this note speaks to</p>
+        <p className="ui-label text-[10px]">Topics (optional)</p>
         <TagFilterBar active={tags} onToggle={toggleTag} />
       </div>
 
@@ -120,7 +127,7 @@ export function CommentComposer({
             disabled={pending || body.trim().length === 0}
             className="btn btn-primary btn-sm min-h-9"
           >
-            {pending ? "Filing…" : editing ? "Save note" : "Post note"}
+            {pending ? "Posting…" : editing ? "Save changes" : "Post comment"}
           </button>
         </div>
       </div>

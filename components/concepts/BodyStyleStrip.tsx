@@ -1,7 +1,5 @@
 "use client";
 
-import { Silhouette } from "@/components/ui/Silhouette";
-
 /**
  * The body-style shelf as a filter you can SEE: one chip per style on the
  * board, each carrying its elevation drawing and live count. Horizontal
@@ -24,10 +22,10 @@ export function BodyStyleStrip({
   const total = shelves.reduce((n, s) => n + s.count, 0);
 
   const chip = (selected: boolean) =>
-    `flex min-h-11 shrink-0 snap-start items-center gap-2.5 rounded-btn border px-3 py-1.5 text-left transition-colors ${
+    `flex min-h-10 shrink-0 snap-start items-center gap-1.5 rounded-full px-3.5 py-2 text-left transition-colors ${
       selected
-        ? "border-accent bg-accent/10 text-accent"
-        : "border-control bg-card text-ink-2 hover:bg-well hover:text-ink"
+        ? "bg-accent text-accent-ink"
+        : "bg-card text-ink-2 hover:bg-well hover:text-ink"
     }`;
 
   return (
@@ -42,8 +40,8 @@ export function BodyStyleStrip({
         onClick={() => onSelect(null)}
         className={chip(active === null)}
       >
-        <span className="text-xs font-semibold">Every body</span>
-        <span className="font-mono text-[10px] text-ink-3">{total}</span>
+        <span className="text-[13px] font-medium">All styles</span>
+        <span className="text-xs opacity-80">{total}</span>
       </button>
       {shelves.map(({ style, count }) => {
         const selected = active === style;
@@ -56,14 +54,8 @@ export function BodyStyleStrip({
             onClick={() => onSelect(selected ? null : style)}
             className={chip(selected)}
           >
-            <Silhouette
-              bodyStyle={style}
-              className={`h-6 w-auto shrink-0 ${
-                selected ? "text-accent" : "text-ink-3"
-              }`}
-            />
-            <span className="text-xs font-semibold">{style}</span>
-            <span className="font-mono text-[10px] text-ink-3">{count}</span>
+            <span className="text-[13px] font-medium">{style}</span>
+            <span className="text-xs opacity-80">{count}</span>
           </button>
         );
       })}

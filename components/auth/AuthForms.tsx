@@ -31,7 +31,13 @@ function ErrorNote({ state }: { state: AuthState }) {
   );
 }
 
-function SubmitButton({ pending, children }: { pending: boolean; children: string }) {
+function SubmitButton({
+  pending,
+  children,
+}: {
+  pending: boolean;
+  children: string;
+}) {
   return (
     <button type="submit" disabled={pending} className="btn btn-primary w-full">
       {pending ? "Working…" : children}
@@ -70,12 +76,10 @@ export function SignupForm({ next }: { next: string }) {
       <div className="flex flex-col items-center gap-4 py-4 text-center">
         <SuccessAnimation />
         <div>
-          <h2 className="font-serif text-xl font-medium">
-            Confirmation filed
-          </h2>
+          <h2 className="font-serif text-xl font-medium">Confirmation filed</h2>
           <p className="mt-1.5 text-sm leading-relaxed text-ink-2">
-            We sent a link to <span className="font-medium">{state.email}</span>.
-            Open it to activate the account — check spam if it hides.
+            We sent a link to <span className="font-medium">{state.email}</span>
+            . Open it to activate the account — check spam if it hides.
           </p>
         </div>
         <Link href={ROUTES.login} className="btn btn-secondary btn-sm">
@@ -90,7 +94,10 @@ export function SignupForm({ next }: { next: string }) {
       <input type="hidden" name="next" value={next} />
       <EmailField autoFocus />
       <UsernameField />
-      <PasswordField autoComplete="new-password" hint="At least 8 characters." />
+      <PasswordField
+        autoComplete="new-password"
+        hint="At least 8 characters."
+      />
       <ErrorNote state={state} />
       <SubmitButton pending={pending}>Create account</SubmitButton>
     </form>

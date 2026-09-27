@@ -86,7 +86,11 @@ export function DesignStudio({
   };
 
   const penStart = (e: React.PointerEvent) => {
-    if (!penDown || !design || design.strokes.length >= DESIGN_LIMITS.maxStrokes)
+    if (
+      !penDown ||
+      !design ||
+      design.strokes.length >= DESIGN_LIMITS.maxStrokes
+    )
       return;
     const p = toCanvas(e);
     if (!p) return;
@@ -120,7 +124,7 @@ export function DesignStudio({
       {/* the plate: preview and (when the pen is up) drawing surface */}
       <div className="sheet overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line bg-well/60 px-4 py-2">
-          <span className="overline text-[10px] text-ink-2">Design bay</span>
+          <span className="ui-label text-[10px] text-ink-2">Design bay</span>
           <span className="dateline text-[10px] text-ink-2">
             {design ? designProvenance(design) : "empty plate"}
           </span>
@@ -177,7 +181,7 @@ export function DesignStudio({
 
       {/* 1 · the skeleton library */}
       <div>
-        <p className="overline mb-2 text-[10px]">Start from a skeleton</p>
+        <p className="ui-label mb-2 text-[10px]">Start from a skeleton</p>
         <div className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1.5 scrollbar-thin">
           <button
             type="button"
@@ -227,7 +231,7 @@ export function DesignStudio({
           {design.base !== null ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5">
-                <span className="overline flex items-baseline justify-between text-[10px]">
+                <span className="ui-label flex items-baseline justify-between text-[10px]">
                   Wheel size
                   <span className="font-mono normal-case tracking-normal text-ink-2">
                     {Math.round(design.wheelScale * 100)}%
@@ -244,7 +248,7 @@ export function DesignStudio({
                 />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className="overline flex items-baseline justify-between text-[10px]">
+                <span className="ui-label flex items-baseline justify-between text-[10px]">
                   Ride height
                   <span className="font-mono normal-case tracking-normal text-ink-2">
                     {design.rideHeight > 0 ? "+" : ""}

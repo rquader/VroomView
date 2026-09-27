@@ -9,7 +9,7 @@ import { CommentComposer } from "./CommentComposer";
 
 /**
  * A single note in a concept's discussion. Well-supported notes get an accent
- * left-edge and a "top note" mark so the thread is scannable by signal. Your
+ * left-edge and a "helpful comment" mark so the thread is scannable by signal. Your
  * own notes carry quiet edit/delete actions — editing swaps the body for the
  * composer in place, and "edited" is the server-derived timestamp truth.
  */
@@ -29,7 +29,7 @@ export function CommentCard({
   const top = comment.votes >= 5;
 
   const remove = () => {
-    if (!window.confirm("Delete this note? This can't be undone.")) return;
+    if (!window.confirm("Delete this comment? This can't be undone.")) return;
     setDeleteError(null);
     startTransition(async () => {
       const result = await deleteComment(comment.id, comment.conceptId);
@@ -50,7 +50,7 @@ export function CommentCard({
           @{comment.author.username}
         </span>
         {pending ? (
-          <span className="dateline text-accent">filing…</span>
+          <span className="dateline text-accent">posting…</span>
         ) : (
           <span className="dateline" suppressHydrationWarning>
             {timeAgo(comment.postedAt)}
@@ -59,7 +59,7 @@ export function CommentCard({
         )}
         {top ? (
           <span className="text-[10px] font-semibold uppercase tracking-wide text-accent">
-            · top note
+            · helpful comment
           </span>
         ) : null}
         {comment.isOwn && !editing && !pending ? (
@@ -93,7 +93,9 @@ export function CommentCard({
         </div>
       ) : (
         <>
-          <p className="mt-2 leading-relaxed">{comment.body}</p>
+          <p className="mt-3 whitespace-pre-wrap break-words leading-relaxed">
+            {comment.body}
+          </p>
           {deleteError ? (
             <p role="alert" className="mt-2 text-sm text-danger">
               {deleteError}
@@ -101,7 +103,7 @@ export function CommentCard({
           ) : null}
           <div className="mt-3 flex items-center gap-3">
             {comment.tags.length > 0 ? (
-              <span className="text-[11px] uppercase tracking-wide text-ink-3">
+              <span className="text-xs text-ink-3">
                 {comment.tags.join(" · ")}
               </span>
             ) : null}

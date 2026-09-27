@@ -2,7 +2,7 @@
 //
 //   node scripts/check-contrast.mjs
 //
-// Parses every `[data-theme="…"]` block in app/globals.css and verifies the
+// Parses every `[data-theme="…"]` block in styles/themes.css and verifies the
 // contrast contract documented there: text tokens (ink, ink-2, ink-3, accent,
 // rubric, danger) ≥ 4.5:1 on BOTH page and card (small-text AA), accent-ink
 // ≥ 4.5:1 on accent (primary button label), and --control ≥ 3:1 on page and
@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const css = readFileSync(
-  join(dirname(fileURLToPath(import.meta.url)), "../app/globals.css"),
+  join(dirname(fileURLToPath(import.meta.url)), "../styles/themes.css"),
   "utf8",
 );
 
@@ -36,9 +36,7 @@ const contrast = (a, b) => {
 
 // ── parse theme blocks ──────────────────────────────────────────────────
 const themes = {};
-for (const m of css.matchAll(
-  /\[data-theme="([\w-]+)"\]\s*\{([^}]+)\}/g,
-)) {
+for (const m of css.matchAll(/\[data-theme="([\w-]+)"\]\s*\{([^}]+)\}/g)) {
   const tokens = {};
   for (const t of m[2].matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{3,6})/g)) {
     tokens[t[1]] = t[2];

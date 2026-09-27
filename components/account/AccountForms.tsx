@@ -23,7 +23,7 @@ export function ChangeUsernameForm({ current }: { current: string }) {
   return (
     <form action={action} className="flex flex-col gap-3">
       <label className="flex flex-col gap-1.5">
-        <span className="overline">New handle</span>
+        <span className="ui-label">New handle</span>
         <input
           name="username"
           type="text"
@@ -82,7 +82,7 @@ export function DeleteAccountForm({ username }: { username: string }) {
       className="flex flex-col gap-3"
     >
       <label className="flex flex-col gap-1.5">
-        <span className="overline">
+        <span className="ui-label">
           Type <span className="normal-case">@{username}</span> to confirm
         </span>
         <input

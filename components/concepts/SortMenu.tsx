@@ -91,9 +91,9 @@ export function SortMenu<K extends string>({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         onClick={() => setOpen((v) => !v)}
-        className="btn btn-sm min-h-9 border border-control bg-card pr-2 pl-2.5 text-ink-2 hover:bg-well hover:text-ink"
+        className="btn btn-sm min-h-10 bg-card pr-3 pl-3.5 text-ink-2 hover:bg-well hover:text-ink"
       >
-        <span className="text-ink-3">Sort</span>
+        <span className="sr-only">Sort </span>
         <span className="font-medium text-ink">{current.label}</span>
         <ChevronDownIcon
           size={13}
@@ -146,7 +146,7 @@ export function SortMenu<K extends string>({
                     >
                       {option.label}
                     </span>
-                    <span className="mt-0.5 block text-xs text-ink-3">
+                    <span className="mt-0.5 block text-xs text-ink-2">
                       {option.description}
                     </span>
                   </span>

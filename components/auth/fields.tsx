@@ -14,7 +14,7 @@ export function EmailField({ autoFocus = false }: { autoFocus?: boolean }) {
   const id = useId();
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="overline">
+      <label htmlFor={id} className="ui-label">
         Email
       </label>
       <input
@@ -38,7 +38,7 @@ export function UsernameField() {
   const hintId = useId();
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="overline">
+      <label htmlFor={id} className="ui-label">
         Handle{" "}
         <span className="normal-case tracking-normal text-ink-3">
           · optional
@@ -58,8 +58,8 @@ export function UsernameField() {
         className="field"
       />
       <span id={hintId} className="text-xs text-ink-3">
-        3–24 characters: a–z, 0–9, underscore. Leave blank and we&apos;ll
-        draft one from your email — you can change it later either way.
+        3–24 characters: a–z, 0–9, underscore. Leave blank and we&apos;ll draft
+        one from your email — you can change it later either way.
       </span>
     </div>
   );
@@ -82,7 +82,7 @@ export function PasswordField({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="overline">
+      <label htmlFor={id} className="ui-label">
         {label}
       </label>
       <div className="relative">

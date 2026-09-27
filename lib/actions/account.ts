@@ -80,7 +80,10 @@ export async function deleteAccountAction(
     .eq("id", user.id)
     .maybeSingle();
   if (!profile)
-    return { status: "error", message: "Deletion didn't go through — try again." };
+    return {
+      status: "error",
+      message: "Deletion didn't go through — try again.",
+    };
 
   // typed confirmation — deliberate friction before an irreversible act
   if (confirmation !== profile.username.toLowerCase()) {
@@ -94,7 +97,10 @@ export async function deleteAccountAction(
   // takes the profile, concepts, notes, and votes with it
   const { error } = await supabase.rpc("delete_account");
   if (error)
-    return { status: "error", message: "Deletion didn't go through — try again." };
+    return {
+      status: "error",
+      message: "Deletion didn't go through — try again.",
+    };
 
   // server-side sessions are already gone (cascade) — clear this device's
   // cookies so the browser doesn't hold dead tokens

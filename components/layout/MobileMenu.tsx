@@ -10,10 +10,10 @@ import { MenuIcon, CloseIcon } from "@/components/ui/Icon";
 import { ThemeList } from "@/components/ui/ThemeSwitcher";
 
 const NAV = [
-  { label: "Feed", href: ROUTES.home },
+  { label: "Community", href: ROUTES.home },
   { label: "Explore", href: ROUTES.explore },
   { label: "About", href: ROUTES.about },
-  { label: "Propose a concept", href: ROUTES.submit },
+  { label: "Share a concept", href: ROUTES.submit },
 ];
 
 /**
@@ -89,7 +89,10 @@ export function MobileMenu({ username }: { username: string | null }) {
             tabIndex={-1}
             className="absolute inset-x-0 top-full z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-line bg-page shadow-[var(--shadow-raise)] outline-none motion-safe:animate-[vv-drop-in_0.18s_var(--ease-out-soft)]"
           >
-            <nav className="mx-auto max-w-6xl px-5 py-4 sm:px-8" aria-label="Site">
+            <nav
+              className="mx-auto max-w-6xl px-5 py-4 sm:px-8"
+              aria-label="Site"
+            >
               <ul className="flex flex-col">
                 {NAV.map((item) => (
                   <li key={item.href}>
@@ -105,10 +108,10 @@ export function MobileMenu({ username }: { username: string | null }) {
                   </li>
                 ))}
               </ul>
-              <p className="overline mt-5 mb-2">Palette</p>
+              <p className="ui-label mt-5 mb-2">Appearance</p>
               <ThemeList />
 
-              <p className="overline mt-5 mb-2">Account</p>
+              <p className="ui-label mt-5 mb-2">Account</p>
               {username ? (
                 <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
                   <span className="text-sm text-ink-2">
@@ -136,10 +139,16 @@ export function MobileMenu({ username }: { username: string | null }) {
                 </div>
               ) : (
                 <div className="flex items-center gap-3 pb-2">
-                  <Link href={ROUTES.login} className="btn btn-secondary btn-sm min-h-10">
+                  <Link
+                    href={ROUTES.login}
+                    className="btn btn-secondary btn-sm min-h-10"
+                  >
                     Sign in
                   </Link>
-                  <Link href={ROUTES.signup} className="btn btn-ghost btn-sm min-h-10">
+                  <Link
+                    href={ROUTES.signup}
+                    className="btn btn-ghost btn-sm min-h-10"
+                  >
                     Create account
                   </Link>
                 </div>

@@ -21,7 +21,7 @@ export function AuthShell({
     <main className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-5 py-12">
       <div className="sheet overflow-hidden">
         <div className="flex items-center justify-between gap-3 border-b border-line bg-well/60 px-5 py-2.5">
-          <span className="overline text-accent">{kicker}</span>
+          <span className="ui-label text-accent">{kicker}</span>
           <span className="dateline text-ink-2">VroomView</span>
         </div>
         <div className="px-5 py-6 sm:px-6">

@@ -4,8 +4,7 @@ export const APP_DESCRIPTION =
 
 /**
  * Central route map — avoid scattering magic path strings across the app.
- * These pages don't all exist yet; add entries as you build features and
- * reference ROUTES.* instead of hard-coding "/login" etc.
+ * Only implemented routes belong here.
  */
 export const ROUTES = {
   home: "/",
@@ -13,9 +12,7 @@ export const ROUTES = {
   account: "/account",
   login: "/login",
   signup: "/signup",
-  feed: "/feed",
   explore: "/explore",
   submit: "/submit",
   concept: (id: string) => `/concepts/${id}`,
-  profile: (username: string) => `/profile/${username}`,
 } as const;

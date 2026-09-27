@@ -63,10 +63,13 @@ export function LensDrawer({
         tabIndex={-1}
         className="fixed inset-x-0 bottom-0 z-50 flex max-h-[80dvh] flex-col rounded-t-2xl border-t border-line bg-page shadow-[var(--shadow-raise)] outline-none motion-safe:animate-[vv-slide-up_0.22s_var(--ease-out-soft)]"
       >
-        <div aria-hidden className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-line-2" />
+        <div
+          aria-hidden
+          className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-line-2"
+        />
         <div className="flex items-center justify-between px-5 pt-3 pb-4">
-          <h2 id={titleId} className="overline">
-            Review lenses
+          <h2 id={titleId} className="ui-label">
+            Filter by topic
           </h2>
           <button
             type="button"
@@ -79,7 +82,12 @@ export function LensDrawer({
         </div>
 
         <div className="scrollbar-thin flex-1 overflow-y-auto px-5 pb-4">
-          <LensControls active={active} counts={counts} onToggle={onToggle} roomy />
+          <LensControls
+            active={active}
+            counts={counts}
+            onToggle={onToggle}
+            roomy
+          />
         </div>
 
         <div className="flex items-center gap-3 border-t border-line px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -96,7 +104,7 @@ export function LensDrawer({
             onClick={onClose}
             className="btn btn-primary ml-auto"
           >
-            Show {resultCount} {resultCount === 1 ? "concept" : "concepts"}
+            View {resultCount} {resultCount === 1 ? "concept" : "concepts"}
           </button>
         </div>
       </div>

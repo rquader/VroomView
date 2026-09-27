@@ -30,7 +30,9 @@ async function login(ctx) {
 }
 
 // ── DEVICE A ─────────────────────────────────────────────────────────────
-const ctxA = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+const ctxA = await browser.newContext({
+  viewport: { width: 1280, height: 900 },
+});
 const a = await login(ctxA);
 check(true, "login lands on the feed (device A)");
 
@@ -47,12 +49,17 @@ check(
 
 // back the truck concept (votes are directional now: up = back, down = red-pencil)
 await a.goto(TRUCK, { waitUntil: "networkidle" });
-const vote = a.getByRole("button", { name: /Back this concept|Remove your backing/ }).first();
+const vote = a
+  .getByRole("button", { name: /Back this concept|Remove your backing/ })
+  .first();
 const before = parseInt(await vote.locator("span").first().innerText(), 10);
 await vote.click();
 await a.waitForTimeout(1500);
 const after = parseInt(await vote.locator("span").first().innerText(), 10);
-check(after === before + 1, `score ${before} → ${after} (optimistic + settled)`);
+check(
+  after === before + 1,
+  `score ${before} → ${after} (optimistic + settled)`,
+);
 
 await a.reload({ waitUntil: "networkidle" });
 const votedState = await a
@@ -73,7 +80,10 @@ const swung = parseInt(
     .innerText(),
   10,
 );
-check(swung === after - 2, `direction switch swings the score by 2 (${after} → ${swung})`);
+check(
+  swung === after - 2,
+  `direction switch swings the score by 2 (${after} → ${swung})`,
+);
 // and back to a backing vote for the rest of the flow
 await a.getByRole("button", { name: "Back this concept" }).first().click();
 await a.waitForTimeout(1500);
@@ -96,11 +106,15 @@ check(true, "comment posts and appears in the thread (optimistic)");
 // back to a reload; the write itself is proven by the note surviving it.
 const myCard = a.locator("article", { hasText: NOTE });
 try {
-  await myCard.getByRole("button", { name: "Edit" }).waitFor({ timeout: 12000 });
+  await myCard
+    .getByRole("button", { name: "Edit" })
+    .waitFor({ timeout: 12000 });
 } catch {
   console.log("     (refresh stream stalled — reloading for server truth)");
   await a.reload({ waitUntil: "networkidle" });
-  await myCard.getByRole("button", { name: "Edit" }).waitFor({ timeout: 15000 });
+  await myCard
+    .getByRole("button", { name: "Edit" })
+    .waitFor({ timeout: 15000 });
 }
 check(true, "note settles to the server truth (editable)");
 
@@ -123,11 +137,16 @@ try {
     .filter({ hasText: NOTE_EDITED })
     .waitFor({ timeout: 15000 });
 }
-await a.getByText(/· edited/i).first().waitFor();
+await a
+  .getByText(/· edited/i)
+  .first()
+  .waitFor();
 check(true, "comment edits in place and shows the edited mark");
 
 // ── DEVICE B (separate cookie jar = separate session) ────────────────────
-const ctxB = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const ctxB = await browser.newContext({
+  viewport: { width: 390, height: 844 },
+});
 const b = await login(ctxB);
 await b.goto(TRUCK, { waitUntil: "networkidle" });
 check(
@@ -138,7 +157,10 @@ const bVoted = await b
   .getByRole("button", { name: "Remove your backing" })
   .first()
   .getAttribute("aria-pressed");
-check(bVoted === "true", "device B sees the vote from device A (account state, not device state)");
+check(
+  bVoted === "true",
+  "device B sees the vote from device A (account state, not device state)",
+);
 
 // delete from device B — editing rights follow the ACCOUNT
 const bCard = b.locator("article", { hasText: NOTE_EDITED });
@@ -153,14 +175,20 @@ try {
   await b.reload({ waitUntil: "networkidle" });
 }
 check(
-  !(await b.getByText(NOTE_EDITED, { exact: true }).isVisible().catch(() => false)),
+  !(await b
+    .getByText(NOTE_EDITED, { exact: true })
+    .isVisible()
+    .catch(() => false)),
   "note deleted from device B",
 );
 
 // device A sees the deletion after refresh
 await a.reload({ waitUntil: "networkidle" });
 check(
-  !(await a.getByText(NOTE_EDITED, { exact: true }).isVisible().catch(() => false)),
+  !(await a
+    .getByText(NOTE_EDITED, { exact: true })
+    .isVisible()
+    .catch(() => false)),
   "deletion propagates to device A",
 );
 
@@ -181,5 +209,7 @@ check(
 );
 
 await browser.close();
-console.log(failures === 0 ? "\nALL E2E CHECKS PASSED" : `\n${failures} E2E FAILURES`);
+console.log(
+  failures === 0 ? "\nALL E2E CHECKS PASSED" : `\n${failures} E2E FAILURES`,
+);
 process.exit(failures === 0 ? 0 : 1);

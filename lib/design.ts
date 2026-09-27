@@ -40,7 +40,11 @@ const NUMBER_RE = /^-?(?:\d+\.?\d*|\.\d+)$/;
  * exactly one, unambiguous form of the path.
  */
 export function canonicalStrokePath(d: string): string | null {
-  if (typeof d !== "string" || d.length === 0 || d.length > DESIGN_LIMITS.maxPathChars)
+  if (
+    typeof d !== "string" ||
+    d.length === 0 ||
+    d.length > DESIGN_LIMITS.maxPathChars
+  )
     return null;
   if (!/^[MLQZ0-9\-.,\s]*$/.test(d)) return null;
   const tokens = d.match(/[MLQZ]|-?[\d.]+/g);
@@ -57,7 +61,8 @@ export function canonicalStrokePath(d: string): string | null {
   };
   while (k < tokens.length) {
     const cmd = tokens[k++] as string;
-    const need = cmd === "M" || cmd === "L" ? 2 : cmd === "Q" ? 4 : cmd === "Z" ? 0 : -1;
+    const need =
+      cmd === "M" || cmd === "L" ? 2 : cmd === "Q" ? 4 : cmd === "Z" ? 0 : -1;
     if (need < 0) return null;
     const nums: string[] = [];
     for (let i = 0; i < need; i++) {
@@ -89,7 +94,8 @@ const clamp = (v: number, min: number, max: number) =>
  * (no base, no strokes) parses to null — it isn't a design.
  */
 export function parseDesign(raw: unknown): ConceptDesign | null {
-  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw))
+    return null;
   const o = raw as Record<string, unknown>;
   if (o.v !== 1 || o.kind !== "studio") return null;
 
@@ -98,11 +104,19 @@ export function parseDesign(raw: unknown): ConceptDesign | null {
 
   const wheelScale =
     typeof o.wheelScale === "number" && Number.isFinite(o.wheelScale)
-      ? clamp(o.wheelScale, DESIGN_LIMITS.wheelScale.min, DESIGN_LIMITS.wheelScale.max)
+      ? clamp(
+          o.wheelScale,
+          DESIGN_LIMITS.wheelScale.min,
+          DESIGN_LIMITS.wheelScale.max,
+        )
       : 1;
   const rideHeight =
     typeof o.rideHeight === "number" && Number.isFinite(o.rideHeight)
-      ? clamp(o.rideHeight, DESIGN_LIMITS.rideHeight.min, DESIGN_LIMITS.rideHeight.max)
+      ? clamp(
+          o.rideHeight,
+          DESIGN_LIMITS.rideHeight.min,
+          DESIGN_LIMITS.rideHeight.max,
+        )
       : 0;
 
   if (!Array.isArray(o.strokes) || o.strokes.length > DESIGN_LIMITS.maxStrokes)
@@ -121,7 +135,14 @@ export function parseDesign(raw: unknown): ConceptDesign | null {
   // a blank plate has no body to lift and no wheels to size — normalize the
   // knobs so every renderer (static SVG, Lottie) agrees on the geometry
   if (base === null) {
-    return { v: 1, kind: "studio", base, wheelScale: 1, rideHeight: 0, strokes };
+    return {
+      v: 1,
+      kind: "studio",
+      base,
+      wheelScale: 1,
+      rideHeight: 0,
+      strokes,
+    };
   }
   return { v: 1, kind: "studio", base, wheelScale, rideHeight, strokes };
 }

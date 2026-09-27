@@ -53,15 +53,25 @@ export async function createConcept(
   if (title.length < 8 || title.length > 90)
     return { ok: false, error: "Titles run 8–90 characters." };
   if (summary.length < 20 || summary.length > 300)
-    return { ok: false, error: "The summary needs 20–300 characters — one or two real sentences." };
+    return {
+      ok: false,
+      error: "The summary needs 20–300 characters — one or two real sentences.",
+    };
   if (details.length > 2000)
     return { ok: false, error: "The case maxes out at 2,000 characters." };
   if (feasibility.length > 2000)
-    return { ok: false, error: "The production case maxes out at 2,000 characters." };
+    return {
+      ok: false,
+      error: "The production case maxes out at 2,000 characters.",
+    };
   if (bodyStyle.length < 3 || bodyStyle.length > 24)
     return { ok: false, error: "Body style runs 3–24 characters." };
   if (make.length > 0 && (make.length < 2 || make.length > 40))
-    return { ok: false, error: "Maker names run 2–40 characters — or leave it blank for any maker." };
+    return {
+      ok: false,
+      error:
+        "Maker names run 2–40 characters — or leave it blank for any maker.",
+    };
 
   // keep only complete spec rows, bounded like the DB expects
   const specs = input.specs
@@ -69,13 +79,22 @@ export async function createConcept(
     .filter((s) => s.label.length > 0 && s.value.length > 0)
     .slice(0, 8);
   if (specs.length === 0)
-    return { ok: false, error: "A proposal needs at least one number — that's the whole idea." };
+    return {
+      ok: false,
+      error: "A proposal needs at least one number — that's the whole idea.",
+    };
   if (specs.some((s) => s.label.length > 24 || s.value.length > 24))
-    return { ok: false, error: "Spec labels and values max out at 24 characters." };
+    return {
+      ok: false,
+      error: "Spec labels and values max out at 24 characters.",
+    };
 
   const tags = input.tags.filter((t) => (ALL_TAGS as string[]).includes(t));
   if (tags.length === 0)
-    return { ok: false, error: "Pick at least one lens so reviewers know where to look." };
+    return {
+      ok: false,
+      error: "Pick at least one lens so reviewers know where to look.",
+    };
 
   // the studio design: strictly parsed (grammar, bounds, known skeletons) —
   // anything malformed is refused rather than silently stripped, and a
@@ -84,9 +103,15 @@ export async function createConcept(
   if (input.design !== undefined && input.design !== null) {
     design = parseDesign(input.design);
     if (!design)
-      return { ok: false, error: "That design sheet didn't validate — redraw and try again." };
+      return {
+        ok: false,
+        error: "That design sheet didn't validate — redraw and try again.",
+      };
     if (JSON.stringify(design).length > DESIGN_LIMITS.maxJsonChars)
-      return { ok: false, error: "That design sheet is too heavy — fewer strokes, same idea." };
+      return {
+        ok: false,
+        error: "That design sheet is too heavy — fewer strokes, same idea.",
+      };
   }
 
   const { data, error } = await supabase

@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import ./scripts/test-register.mjs --test tests/*.test.ts",
+    "check:contrast": "node scripts/check-contrast.mjs",
+    "check": "npm run lint && npm run typecheck && npm test && npm run check:contrast",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": "22.x"
@@ -29,6 +34,7 @@
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.2.9",
     "playwright": "^1.61.1",
+    "prettier": "3.6.2",
     "tailwindcss": "^4.3.2",
     "typescript": "^6.0.3"
   },

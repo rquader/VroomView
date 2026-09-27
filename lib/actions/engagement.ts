@@ -60,7 +60,8 @@ export async function setConceptVote(
       .delete()
       .eq("concept_id", conceptId)
       .eq("voter_id", user.id);
-    if (error) return { ok: false, error: "That vote didn't stick — try again." };
+    if (error)
+      return { ok: false, error: "That vote didn't stick — try again." };
   } else {
     // update-first (direction changes are UPDATEs — the grant only allows
     // touching `value`); insert when no row exists yet. 23505 = an insert
@@ -135,7 +136,8 @@ export async function addComment(
   if (trimmed.length < 1) return { ok: false, error: "Write the note first." };
   if (trimmed.length > 2000)
     return { ok: false, error: "Notes max out at 2,000 characters." };
-  if (!validTags(tags)) return { ok: false, error: "Those lenses don't exist." };
+  if (!validTags(tags))
+    return { ok: false, error: "Those lenses don't exist." };
 
   const { error } = await supabase.from("comments").insert({
     concept_id: conceptId,
@@ -163,7 +165,8 @@ export async function updateComment(
   if (trimmed.length < 1) return { ok: false, error: "Write the note first." };
   if (trimmed.length > 2000)
     return { ok: false, error: "Notes max out at 2,000 characters." };
-  if (!validTags(tags)) return { ok: false, error: "Those lenses don't exist." };
+  if (!validTags(tags))
+    return { ok: false, error: "Those lenses don't exist." };
 
   // .select() makes Postgres report the rows RLS actually let us touch —
   // zero rows means "not yours (or gone)", which we surface honestly.

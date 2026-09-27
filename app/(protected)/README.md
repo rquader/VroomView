@@ -1,16 +1,8 @@
-# `(protected)` route group
+# Protected route group
 
-A **route group** (parentheses = not part of the URL) for pages that require a
-signed-in user — the feed, settings, messages, etc.
-
-Two layers protect these (used together):
-
-1. **Middleware** (`middleware.ts` → `lib/supabase/middleware.ts`) refreshes the
-   session on every request and can redirect unauthenticated users. (The redirect is
-   commented out until auth pages exist.)
-2. **A group layout** `(protected)/layout.tsx` (add later) can call the server Supabase
-   client, check `auth.getUser()`, and `redirect("/login")` if there's no user —
-   defense in depth.
-
-Planned routes (not built yet), e.g. `feed/page.tsx` → `/feed`. See
-`06 - Auth Architecture` in the docs.
+This App Router folder is reserved for routes that should require a signed-in
+user. There are no protected pages or group layout here yet. A route group name
+in parentheses does not appear in the URL and does not protect a page by
+itself; add an explicit server-side session check before placing a private page
+here. See the auth architecture note in VroomViewNotes before changing access
+rules.

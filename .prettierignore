@@ -1,0 +1,9 @@
+node_modules/
+.next/
+.vercel/
+.claude/
+.visual-audit/
+.env*
+package-lock.json
+types/database.ts
+public/animations/*.json

@@ -1,33 +1,29 @@
-# lib/services — the data-access boundary
+# Services: reads and data mapping
 
-THE RULE: components and pages never import a Supabase client directly — they
-call these functions (reads) or `lib/actions/*` (writes). Callers depend on
-the SIGNATURES and the domain types in `@/types`, not on where data comes
-from. That seam is what makes swapping or adding a data source (a Python
-service, an AI ranker, a cache) a services-only change.
+Pages and components use functions here to read app data. They do not import a Supabase client. Services return domain types from `types/`, keeping database column names and query details at the boundary.
 
-```
-UI / pages ──▶ lib/services/* (reads)  ──▶ Supabase (today)
-           └─▶ lib/actions/*  (writes) ──▶ …or any future backend (later)
+```text
+Server page → lib/services read → Supabase (today)
+                    ↓
+              domain types → components
 ```
 
-## The services (all server-side — they read the session cookie)
+| File                  | Purpose                                                                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `concepts.service.ts` | `listConcepts()` and `getRelated()` return compact `ConceptSummary` values; `getConcept(id)` returns the full `Concept`, including long proposal prose. |
+| `comments.service.ts` | Reads notes for a concept and maps timestamps and viewer state.                                                                                         |
+| `viewer.service.ts`   | `getViewer()` verifies the session and returns the public profile, or `null` for a guest.                                                               |
 
-| File | Provides |
-|------|----------|
-| `concepts.service.ts` | `listConcepts()`, `getConcept(id)`, `getRelated(concept)` — one embedded PostgREST read each (author join + vote/comment counts), viewer vote state merged in |
-| `comments.service.ts` | `listCommentsByConcept(id)` — same shape of thinking; `edited` derived from DB-stamped timestamps |
-| `viewer.service.ts` | `getViewer()` — the session user + public profile, or null for guests |
+For lists, use the lean type that fits the screen. `ConceptSummary` deliberately omits `details` and `feasibility`; the detail page asks for the full concept. This avoids fetching long prose for every board card.
 
-Writes live in `lib/actions/engagement.ts` (Server Actions): vote toggles and
-comment add/edit/delete. Every action checks the session for friendly errors,
-but the REAL authorization is RLS in Postgres — see team note
-"23 - Data Layer and RLS" for the policy matrix and the two-layer rationale.
+The services add per-viewer values such as a person's vote and whether they authored a concept. Keep these values scoped to the current request. `getViewer()` uses React's request-scoped `cache()` so concurrent server reads can share the verified viewer identity without sharing it across requests.
 
-## Patterns to keep
+## Writes
 
-- Map rows → domain types at the boundary (snake_case stays here; the app
-  speaks `postedAt`, `viewerHasVoted`, `isOwn`).
-- Per-viewer fields are computed HERE, per request — never cached across users.
-- Throw on read errors (error boundaries render the drafting-language error
-  state); return `{ ok, error }` from actions (forms show the message inline).
+Writes live in `lib/actions/` as Server Actions. Actions check the signed-in user and validate input for useful feedback. Database constraints and Row Level Security remain the final authorization boundary; application checks do not replace them. See the VroomViewNotes “23 - Data Layer and RLS” for the policy details.
+
+## If the data source changes
+
+Keep callers dependent on service/action signatures and domain types. A Python or Java service could be adapted behind this boundary if a concrete product need arises. There is no need to introduce a second backend preemptively; today, Supabase is the persistence layer.
+
+The full flow and current board limit are in [docs/architecture.md](../../docs/architecture.md).

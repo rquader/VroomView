@@ -1,114 +1,99 @@
 import Link from "next/link";
 import { ViewTransition } from "react";
-import type { Concept } from "@/types";
+import type { ConceptSummary } from "@/types";
 import { ROUTES } from "@/constants/app";
 import { timeAgo } from "@/utils/time";
-import { DesignPlate } from "./DesignPlate";
-import { SpecList } from "./SpecList";
+import { CommentIcon } from "@/components/ui/Icon";
+import { Avatar } from "@/components/ui/Avatar";
+import { ConceptArtwork } from "./ConceptArtwork";
 import { VoteControl } from "./VoteControl";
-import { Silhouette } from "@/components/ui/Silhouette";
-import { CommentIcon, TagIcon } from "@/components/ui/Icon";
 
-/**
- * A concept post in the feed — a catalogue entry: index + body-style kicker +
- * dateline, serif title (the only link — the card holds its own buttons), lede,
- * the measured spec sheet with its headline number, then quiet tag marks +
- * discussion/vote. Hovering the card (pointer devices) ghosts the concept's
- * elevation in from the right edge — the drawing showing through the sheet.
- */
 export function ConceptCard({
   concept,
-  index,
   signedIn,
 }: {
-  concept: Concept;
-  index?: number;
+  concept: ConceptSummary;
   signedIn: boolean;
 }) {
+  const author = concept.author.displayName || concept.author.username;
+  const href = ROUTES.concept(concept.id);
   return (
-    <article className="sheet sheet-hover group relative overflow-hidden p-5 sm:p-6">
-      {/* hover ghost: the author's own design when they drafted one */}
-      {concept.design ? (
-        <DesignPlate
-          design={concept.design}
-          className="pointer-events-none absolute -right-3 top-5 hidden w-44 translate-x-3 text-ink opacity-0 transition-[opacity,transform] duration-300 ease-[var(--ease-out-soft)] group-hover:translate-x-0 group-hover:opacity-10 lg:block"
-        />
-      ) : (
-        <Silhouette
-          bodyStyle={concept.bodyStyle}
-          aria-hidden
-          className="pointer-events-none absolute -right-3 top-5 hidden w-44 translate-x-3 text-ink opacity-0 transition-[opacity,transform] duration-300 ease-[var(--ease-out-soft)] group-hover:translate-x-0 group-hover:opacity-10 lg:block"
-        />
-      )}
-
-      <div className="flex items-center gap-2.5 text-[11px]">
-        {typeof index === "number" ? (
-          <span className="font-mono text-rubric">
-            {String(index).padStart(2, "0")}
+    <article className="concept-card">
+      <div className="flex items-center gap-3 px-5 pt-5 sm:px-6">
+        <Avatar name={author} small />
+        <div className="min-w-0 flex-1 text-sm">
+          <span className="font-medium text-ink">{author}</span>
+          <span className="ml-2 text-xs text-ink-3" suppressHydrationWarning>
+            {timeAgo(concept.postedAt)}
+          </span>
+        </div>
+        {concept.make ? (
+          <span className="truncate text-xs text-ink-2">
+            For {concept.make}
           </span>
         ) : null}
-        <span className="font-semibold uppercase tracking-[0.14em] text-accent">
-          {concept.bodyStyle}
-        </span>
-        {/* suppress: age labels re-compute on the client and may drift from the
-            build-time SSG text (e.g. "5h" → "9h") — that drift is expected */}
-        <span className="dateline truncate" suppressHydrationWarning>
-          {timeAgo(concept.postedAt)} ·{" "}
-          {/* handles keep their true case inside the caps dateline */}
-          <span className="normal-case">@{concept.author.username}</span>
-          {concept.make ? (
-            <>
-              {" "}
-              · for <span className="normal-case">{concept.make}</span>
-            </>
-          ) : null}
-        </span>
       </div>
-
-      {/* named transition: this title morphs into the detail sheet's h1 —
-          the card being pulled up to the drafting table */}
-      <ViewTransition name={`vv-title-${concept.id}`}>
-        <h2 className="mt-2.5 font-serif text-[1.4rem] font-medium leading-snug tracking-[-0.01em]">
-          <Link
-            href={ROUTES.concept(concept.id)}
-            className="transition-colors group-hover:text-accent"
-          >
-            {concept.title}
-          </Link>
-        </h2>
-      </ViewTransition>
-      <p className="mt-1.5 leading-relaxed text-ink-2">{concept.summary}</p>
-
-      <div className="mt-5">
-        <SpecList specs={concept.specs} lead />
-      </div>
-
-      <div className="mt-5 flex items-center gap-4 border-t border-line pt-3.5">
-        <div className="flex min-w-0 items-center gap-1.5 text-[11px] uppercase tracking-wide text-ink-3">
-          <TagIcon size={13} className="shrink-0" />
-          <span className="truncate">{concept.tags.join(" · ")}</span>
-        </div>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Link
-            href={`${ROUTES.concept(concept.id)}#discussion`}
-            aria-label={`${concept.comments} ${
-              concept.comments === 1 ? "note" : "notes"
-            } — open the discussion`}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-btn px-1.5 text-sm text-ink-3 transition-colors hover:text-accent"
-          >
-            <CommentIcon size={15} />
-            <span className="font-mono tabular-nums">{concept.comments}</span>
-          </Link>
-          <VoteControl
-            conceptId={concept.id}
-            score={concept.score}
-            viewerVote={concept.viewerVote}
-            signedIn={signedIn}
+      <div className="px-5 pt-4 sm:px-6">
+        <ViewTransition name={`vv-title-${concept.id}`}>
+          <h2 className="font-serif text-[1.7rem] font-medium leading-[1.12] tracking-[-0.025em] sm:text-[1.95rem]">
+            <Link href={href} className="hover:text-accent">
+              {concept.title}
+            </Link>
+          </h2>
+        </ViewTransition>
+        <p className="mt-2.5 text-sm leading-relaxed text-ink-2 sm:text-[15px]">
+          {concept.summary}
+        </p>
+        <Link
+          href={href}
+          aria-label={`View ${concept.title}`}
+          className="mt-5 block rounded-card"
+        >
+          <ConceptArtwork
+            bodyStyle={concept.bodyStyle}
+            design={concept.design}
           />
+        </Link>
+        <dl className="my-5 grid grid-cols-2 gap-x-5 gap-y-4 min-[480px]:grid-cols-3">
+          {concept.specs.slice(0, 3).map((spec, index) => (
+            <div key={`${spec.label}-${index}`} className="min-w-0">
+              <dt className="text-xs text-ink-3">{spec.label}</dt>
+              <dd className="mt-1 break-words font-mono text-sm font-medium text-ink">
+                {spec.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          {concept.tags.map((tag) => (
+            <Link
+              key={tag}
+              href={`/?tag=${encodeURIComponent(tag)}`}
+              className="topic-tag"
+            >
+              {tag}
+            </Link>
+          ))}
         </div>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2.5 sm:px-5">
+        <VoteControl
+          conceptId={concept.id}
+          score={concept.score}
+          viewerVote={concept.viewerVote}
+          signedIn={signedIn}
+        />
+        <Link
+          href={`${href}#discussion`}
+          className="btn btn-ghost min-h-11 gap-2 text-xs sm:text-sm"
+          aria-label={`${concept.comments} comments on ${concept.title}`}
+        >
+          <CommentIcon size={17} />
+          {concept.comments > 0
+            ? `${concept.comments} comments`
+            : "Start a conversation"}
+        </Link>
       </div>
     </article>
   );
 }
-
-export default ConceptCard;

@@ -9,7 +9,7 @@ export default function NotFound() {
       <div className="sheet w-full max-w-xs overflow-hidden text-left">
         {/* ink-2 tiers: this strip is well-tinted, where ink-3/rubric dip below AA */}
         <div className="flex items-center justify-between border-b border-line bg-well/60 px-4 py-2">
-          <span className="overline text-[10px] text-ink-2">Sheet 404</span>
+          <span className="ui-label text-[10px] text-ink-2">Sheet 404</span>
           <span className="dateline text-[10px] text-ink-2">Not filed</span>
         </div>
         <div className="px-4 py-5">

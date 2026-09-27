@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import type { ConceptComment, ConceptTag } from "@/types";
+import { parseConceptTags } from "@/lib/domain/concept-mapping";
+import { getViewer } from "@/lib/services/viewer.service";
+import type { ConceptComment } from "@/types";
+import type { Database } from "@/types/database";
+import type { QueryData, SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Comments ("notes") data access — same shape of thinking as the concepts
@@ -8,50 +12,43 @@ import type { ConceptComment, ConceptTag } from "@/types";
  * trigger), so it can't be spoofed by a client.
  */
 
-type CommentRow = {
-  id: string;
-  concept_id: string;
-  body: string;
-  tags: string[];
-  created_at: string;
-  updated_at: string;
-  author: { id: string; username: string; display_name: string | null };
-  comment_votes: { count: number }[];
-};
+const MAX_COMMENT_READ_ROWS = 1_000;
+const COMMENT_SELECT = `id, concept_id, body, tags, created_at, updated_at,
+  author:profiles!comments_author_id_fkey(id, username, display_name),
+  comment_votes(count)` as const;
+
+function commentQuery(supabase: SupabaseClient<Database>) {
+  return supabase.from("comments").select(COMMENT_SELECT);
+}
+
+type CommentRow = QueryData<ReturnType<typeof commentQuery>>[number];
 
 export async function listCommentsByConcept(
   conceptId: string,
 ): Promise<ConceptComment[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("comments")
-    .select(
-      // FK named explicitly: profiles is also reachable through comment_votes,
-      // which would make a bare `profiles(...)` embed ambiguous to PostgREST.
-      `id, concept_id, body, tags, created_at, updated_at,
-       author:profiles!comments_author_id_fkey(id, username, display_name),
-       comment_votes(count)`,
-    )
+  const { data, error } = await commentQuery(supabase)
     .eq("concept_id", conceptId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .limit(MAX_COMMENT_READ_ROWS);
   if (error) throw new Error(`listComments failed: ${error.message}`);
 
-  const rows = (data ?? []) as unknown as CommentRow[];
+  const rows: CommentRow[] = data ?? [];
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const viewer = await getViewer();
   let voted = new Set<string>();
-  if (user && rows.length > 0) {
-    const { data: votes } = await supabase
+  if (viewer && rows.length > 0) {
+    const { data: votes, error: voteError } = await supabase
       .from("comment_votes")
       .select("comment_id")
-      .eq("voter_id", user.id)
+      .eq("voter_id", viewer.id)
       .in(
         "comment_id",
         rows.map((r) => r.id),
       );
+    if (voteError)
+      throw new Error(`getCommentViewerVotes failed: ${voteError.message}`);
     voted = new Set((votes ?? []).map((v) => v.comment_id));
   }
 
@@ -64,10 +61,10 @@ export async function listCommentsByConcept(
       displayName: r.author.display_name,
     },
     body: r.body,
-    tags: r.tags as ConceptTag[],
+    tags: parseConceptTags(r.tags),
     votes: r.comment_votes[0]?.count ?? 0,
     viewerHasVoted: voted.has(r.id),
-    isOwn: user !== null && r.author.id === user.id,
+    isOwn: viewer !== null && r.author.id === viewer.id,
     edited: r.updated_at > r.created_at,
     postedAt: r.created_at,
   }));

@@ -2,13 +2,13 @@ import Link from "next/link";
 import { APP_NAME, ROUTES } from "@/constants/app";
 import { getViewer } from "@/lib/services/viewer.service";
 import { PlusIcon } from "@/components/ui/Icon";
-import { ThemeCycleButton } from "@/components/ui/ThemeSwitcher";
+import { ThemePicker } from "@/components/ui/ThemeSwitcher";
 import { HeaderNav } from "./HeaderNav";
 import { MobileMenu } from "./MobileMenu";
 import { AccountMenu } from "./AccountMenu";
 
 const NAV = [
-  { label: "Feed", href: ROUTES.home },
+  { label: "Community", href: ROUTES.home },
   { label: "Explore", href: ROUTES.explore },
   { label: "About", href: ROUTES.about },
 ];
@@ -25,31 +25,38 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-page">
-      <div className="h-[3px] bg-accent" />
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-5 py-3 sm:px-8 md:py-3.5">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-4 sm:px-8 md:py-4">
         <div className="flex min-w-0 items-baseline gap-3">
           <Link
             href={ROUTES.home}
-            className="font-serif text-2xl font-semibold tracking-[-0.02em] text-ink"
+            className="flex items-center gap-2.5 font-serif text-[1.7rem] font-semibold tracking-[-0.035em] text-ink"
           >
+            <span className="brand-mark" aria-hidden>
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="m3 5 5 14h3L6 5H3Zm10 0-3.5 9M21 5l-5 14h-3"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
             {APP_NAME}
           </Link>
-          <span className="dateline hidden lg:inline">
-            Independent concept review
-          </span>
         </div>
 
         <div className="flex shrink-0 items-center gap-2 md:gap-3">
           <HeaderNav items={NAV} />
-          <ThemeCycleButton />
+          <ThemePicker />
           {/* icon-only below sm so the theme button always fits; label returns at sm */}
           <Link
             href={ROUTES.submit}
             className="btn btn-primary"
-            aria-label="Propose a concept"
+            aria-label="Share a concept"
           >
             <PlusIcon size={16} />
-            <span className="hidden sm:inline">Propose</span>
+            <span className="hidden sm:inline">Share a concept</span>
           </Link>
           {viewer ? (
             <AccountMenu

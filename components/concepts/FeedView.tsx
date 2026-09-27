@@ -1,263 +1,272 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ROUTES } from "@/constants/app";
-import { controversyScore, hotScore, referenceClock } from "@/utils/rank";
-import type { Concept, ConceptTag } from "@/types";
+import type { ConceptSummary, ConceptTag } from "@/types";
+import {
+  FEED_SORTS,
+  filterConcepts,
+  parseFeedFilters,
+  type FeedFilters,
+} from "@/lib/domain/feed";
 import { BodyStyleStrip } from "./BodyStyleStrip";
 import { ConceptCard } from "./ConceptCard";
 import { LensControls } from "./LensControls";
 import { LensDrawer } from "./LensDrawer";
-import { SortMenu, type SortOption } from "./SortMenu";
-import { EmptyState } from "@/components/animations";
-import { CloseIcon, SlidersIcon } from "@/components/ui/Icon";
+import { SortMenu } from "./SortMenu";
+import { Avatar } from "@/components/ui/Avatar";
+import {
+  CloseIcon,
+  PlusIcon,
+  SearchIcon,
+  SlidersIcon,
+} from "@/components/ui/Icon";
 
-type SortKey =
-  | "trending"
-  | "newest"
-  | "oldest"
-  | "popular"
-  | "unpopular"
-  | "controversial"
-  | "discussed";
-
-const SORTS: SortOption<SortKey>[] = [
-  { key: "trending", label: "Trending", description: "Fresh support first" },
-  { key: "newest", label: "Newest", description: "Latest filings" },
-  { key: "oldest", label: "Oldest", description: "The register, front to back" },
-  { key: "popular", label: "Most popular", description: "Highest score" },
-  { key: "unpopular", label: "Least popular", description: "Lowest score" },
-  {
-    key: "controversial",
-    label: "Most controversial",
-    description: "Big, split arguments",
-  },
-  {
-    key: "discussed",
-    label: "Most discussed",
-    description: "Most notes filed",
-  },
-];
-
-/**
- * Client feed: review-lens filtering + sorting over data handed down by a
- * Server Component (currently mock) — stays presentational so mock → Supabase
- * later won't touch it. A concept must match ALL active lenses ("narrow by").
- *
- * Responsive split: at lg+ the lenses live in a sticky rail; below lg the SAME
- * <LensControls> renders inside a bottom-sheet drawer, with active lenses
- * echoed as dismissible chips so state is never hidden behind the drawer.
- */
+/** URL-backed filters survive navigation and can be shared with other readers. */
 export function FeedView({
   concepts,
   signedIn,
-  initialBody = null,
+  viewerName,
 }: {
-  concepts: Concept[];
+  concepts: ConceptSummary[];
   signedIn: boolean;
-  /** validated ?body= deep link (Explore's shelves land here) */
-  initialBody?: string | null;
+  viewerName?: string;
 }) {
-  const [active, setActive] = useState<ConceptTag[]>([]);
-  const [bodyFilter, setBodyFilter] = useState<string | null>(initialBody);
-  const [sort, setSort] = useState<SortKey>("trending");
+  const params = useSearchParams();
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  // keep ?body= shareable without paying a server round-trip per tap:
-  // shallow history update — client state is the source of truth here
-  const selectBody = (style: string | null) => {
-    setBodyFilter(style);
+  const shelves = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const concept of concepts)
+      counts.set(concept.bodyStyle, (counts.get(concept.bodyStyle) ?? 0) + 1);
+    return [...counts]
+      .map(([style, count]) => ({ style, count }))
+      .sort((a, b) => a.style.localeCompare(b.style));
+  }, [concepts]);
+  const filters = parseFeedFilters(
+    params,
+    shelves.map((shelf) => shelf.style),
+  );
+  const updateFilters = (patch: Partial<FeedFilters>) => {
+    const next = { ...filters, ...patch };
+    const query = new URLSearchParams();
+    if (next.query) query.set("q", next.query);
+    if (next.body) query.set("body", next.body);
+    for (const tag of next.tags) query.append("tag", tag);
+    if (next.sort !== "trending") query.set("sort", next.sort);
     window.history.replaceState(
       null,
       "",
-      style ? `${ROUTES.home}?body=${encodeURIComponent(style)}` : ROUTES.home,
+      query.size ? `/?${query}` : ROUTES.home,
     );
   };
+  const toggleTag = (tag: ConceptTag) =>
+    updateFilters({
+      tags: filters.tags.includes(tag)
+        ? filters.tags.filter((value) => value !== tag)
+        : [...filters.tags, tag],
+    });
+  const clearFilters = () => updateFilters({ query: "", body: null, tags: [] });
+  const counts = useMemo(() => {
+    const result: Partial<Record<ConceptTag, number>> = {};
+    for (const concept of concepts)
+      for (const tag of concept.tags) result[tag] = (result[tag] ?? 0) + 1;
+    return result;
+  }, [concepts]);
+  const visible = filterConcepts(concepts, filters);
+  const hasFilters = Boolean(
+    filters.query || filters.body || filters.tags.length,
+  );
 
-  // The drawer trigger hides at lg (the rail takes over) — close on crossing
-  // that line so the scroll lock can't outlive its visible UI.
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const onChange = (e: MediaQueryListEvent) => {
-      if (e.matches) setDrawerOpen(false);
+    const media = window.matchMedia("(min-width: 1024px)");
+    const closeOnDesktop = () => {
+      if (media.matches) setDrawerOpen(false);
     };
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
+    media.addEventListener("change", closeOnDesktop);
+    return () => media.removeEventListener("change", closeOnDesktop);
   }, []);
 
-  const toggle = (tag: ConceptTag) =>
-    setActive((cur) =>
-      cur.includes(tag) ? cur.filter((t) => t !== tag) : [...cur, tag],
-    );
-
-  const counts = useMemo(() => {
-    const m: Partial<Record<ConceptTag, number>> = {};
-    for (const c of concepts) for (const t of c.tags) m[t] = (m[t] ?? 0) + 1;
-    return m;
-  }, [concepts]);
-
-  // the shelf strip: every body style on the board with its live count
-  const shelves = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const c of concepts) m.set(c.bodyStyle, (m.get(c.bodyStyle) ?? 0) + 1);
-    return [...m.entries()]
-      .map(([style, count]) => ({ style, count }))
-      .sort((a, b) => b.count - a.count || a.style.localeCompare(b.style));
-  }, [concepts]);
-
-  const visible = useMemo(() => {
-    const byLens =
-      active.length === 0
-        ? concepts
-        : concepts.filter((c) => active.every((t) => c.tags.includes(t)));
-    const filtered = bodyFilter
-      ? byLens.filter((c) => c.bodyStyle === bodyFilter)
-      : byLens;
-    // ties fall through to recency so equal-primary orderings stay stable
-    const newest = (a: Concept, b: Concept) =>
-      b.postedAt.localeCompare(a.postedAt);
-    const ref = referenceClock(concepts);
-    const bySort: Record<SortKey, (a: Concept, b: Concept) => number> = {
-      trending: (a, b) => hotScore(b, ref) - hotScore(a, ref) || newest(a, b),
-      newest,
-      oldest: (a, b) => -newest(a, b),
-      popular: (a, b) => b.score - a.score || newest(a, b),
-      unpopular: (a, b) => a.score - b.score || newest(a, b),
-      controversial: (a, b) =>
-        controversyScore(b) - controversyScore(a) || newest(a, b),
-      discussed: (a, b) => b.comments - a.comments || newest(a, b),
-    };
-    return [...filtered].sort(bySort[sort]);
-  }, [concepts, active, bodyFilter, sort]);
-
   return (
-    <div className="grid gap-10 lg:grid-cols-[230px_1fr] lg:gap-14">
-      {/* Desktop lens rail — sticky below the masthead */}
-      <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
-        <div className="flex items-baseline justify-between border-b border-line pb-3">
-          <h2 className="overline">Review lenses</h2>
-          {active.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => setActive([])}
-              className="text-xs text-accent hover:underline"
-            >
-              Clear
-            </button>
-          ) : null}
-        </div>
-        <div className="mt-6">
-          <LensControls active={active} counts={counts} onToggle={toggle} />
-        </div>
+    <div className="grid items-start gap-8 lg:grid-cols-[190px_minmax(0,1fr)] xl:grid-cols-[190px_minmax(0,1fr)_240px] xl:gap-9">
+      <aside
+        className="hidden lg:sticky lg:top-28 lg:block"
+        aria-label="Filter concepts"
+      >
+        <h2 className="font-serif text-xl font-medium">Topics</h2>
+        <p className="mt-2 mb-6 text-xs leading-relaxed text-ink-3">
+          Filter by one or more topics.
+        </p>
+        <LensControls
+          active={filters.tags}
+          counts={counts}
+          onToggle={toggleTag}
+        />
+        {filters.tags.length > 0 ? (
+          <button
+            type="button"
+            onClick={() => updateFilters({ tags: [] })}
+            className="mt-4 min-h-11 text-sm text-accent hover:underline"
+          >
+            Clear topics
+          </button>
+        ) : null}
       </aside>
 
-      {/* min-w-0: the shelf strip inside is a scroll container, and a grid
-          item's default min-width:auto would let it stretch the track instead
-          of scrolling */}
       <div className="min-w-0">
-        {/* the shelf strip — body styles as drawn, tappable chips. Replaces
-            the old lone "?body= chip": the filter state is always visible,
-            not just when set, and Explore's deep links land on it selected */}
-        <div className="mb-5">
-          <BodyStyleStrip
-            shelves={shelves}
-            active={bodyFilter}
-            onSelect={selectBody}
+        <Link href={ROUTES.submit} className="composer-invite mb-6">
+          <Avatar name={viewerName || "You"} />
+          <span className="min-w-0 flex-1">
+            <span className="block font-serif text-xl font-medium">
+              Share a concept
+            </span>
+            <span className="mt-1 block text-xs text-ink-2">
+              Add an idea, sketch, and specifications.
+            </span>
+          </span>
+          <PlusIcon size={22} className="shrink-0 text-accent" />
+        </Link>
+        <label className="relative mb-5 block">
+          <span className="sr-only">Search concepts</span>
+          <SearchIcon
+            size={18}
+            className="pointer-events-none absolute top-3.5 left-4 text-ink-3"
           />
-        </div>
-
-        {/* Toolbar: count · (lenses on small screens) · sort. Wraps rather
-            than overflowing on narrow phones */}
-        <div className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line pb-3">
-          <p className="dateline">
+          <input
+            type="search"
+            value={filters.query}
+            maxLength={120}
+            onChange={(event) => updateFilters({ query: event.target.value })}
+            placeholder="Search ideas, makers, or people"
+            className="field min-h-12 pl-11"
+          />
+        </label>
+        <BodyStyleStrip
+          shelves={shelves}
+          active={filters.body}
+          onSelect={(body) => updateFilters({ body })}
+        />
+        <div className="my-5 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-ink-2" role="status">
             {visible.length} {visible.length === 1 ? "concept" : "concepts"}
-            {active.length || bodyFilter ? " · narrowed" : ""}
           </p>
-
-          <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="btn btn-secondary btn-sm min-h-9 lg:hidden"
+              className="btn btn-secondary btn-sm min-h-10 lg:hidden"
               aria-haspopup="dialog"
               aria-expanded={drawerOpen}
             >
-              <SlidersIcon size={14} />
-              Lenses
-              {active.length > 0 ? (
-                <span className="rounded-full bg-accent px-1.5 py-0.5 font-mono text-[10px] leading-none text-accent-ink">
-                  {active.length}
-                </span>
-              ) : null}
+              <SlidersIcon size={14} /> Topics
+              {filters.tags.length > 0 ? ` (${filters.tags.length})` : ""}
             </button>
-
-            <SortMenu value={sort} options={SORTS} onChange={setSort} />
+            <SortMenu
+              value={filters.sort}
+              options={[...FEED_SORTS]}
+              onChange={(sort) => updateFilters({ sort })}
+            />
           </div>
         </div>
-
-        {/* Active lenses echoed as dismissible chips where the rail is hidden */}
-        {active.length > 0 ? (
-          <div className="mb-5 flex flex-wrap items-center gap-2 lg:hidden">
-            {active.map((tag) => (
+        {filters.tags.length > 0 ? (
+          <div className="mb-5 flex flex-wrap gap-2">
+            {filters.tags.map((tag) => (
               <button
                 key={tag}
                 type="button"
-                onClick={() => toggle(tag)}
-                aria-label={`Remove ${tag} lens`}
-                className="inline-flex min-h-9 items-center gap-1.5 rounded-btn border border-control bg-card px-2.5 text-xs text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
+                onClick={() => toggleTag(tag)}
+                aria-label={`Remove ${tag} topic`}
+                className="topic-tag min-h-9"
               >
                 {tag}
-                <CloseIcon size={11} />
+                <CloseIcon size={12} />
               </button>
             ))}
           </div>
         ) : null}
-
-        {visible.length === 0 ? (
-          <EmptyState
-            heading="h2"
-            title="Nothing matches every filter"
-            description="Each filter narrows the board further. Loosen one, or propose the concept that fits."
-            action={
+        {visible.length ? (
+          <div className="flex flex-col gap-6">
+            {visible.map((concept) => (
+              <ConceptCard
+                key={concept.id}
+                concept={concept}
+                signedIn={signedIn}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="sheet px-6 py-12 text-center">
+            <h2 className="font-serif text-3xl">
+              {hasFilters ? "No concepts found" : "No concepts yet"}
+            </h2>
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-ink-2">
+              {hasFilters
+                ? "Try another search or remove a topic to see more ideas."
+                : "Share the first concept to start a discussion."}
+            </p>
+            {hasFilters ? (
               <button
                 type="button"
-                onClick={() => {
-                  setActive([]);
-                  if (bodyFilter) selectBody(null);
-                }}
-                className="btn btn-secondary btn-sm min-h-10"
+                onClick={clearFilters}
+                className="btn btn-secondary mt-6"
               >
                 Clear filters
               </button>
-            }
-          />
-        ) : (
-          <div className="flex flex-col gap-4 sm:gap-5">
-            {visible.map((c, i) => (
-              // staggered rise on arrival (capped so long boards don't lag the tail)
-              <div
-                key={c.id}
-                style={{ animationDelay: `${Math.min(i, 6) * 60}ms` }}
-                className="motion-safe:animate-[vv-rise_0.4s_var(--ease-out-soft)_backwards]"
-              >
-                <ConceptCard concept={c} index={i + 1} signedIn={signedIn} />
-              </div>
-            ))}
+            ) : (
+              <Link href={ROUTES.submit} className="btn btn-primary mt-6">
+                Share a concept
+              </Link>
+            )}
           </div>
         )}
       </div>
 
+      <aside className="hidden xl:sticky xl:top-28 xl:block">
+        <section className="community-note">
+          <h2 className="font-serif text-2xl font-medium">About VroomView</h2>
+          <p className="mt-3 text-sm leading-relaxed text-ink-2">
+            A community for proposing vehicles and discussing their design,
+            cost, and engineering.
+          </p>
+          <dl className="mt-5 grid grid-cols-2 border-y border-line py-4">
+            <div>
+              <dt className="text-xs text-ink-3">Concepts</dt>
+              <dd className="mt-1 text-lg font-medium">{concepts.length}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-ink-3">Comments</dt>
+              <dd className="mt-1 text-lg font-medium">
+                {concepts.reduce(
+                  (total, concept) => total + concept.comments,
+                  0,
+                )}
+              </dd>
+            </div>
+          </dl>
+          <Link
+            href={signedIn ? ROUTES.submit : ROUTES.signup}
+            className="btn btn-primary mt-5 w-full"
+          >
+            {signedIn ? "Share a concept" : "Create an account"}
+          </Link>
+          <Link
+            href={ROUTES.about}
+            className="mt-3 block py-2 text-center text-sm text-accent hover:underline"
+          >
+            How it works
+          </Link>
+        </section>
+      </aside>
       <LensDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         resultCount={visible.length}
-        active={active}
+        active={filters.tags}
         counts={counts}
-        onToggle={toggle}
-        onClear={() => setActive([])}
+        onToggle={toggleTag}
+        onClear={() => updateFilters({ tags: [] })}
       />
     </div>
   );
 }
-
-export default FeedView;

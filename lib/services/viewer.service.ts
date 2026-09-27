@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
 
 /**
  * Who is looking at the page? `getUser()` revalidates the session token with
@@ -12,7 +13,9 @@ export type Viewer = {
   displayName: string | null;
 } | null;
 
-export async function getViewer(): Promise<Viewer> {
+// React's server cache is request-scoped: concurrent service reads share the
+// verified identity without retaining a user across requests or sessions.
+export const getViewer = cache(async (): Promise<Viewer> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -34,4 +37,4 @@ export async function getViewer(): Promise<Viewer> {
     username: profile.username,
     displayName: profile.display_name,
   };
-}
+});

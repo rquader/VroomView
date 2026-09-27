@@ -156,7 +156,8 @@ export function designToLottie(design: ConceptDesign): object {
 
   const strokesStart = profile ? 96 : 12;
   const strokeFrames = 16;
-  const op = strokesStart + Math.max(design.strokes.length, 1) * strokeFrames + 30;
+  const op =
+    strokesStart + Math.max(design.strokes.length, 1) * strokeFrames + 30;
 
   // the body group rides rideHeight units above the axles
   const bodyTransform = {
@@ -178,7 +179,13 @@ export function designToLottie(design: ConceptDesign): object {
         transform: bodyTransform,
         items: [
           pathFromSvg(profile.body),
-          trim(stat(0), anim([[4, 0], [64, 100]])),
+          trim(
+            stat(0),
+            anim([
+              [4, 0],
+              [64, 100],
+            ]),
+          ),
           strokeItem("vv-ink", 1.35),
         ],
       }),
@@ -191,10 +198,19 @@ export function designToLottie(design: ConceptDesign): object {
           cl: "vv-ink-2",
           op,
           transform: bodyTransform,
-          opacity: anim([[40, 0], [46, 75]]),
+          opacity: anim([
+            [40, 0],
+            [46, 75],
+          ]),
           items: [
             pathFromSvg(profile.dlo),
-            trim(stat(0), anim([[44, 0], [72, 100]])),
+            trim(
+              stat(0),
+              anim([
+                [44, 0],
+                [72, 100],
+              ]),
+            ),
             strokeItem("vv-ink-2", 1),
           ],
         }),
@@ -207,7 +223,10 @@ export function designToLottie(design: ConceptDesign): object {
         cl: "vv-ink-2",
         op,
         transform: bodyTransform,
-        opacity: anim([[64, 0], [78, 50]]),
+        opacity: anim([
+          [64, 0],
+          [78, 50],
+        ]),
         items: [
           ...[...profile.seams, ...profile.accents].map(pathFromSvg),
           strokeItem("vv-ink-2", 0.95),
@@ -223,7 +242,10 @@ export function designToLottie(design: ConceptDesign): object {
           cl: "vv-ink",
           op,
           transform: { p: stat([cx * S, 31.5 * S, 0]) },
-          opacity: anim([[t, 0], [t + 4, 100]]),
+          opacity: anim([
+            [t, 0],
+            [t + 4, 100],
+          ]),
           items: [
             ellipse(0, 0, profile.wheelR * design.wheelScale * 2 * S),
             ellipse(0, 0, profile.wheelR * design.wheelScale * 1.16 * S),
@@ -245,10 +267,19 @@ export function designToLottie(design: ConceptDesign): object {
         cl: "vv-ink",
         op,
         transform: bodyTransform,
-        opacity: anim([[t, 0], [t + 2, 100]]),
+        opacity: anim([
+          [t, 0],
+          [t + 2, 100],
+        ]),
         items: [
           pathFromSvg(stroke.d),
-          trim(stat(0), anim([[t, 0], [t + strokeFrames, 100]])),
+          trim(
+            stat(0),
+            anim([
+              [t, 0],
+              [t + strokeFrames, 100],
+            ]),
+          ),
           strokeItem("vv-ink", 1.15),
         ],
       }),
