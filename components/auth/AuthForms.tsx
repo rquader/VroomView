@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ROUTES } from "@/constants/app";
 import {
@@ -70,16 +70,31 @@ export function LoginForm({ next, notice }: { next: string; notice?: string }) {
 
 export function SignupForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState(signUpAction, IDLE);
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (state.status === "sent") successHeadingRef.current?.focus();
+  }, [state.status]);
 
   if (state.status === "sent") {
     return (
-      <div className="flex flex-col items-center gap-4 py-4 text-center">
+      <div
+        role="status"
+        className="flex flex-col items-center gap-4 py-4 text-center"
+      >
         <SuccessAnimation />
         <div>
-          <h2 className="font-serif text-xl font-medium">Confirmation filed</h2>
+          <h2
+            ref={successHeadingRef}
+            tabIndex={-1}
+            className="font-serif text-xl font-medium outline-none"
+          >
+            Check your email
+          </h2>
           <p className="mt-1.5 text-sm leading-relaxed text-ink-2">
-            We sent a link to <span className="font-medium">{state.email}</span>
-            . Open it to activate the account — check spam if it hides.
+            We sent a confirmation link to{" "}
+            <span className="font-medium">{state.email}</span>. Open it to
+            finish creating your account. Check spam if you do not see it.
           </p>
         </div>
         <Link href={ROUTES.login} className="btn btn-secondary btn-sm">
@@ -109,14 +124,29 @@ export function ForgotPasswordForm() {
     requestPasswordResetAction,
     IDLE,
   );
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (state.status === "sent") successHeadingRef.current?.focus();
+  }, [state.status]);
 
   if (state.status === "sent") {
     return (
-      <div className="flex flex-col items-center gap-4 py-4 text-center">
+      <div
+        role="status"
+        className="flex flex-col items-center gap-4 py-4 text-center"
+      >
         <SuccessAnimation />
+        <h2
+          ref={successHeadingRef}
+          tabIndex={-1}
+          className="font-serif text-xl font-medium outline-none"
+        >
+          Check your email
+        </h2>
         <p className="text-sm leading-relaxed text-ink-2">
           If <span className="font-medium">{state.email}</span> has an account,
-          a reset link is on its way.
+          we sent a reset link. Check spam if you do not see it.
         </p>
         <Link href={ROUTES.login} className="btn btn-secondary btn-sm">
           Back to sign in

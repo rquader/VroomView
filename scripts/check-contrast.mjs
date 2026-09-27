@@ -72,6 +72,7 @@ for (const [name, t] of Object.entries(themes)) {
     }
   }
   check("accent-ink on accent", t["accent-ink"], t.accent, 4.5);
+  check("accent-ink on hover", t["accent-ink"], t["accent-2"], 4.5);
   for (const surface of ["page", "card"]) {
     check(`control on ${surface}`, t.control, t[surface], 3.0);
   }

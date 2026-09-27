@@ -21,8 +21,8 @@ export default async function SubmitPage() {
         Share a concept
       </h1>
       <p className="mt-3 text-ink-2">
-        Describe your idea, add specifications, and include a sketch if you
-        like.
+        Propose a new vehicle or a change to an existing model. Explain your
+        reasoning; sketches are optional.
       </p>
       <div className="mt-9">
         {viewer ? (

@@ -4,9 +4,9 @@ Instructions for Claude Code (and any AI agent) working in this repo. These over
 
 ## Project
 
-VroomView — a social web app for car enthusiasts. **Currently a skeleton**; features are built incrementally.
+VroomView is a community review board for automotive concepts. People can browse proposals, filter and sort the board, inspect full concept details and authored sketches, create a proposal, vote, comment, and manage an account. The website is in an active UI and maintainability refresh; describe only behavior that exists in the current code and avoid treating this as a mock-only skeleton.
 
-**Stack:** Next.js (App Router) · TypeScript · Tailwind CSS v4 · Supabase (Postgres / Auth / Storage / RLS) · lottie-react · hosted on Vercel · Node 22 LTS.
+**Stack:** Next.js 16.3.6 (App Router) · React 19 · TypeScript 6 · Tailwind CSS v4 · Supabase (Postgres / Auth / Storage / RLS) · lottie-react · hosted on Vercel · Node 22 (current test runtime 22.23.3). Prettier 3.6.2 is a development-only dependency.
 
 ## Priorities
 
@@ -27,7 +27,7 @@ VroomView — a social web app for car enthusiasts. **Currently a skeleton**; fe
 
 - **Server-first.** Components are Server Components by default. Add `"use client"` only when needed (state, effects, events, browser APIs), and keep the boundary small.
 - **Data-access boundary.** UI/pages never import `@/lib/supabase` directly — go through `lib/services/*`, which return domain types from `@/types`. This keeps adding/swapping a backend (Java/Python/AI) cheap.
-- **Supabase clients:** `@/lib/supabase/client` (client components), `server` (server components / actions / route handlers), `middleware` (root `middleware.ts` only). All use the publishable key; RLS enforces access.
+- **Supabase clients:** `@/lib/supabase/client` (client components), `server` (server components / actions / route handlers), `middleware` (called by root `proxy.ts`). Next.js 16 uses the `proxy.ts` convention; do not rename the existing helper. All clients use the publishable key; RLS enforces access.
 - **Path alias:** `@/*` → repo root. Prefer it over long relative imports.
 - **Tailwind v4:** configured in `app/globals.css` (`@import "tailwindcss"`, `@theme`). There is no `tailwind.config.js`.
 - **Constants over magic strings:** routes in `constants/app.ts` (`ROUTES`), animation paths in `constants/animations.ts`.
@@ -45,3 +45,13 @@ Teammate-facing learning docs live in the separate **VroomViewNotes** repo (Mark
 ## Working style
 
 This project is also for learning. Explain non-obvious decisions clearly (like a senior engineer mentoring a student), but don't pad. Propose a short plan for anything architectural and wait for approval before large changes.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

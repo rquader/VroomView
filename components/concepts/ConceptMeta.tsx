@@ -21,7 +21,7 @@ export function ConceptMeta({ concept }: { concept: Concept }) {
       <dl className="mt-2 flex flex-col">
         {[
           ["Body style", concept.bodyStyle],
-          ["Author", `@${concept.author.username}`],
+          ["Ideator", `@${concept.author.username}`],
           ["Posted", filed],
           // "any maker" is the deliberate reading of NULL, not missing data
           ["Maker", concept.make ?? "Any maker"],

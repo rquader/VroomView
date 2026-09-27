@@ -94,7 +94,7 @@ export default async function ConceptDetailPage({ params }: DetailPageProps) {
               </section>
               {concept.details ? (
                 <section className="mt-8">
-                  <h2 className="section-heading">The idea</h2>
+                  <h2 className="section-heading">The argument</h2>
                   <p className="mt-3 whitespace-pre-wrap break-words leading-relaxed text-ink-2">
                     {concept.details}
                   </p>
@@ -102,7 +102,7 @@ export default async function ConceptDetailPage({ params }: DetailPageProps) {
               ) : null}
               {concept.feasibility ? (
                 <section className="mt-8">
-                  <h2 className="section-heading">How it could be built</h2>
+                  <h2 className="section-heading">How it could work</h2>
                   <p className="mt-3 whitespace-pre-wrap break-words leading-relaxed text-ink-2">
                     {concept.feasibility}
                   </p>

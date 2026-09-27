@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useId, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ROUTES } from "@/constants/app";
 import { createConcept } from "@/lib/actions/concepts";
 import type { ConceptDesign, ConceptTag, SpecMetric } from "@/types";
-import { useDialogFocus } from "@/hooks/useDialogFocus";
 import { ChevronUpIcon, CloseIcon } from "@/components/ui/Icon";
 import { TagFilterBar } from "./TagFilterBar";
 import { ProposalIdeaFields } from "./proposal/ProposalIdeaFields";
@@ -43,7 +42,7 @@ export function DraftingTable({
   const [pending, startTransition] = useTransition();
   const [previewOpen, setPreviewOpen] = useState(false);
   const previewTitleId = useId();
-  const panelRef = useDialogFocus<HTMLDivElement>(previewOpen);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const chosenMake = makeMode === "specific" ? make.trim() : "";
   const completeSpecs = specs.filter(
     (spec) => spec.label.trim() && spec.value.trim(),
@@ -51,24 +50,28 @@ export function DraftingTable({
 
   useEffect(() => {
     if (!previewOpen) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
 
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setPreviewOpen(false);
+    dialog.showModal();
+    const previousOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    return () => {
+      if (dialog.open) dialog.close();
+      document.documentElement.style.overflow = previousOverflow;
     };
+  }, [previewOpen]);
+
+  // The mobile trigger is hidden on desktop. Close an already-open preview
+  // when crossing that boundary so its modal and scroll lock do not linger.
+  useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
     const onViewportChange = (event: MediaQueryListEvent) => {
       if (event.matches) setPreviewOpen(false);
     };
-
-    document.addEventListener("keydown", onKey);
     mediaQuery.addEventListener("change", onViewportChange);
-    document.documentElement.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      mediaQuery.removeEventListener("change", onViewportChange);
-      document.documentElement.style.overflow = "";
-    };
-  }, [previewOpen]);
+    return () => mediaQuery.removeEventListener("change", onViewportChange);
+  }, []);
 
   const setSpec = (index: number, patch: Partial<SpecMetric>) => {
     setSpecs((current) =>
@@ -189,7 +192,7 @@ export function DraftingTable({
             What feedback would help?
           </legend>
           <p className="mb-3 text-sm text-ink-2">
-            Choose at least one lens to guide the conversation.
+            Choose at least one topic to guide the conversation.
           </p>
           <TagFilterBar active={tags} onToggle={toggleTag} />
         </fieldset>
@@ -200,9 +203,9 @@ export function DraftingTable({
         ) : null}
         <div className="flex items-center gap-4 border-t border-line pt-5">
           <button type="submit" disabled={pending} className="btn btn-primary">
-            {pending ? "Sharing…" : "Share concept"}
+            {pending ? "Sharing…" : "Share a concept"}
           </button>
-          <span className="dateline">Posting as @{username}</span>
+          <span className="dateline">Sharing as @{username}</span>
         </div>
       </form>
 
@@ -227,7 +230,7 @@ export function DraftingTable({
           </span>
           <span className="truncate text-sm font-medium">
             {title.trim() || (
-              <span className="text-ink-3">Untitled proposal</span>
+              <span className="text-ink-3">Untitled concept</span>
             )}
           </span>
           <span className="dateline ml-auto shrink-0">
@@ -240,50 +243,38 @@ export function DraftingTable({
           <ChevronUpIcon size={16} className="shrink-0 text-ink-3" />
         </button>
       </div>
-      {previewOpen ? (
-        <div className="lg:hidden">
-          <button
-            type="button"
-            aria-label="Close preview"
-            onClick={() => setPreviewOpen(false)}
-            className="fixed inset-0 z-40 cursor-default bg-black/30 motion-safe:animate-[vv-fade-in_0.15s_ease]"
-          />
+      <dialog
+        ref={dialogRef}
+        aria-labelledby={previewTitleId}
+        onCancel={() => setPreviewOpen(false)}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) setPreviewOpen(false);
+        }}
+        className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none overflow-hidden border-0 bg-black/30 p-0 text-ink backdrop:bg-transparent lg:hidden"
+      >
+        <div className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl border-t border-line bg-page shadow-[var(--shadow-raise)] motion-safe:animate-[vv-slide-up_0.22s_var(--ease-out-soft)]">
           <div
-            ref={panelRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={previewTitleId}
-            tabIndex={-1}
-            className={[
-              "fixed inset-x-0 bottom-0 z-50 flex max-h-[85dvh] flex-col",
-              "rounded-t-2xl border-t border-line bg-page",
-              "shadow-[var(--shadow-raise)] outline-none",
-              "motion-safe:animate-[vv-slide-up_0.22s_var(--ease-out-soft)]",
-            ].join(" ")}
-          >
-            <div
-              aria-hidden
-              className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-line-2"
-            />
-            <div className="flex items-center justify-between px-5 pt-3 pb-3">
-              <h2 id={previewTitleId} className="ui-label">
-                Preview
-              </h2>
-              <button
-                type="button"
-                onClick={() => setPreviewOpen(false)}
-                aria-label="Close preview"
-                className="btn btn-ghost -mr-2 min-h-11 min-w-11"
-              >
-                <CloseIcon size={18} />
-              </button>
-            </div>
-            <div className="scrollbar-thin flex-1 overflow-y-auto px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-              {preview}
-            </div>
+            aria-hidden
+            className="mx-auto mt-2.5 h-1 w-10 rounded-full bg-line-2"
+          />
+          <div className="flex items-center justify-between px-5 pt-3 pb-3">
+            <h2 id={previewTitleId} className="ui-label">
+              Preview
+            </h2>
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(false)}
+              aria-label="Close preview"
+              className="btn btn-ghost -mr-2 min-h-11 min-w-11"
+            >
+              <CloseIcon size={18} />
+            </button>
+          </div>
+          <div className="scrollbar-thin flex-1 overflow-y-auto px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+            {preview}
           </div>
         </div>
-      ) : null}
+      </dialog>
     </div>
   );
 }

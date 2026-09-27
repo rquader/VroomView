@@ -52,4 +52,18 @@ Do not test this flow by writing to production. A write integration test needs a
 
 The app should remain understandable without a backend migration. If a future Python or Java service becomes useful, adapt it behind the service/action boundary and keep the UI speaking the same domain types. Until then, Supabase remains the only persistence system; avoid speculative adapters.
 
+## Board presentation and interactions
+
+The concept gallery uses three columns on desktop, two on tablet, and one on phones. A concept can propose a new vehicle or argue for a change or variant of an existing model, such as an all-wheel-drive Honda Odyssey. A concept with an authored drawing shows its “Ideator’s sketch”; one without a drawing uses a text-led preview. Keep the Ideator's identity and the community's votes and comments visible as part of the same social proposal.
+
+The header has one cycling theme control for all four themes. A saved theme takes precedence; Vellum is the default when no preference has been saved. The header action is “Share a concept,” without a plus icon. Use concise functional labels such as Community, Comments, and Topics; explanations belong where they help people browse, post, or comment. Avoid sidebars, repeated calls to action, brand slogans, and decorative copy.
+
+Topic selection, mobile navigation, and mobile preview use native modal dialogs. Authentication success moves focus to and announces the result; vote errors remain visible to the person voting. Clay's control contrast has been adjusted. Coordinate-based sketch input is available alongside pointer drawing; a local harness checked serialization, but that is not a cross-browser or screen-reader review.
+
+## Verification status
+
+On 2026-09-27, `npm run check` passed lint, TypeScript, 16 tests, and contrast checks across all four themes (18 color pairs per theme). `npm run format:check`, `git diff --check`, and `npm audit` also passed; the audit reported zero findings. Targeted browser checks passed for 320px and 390px overflow, cycling through all four themes and Graphite persistence after reload, topic-dialog keyboard/Escape focus return, combined search/body/tag filters, keyboard sorting, same-page menu close with scroll restored, guest posting/discussion login return, and labeled/autocomplete sign-in fields. An isolated local harness verified two sketch points serialize as one valid stroke; it did not publish a proposal. Removing a specification returns focus to its former label. The mobile concept preview was verified with an inert background, Escape/backdrop/close dismissal, restored trigger focus, and scroll restoration when resized to desktop.
+
+The final production build passed on 2026-09-27 and completed all 13 routes. Authenticated live writes, cross-browser behavior, and manual screen-reader review remain untested. These checks do not certify full WCAG conformance or production security.
+
 For contributor setup and a first walkthrough, see [CONTRIBUTING.md](../CONTRIBUTING.md). For the security model and schema details, see the matching VroomViewNotes pages.

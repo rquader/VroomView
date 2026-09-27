@@ -39,7 +39,7 @@ export function LensControls({
                     className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${selected ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-well hover:text-ink"}`}
                   >
                     <span className="flex-1">{lensLabel(tag)}</span>
-                    <span className="text-xs tabular-nums opacity-80">
+                    <span className="text-xs tabular-nums">
                       {counts[tag] ?? 0}
                     </span>
                     {selected ? <CheckIcon size={14} /> : null}

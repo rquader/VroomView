@@ -1,6 +1,6 @@
 # Contributing to VroomView
 
-VroomView is a community for sharing and discussing automotive ideas. Keep changes useful to real people: plain language, clear controls, room for different opinions, and a warm paper-and-serif visual identity. Preserve all four themes. Use concise, functional labels such as “Share a concept,” “Comments,” and “Topics.” Explanatory copy should help someone browse, post, or comment; avoid brand slogans, fake cheerleading, generic gradients, visual clutter, and copy that sounds generated.
+VroomView is a community for sharing and discussing automotive ideas. A concept can propose a new vehicle or make a case for a change or variant of an existing model, such as an all-wheel-drive Honda Odyssey. Call contributors Ideators; use “Ideator” for author metadata and “Ideator’s sketch” for their drawing. Keep changes useful to real people: plain language, clear controls, room for different opinions, and a warm paper-and-serif visual identity. Preserve all four themes. Use concise, functional labels such as “Share a concept,” “Comments,” and “Topics.” Explanatory copy should help someone browse, post, or comment; avoid brand slogans, fake cheerleading, generic gradients, visual clutter, and copy that sounds generated.
 
 ## Get it running
 
@@ -20,7 +20,7 @@ For a write, the proposal form calls a Server Action in `lib/actions`. The actio
 
 1. Find the closest existing page, component, service, action, or pure domain function and follow its pattern.
 2. Keep components focused on presentation. Put data reads in `lib/services`, writes in `lib/actions`, and reusable framework-independent rules in `lib/domain`.
-3. Preserve the warm paper palette and four themes. Use semantic CSS tokens from `app/globals.css`, check keyboard and small-screen behavior, and honor reduced-motion preferences.
+3. Preserve the warm paper palette and all four themes. The gallery is three columns on desktop, two on tablet, and one on phones; authored drawings get sketch previews and proposals without drawings stay text-led. Keep authors, votes, and comments visible. Use the single cycling theme control, native modal dialogs for topic selection, mobile navigation, and mobile preview, and concise functional labels. Avoid sidebars, repeated calls to action, slogans, and fake cheerleading. Use semantic CSS tokens from `app/globals.css`, check keyboard and small-screen behavior, and honor reduced-motion preferences.
 4. Add or adjust a focused test for pure behavior when it matters. Do not add a test framework dependency without discussion.
 5. Before describing the change as complete, run `npm run check` and `npm run build`; report any check you could not run.
 

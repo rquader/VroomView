@@ -39,6 +39,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${serif.variable} ${sans.variable} ${mono.variable}`}
     >

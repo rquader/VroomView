@@ -10,7 +10,7 @@ VroomView is an open review board for automotive concepts. People share proposal
 4. Run `npm run dev` and open <http://localhost:3000>.
 5. Read [CONTRIBUTING.md](CONTRIBUTING.md) for a project tour, change workflow, and checks.
 
-The app uses Next.js App Router, React, TypeScript, Tailwind CSS v4, Supabase, and lottie-react. Vercel runs Node 22. The live feature and deployment state changes over time; check the VroomViewNotes current-session note rather than relying on an old status snapshot.
+The app uses Next.js 16.3.6 App Router, React, TypeScript, Tailwind CSS v4, Supabase, and lottie-react. Vercel uses Node 22; the current test runtime is Node 22.23.3. Prettier 3.6.2 is development-only. The live feature and deployment state changes over time; check the VroomViewNotes current-session note rather than relying on an old status snapshot.
 
 ## Quality checks
 

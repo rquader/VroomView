@@ -74,7 +74,7 @@ export function DeleteAccountForm({ username }: { username: string }) {
       onSubmit={(e) => {
         if (
           !window.confirm(
-            "Delete this account and everything it filed? This can't be undone.",
+            "Delete this account and all its posts? This can't be undone.",
           )
         )
           e.preventDefault();

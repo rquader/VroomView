@@ -31,7 +31,7 @@ export function ProposalPreview({
     <div className="sheet overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b border-line bg-well/60 px-4 py-2">
         <span className="ui-label text-[10px] text-ink-2">Preview</span>
-        <span className="dateline text-[10px] text-ink-2">Not posted</span>
+        <span className="dateline text-[10px] text-ink-2">Draft</span>
       </div>
       <div className="p-5">
         <div className="flex items-center gap-2.5 text-[11px]">
@@ -49,9 +49,7 @@ export function ProposalPreview({
           </span>
         </div>
         <h2 className="mt-2.5 font-serif text-[1.4rem] font-medium leading-snug tracking-[-0.01em]">
-          {title.trim() || (
-            <span className="text-ink-3">Untitled proposal</span>
-          )}
+          {title.trim() || <span className="text-ink-3">Untitled concept</span>}
         </h2>
         <p className="mt-1.5 leading-relaxed text-ink-2">
           {summary.trim() || (

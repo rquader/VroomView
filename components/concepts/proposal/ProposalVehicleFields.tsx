@@ -66,7 +66,7 @@ export function ProposalVehicleFields({
         </label>
         <div className="flex flex-col gap-1.5">
           <span className="ui-label" id={makerGroupId}>
-            Who could make it?
+            Brand
           </span>
           <div
             role="radiogroup"
@@ -75,8 +75,8 @@ export function ProposalVehicleFields({
           >
             {(
               [
-                ["any", "Any maker"],
-                ["specific", "Name a maker"],
+                ["any", "Any brand"],
+                ["specific", "Specific brand"],
               ] as const
             ).map(([mode, label]) => (
               <label key={mode} className="cursor-pointer">
@@ -90,10 +90,10 @@ export function ProposalVehicleFields({
                 />
                 <span
                   className={[
-                    "inline-flex min-h-9 items-center rounded-btn border",
+                    "inline-flex min-h-11 items-center rounded-btn border",
                     "border-control bg-card px-3 text-sm text-ink-2",
                     "transition-colors hover:text-ink peer-checked:border-accent",
-                    "peer-checked:bg-accent/10 peer-checked:text-accent",
+                    "peer-checked:bg-well peer-checked:text-ink",
                     "peer-focus-visible:outline-2",
                     "peer-focus-visible:outline-offset-2 peer-focus-visible:outline-rubric",
                   ].join(" ")}
@@ -111,8 +111,8 @@ export function ProposalVehicleFields({
               maxLength={40}
               required
               list="common-makes"
-              placeholder="e.g. Volvo"
-              aria-label="Proposed maker name"
+              placeholder="e.g. Honda"
+              aria-label="Existing or proposed brand"
               className="field"
             />
           ) : null}

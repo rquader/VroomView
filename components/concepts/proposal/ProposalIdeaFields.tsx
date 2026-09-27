@@ -39,7 +39,7 @@ export function ProposalIdeaFields({
             minLength={8}
             maxLength={90}
             required
-            placeholder="e.g. Compact EV wagon concept"
+            placeholder="e.g. Honda Odyssey with four-wheel drive"
             className="field"
           />
           <span className="text-xs text-ink-3">8–90 characters</span>
@@ -58,7 +58,7 @@ export function ProposalIdeaFields({
             minLength={20}
             maxLength={300}
             required
-            placeholder="One or two sentences on the idea…"
+            placeholder="What would you change or create?"
             className="field resize-none"
           />
           <span className="text-xs text-ink-3">
@@ -67,7 +67,7 @@ export function ProposalIdeaFields({
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="ui-label">
-            Why it should exist{" "}
+            The argument{" "}
             <span className="normal-case tracking-normal text-ink-3">
               · optional
             </span>
@@ -77,13 +77,13 @@ export function ProposalIdeaFields({
             onChange={(event) => onDetailsChange(event.target.value)}
             rows={4}
             maxLength={2000}
-            placeholder="Who is it for, and what does the market keep getting wrong?"
+            placeholder="What should change, who would benefit, and why?"
             className="field resize-none"
           />
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="ui-label">
-            How it could be built{" "}
+            How it could work{" "}
             <span className="normal-case tracking-normal text-ink-3">
               · optional
             </span>
@@ -93,7 +93,7 @@ export function ProposalIdeaFields({
             onChange={(event) => onFeasibilityChange(event.target.value)}
             rows={3}
             maxLength={2000}
-            placeholder="Existing platforms, parts-bin components, or a price that pencils out…"
+            placeholder="Possible engineering, costs, and trade-offs"
             className="field resize-none"
           />
         </label>

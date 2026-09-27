@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { SPEC_PRESETS, specPlaceholder } from "@/constants/specs";
 import { CloseIcon, PlusIcon } from "@/components/ui/Icon";
 import type { SpecMetric } from "@/types";
@@ -19,6 +20,8 @@ export function ProposalSpecsEditor({
   onAdd,
   onAddLabel,
 }: ProposalSpecsEditorProps) {
+  const labelInputs = useRef<(HTMLInputElement | null)[]>([]);
+  const addButtonRef = useRef<HTMLButtonElement>(null);
   const usedLabels = new Set(
     specs.map((spec) => spec.label.trim().toLowerCase()),
   );
@@ -28,6 +31,17 @@ export function ProposalSpecsEditor({
   const community = communityLabels
     .filter((label) => !usedLabels.has(label.toLowerCase()))
     .slice(0, 6);
+
+  const removeSpec = (index: number) => {
+    onRemove(index);
+    requestAnimationFrame(() => {
+      if (index > 0) {
+        labelInputs.current[index - 1]?.focus();
+        return;
+      }
+      addButtonRef.current?.focus();
+    });
+  };
 
   return (
     <fieldset>
@@ -44,6 +58,9 @@ export function ProposalSpecsEditor({
         {specs.map((spec, index) => (
           <div key={index} className="flex items-center gap-2">
             <input
+              ref={(element) => {
+                labelInputs.current[index] = element;
+              }}
               value={spec.label}
               onChange={(event) =>
                 onSpecChange(index, { label: event.target.value })
@@ -66,7 +83,7 @@ export function ProposalSpecsEditor({
             />
             <button
               type="button"
-              onClick={() => onRemove(index)}
+              onClick={() => removeSpec(index)}
               aria-label={`Remove specification ${index + 1}`}
               className="btn btn-ghost min-h-10 min-w-10 shrink-0 px-2"
             >
@@ -84,6 +101,7 @@ export function ProposalSpecsEditor({
         </datalist>
         {specs.length < 8 ? (
           <button
+            ref={addButtonRef}
             type="button"
             onClick={onAdd}
             className="btn btn-secondary btn-sm min-h-9 self-start"

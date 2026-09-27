@@ -15,6 +15,10 @@
     border-radius: 3px;
   }
 
+  html {
+    scroll-padding-top: 6rem;
+  }
+
   ::selection {
     background: color-mix(in oklab, var(--accent) 22%, transparent);
   }

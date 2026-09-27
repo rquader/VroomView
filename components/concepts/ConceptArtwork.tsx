@@ -28,7 +28,7 @@ export function ConceptArtwork({
       <figcaption className="relative flex items-center justify-between gap-3 text-xs text-ink-2">
         <span>{bodyStyle}</span>
         <span>
-          {authoredDesign ? "Creator’s sketch" : "Body style illustration"}
+          {authoredDesign ? "Ideator’s sketch" : "Body style illustration"}
         </span>
       </figcaption>
     </figure>

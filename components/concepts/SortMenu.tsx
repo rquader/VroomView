@@ -10,17 +10,7 @@ export type SortOption<K extends string> = {
   description: string;
 };
 
-/**
- * The sort control, designed instead of defaulted: a listbox popover where
- * every ordering explains itself in one line — seven bare words in a native
- * select tell a newcomer nothing about what "controversial" reads.
- *
- * Accessibility is the listbox pattern done by hand: the trigger carries
- * aria-haspopup/expanded, options are focusable role="option" items, arrows
- * and Home/End rove focus, Escape returns it to the trigger, and a backdrop
- * click closes without stealing focus. Options activate on click, Enter, or
- * Space.
- */
+/** Keyboard listbox with arrow navigation and focus restoration. */
 export function SortMenu<K extends string>({
   value,
   options,
@@ -91,7 +81,7 @@ export function SortMenu<K extends string>({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         onClick={() => setOpen((v) => !v)}
-        className="btn btn-sm min-h-10 bg-card pr-3 pl-3.5 text-ink-2 hover:bg-well hover:text-ink"
+        className="btn min-h-11 rounded-full bg-card pr-3 pl-3.5 text-ink-2 hover:bg-well hover:text-ink"
       >
         <span className="sr-only">Sort </span>
         <span className="font-medium text-ink">{current.label}</span>

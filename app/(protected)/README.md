@@ -1,8 +1,5 @@
 # Protected route group
 
-This App Router folder is reserved for routes that should require a signed-in
-user. There are no protected pages or group layout here yet. A route group name
-in parentheses does not appear in the URL and does not protect a page by
-itself; add an explicit server-side session check before placing a private page
-here. See the auth architecture note in VroomViewNotes before changing access
-rules.
+This directory reserves a Next.js route group for pages that require a signed-in user. Parentheses do not add a URL segment, and the group name itself does not enforce authentication. Every page or action must use the project's auth checks and rely on Supabase Row Level Security for data access.
+
+There are no protected pages in this group yet. Current routes perform authorization in their server actions and data boundaries.

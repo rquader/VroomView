@@ -17,7 +17,7 @@ const FAQS = [
   {
     question: "What belongs in a concept?",
     answer:
-      "A vehicle idea with a title, summary, body style, and at least one specification. You can also add a sketch, proposed maker, and an explanation of how it could be built.",
+      "A new vehicle or an improvement to an existing model, with your reasoning. Include a title, summary, body style, and at least one specification. Sketches are optional.",
   },
   {
     question: "How do votes work?",
@@ -53,7 +53,7 @@ export default function AboutPage() {
           {[
             [
               "Share a concept",
-              "Describe the vehicle and add specifications. Use the design studio if you want to sketch it.",
+              "Describe what you would change or create, and why. Add specifications and an optional sketch.",
             ],
             [
               "Discuss the details",

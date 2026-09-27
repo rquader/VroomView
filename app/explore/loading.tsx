@@ -7,7 +7,7 @@ export default function LoadingExplore() {
     <main
       className="mx-auto max-w-6xl animate-pulse px-5 py-10 sm:px-8 sm:py-14"
       aria-busy="true"
-      aria-label="Opening the catalogue"
+      aria-label="Loading Explore"
     >
       <div className="h-3 w-32 rounded bg-well" />
       <div className="mt-4 h-9 w-64 rounded bg-well" />
@@ -27,7 +27,7 @@ export default function LoadingExplore() {
           </div>
         ))}
       </div>
-      <span className="sr-only">Opening the catalogue…</span>
+      <span className="sr-only">Loading Explore…</span>
     </main>
   );
 }

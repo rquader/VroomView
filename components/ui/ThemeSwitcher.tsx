@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { CheckIcon } from "@/components/ui/Icon";
 
 /**
@@ -68,8 +68,8 @@ function SwatchDisc({
 const THEME_EVENT = "vv-theme-change";
 
 /**
- * Theme state shared across every consumer (masthead cycle button AND the
- * mobile-menu list). The DOM attribute is the source of truth — set before
+ * Theme state shared across every consumer. The DOM attribute is the source
+ * of truth — set before
  * paint by the no-flash script in layout.tsx. useSyncExternalStore hydrates
  * with the server snapshot ("vellum") and immediately reconciles to the real
  * client value, so instances can't drift.
@@ -96,51 +96,27 @@ function useTheme() {
   return { theme, pick: pickTheme };
 }
 
-/** Native disclosure keeps all theme choices visible and keyboard reachable. */
+/** Cycles the four themes in their published order. */
 export function ThemePicker() {
-  const { theme } = useTheme();
-  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const { theme, pick } = useTheme();
   const current = THEMES.find((item) => item.id === theme) ?? THEMES[0];
+  const currentIndex = THEMES.findIndex((item) => item.id === current.id);
+  const next = THEMES[(currentIndex + 1) % THEMES.length];
+
   return (
-    <details
-      ref={detailsRef}
-      className="relative hidden md:block"
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && detailsRef.current) {
-          detailsRef.current.open = false;
-          detailsRef.current.querySelector("summary")?.focus();
-        }
-      }}
-      onBlur={(event) => {
-        if (
-          !event.currentTarget.contains(event.relatedTarget) &&
-          detailsRef.current
-        )
-          detailsRef.current.open = false;
-      }}
+    <button
+      type="button"
+      onClick={() => pick(next.id)}
+      aria-label={`Theme: ${current.label}. Switch to ${next.label}.`}
+      title={`Theme: ${current.label}. Next: ${next.label}.`}
+      className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-well hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rubric"
     >
-      <summary
-        aria-label={`Choose theme. Current: ${current.label}`}
-        className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-btn px-2 text-sm text-ink-2 [&::-webkit-details-marker]:hidden"
-      >
-        <SwatchDisc
-          paper={current.paper}
-          accent={current.accent}
-          className="h-6 w-6 rounded-full ring-1 ring-control"
-        />
-        <span className="hidden xl:inline">Theme</span>
-      </summary>
-      <div className="sheet absolute right-0 top-[calc(100%+8px)] z-40 w-64 p-2 shadow-[var(--shadow-raise)]">
-        <ThemeList
-          onPick={() => {
-            if (detailsRef.current) {
-              detailsRef.current.open = false;
-              detailsRef.current.querySelector("summary")?.focus();
-            }
-          }}
-        />
-      </div>
-    </details>
+      <SwatchDisc
+        paper={current.paper}
+        accent={current.accent}
+        className="h-6 w-6 rounded-full ring-1 ring-control"
+      />
+    </button>
   );
 }
 

@@ -1,6 +1,6 @@
 export const APP_NAME = "VroomView";
 export const APP_DESCRIPTION =
-  "An independent review board for automotive concepts — proposals with real numbers, debated like a design review.";
+  "A community for vehicle ideas, improvements, and discussion.";
 
 /**
  * Central route map — avoid scattering magic path strings across the app.

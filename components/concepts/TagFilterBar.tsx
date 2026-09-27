@@ -3,12 +3,7 @@
 import type { ConceptTag } from "@/types";
 import { ALL_TAGS } from "@/constants/lenses";
 
-/**
- * A horizontal lens selector styled as editorial underline-tabs (not pills).
- * Controlled by the parent so one state can drive the visible list. Pass
- * `available` to show only the lenses that actually occur in the content
- * being filtered (an empty tab teaches nothing).
- */
+/** Shared topic toggles for comment filters and the composer. */
 export function TagFilterBar({
   active,
   onToggle,
@@ -23,7 +18,7 @@ export function TagFilterBar({
     : ALL_TAGS;
 
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+    <div role="group" aria-label="Topics" className="flex flex-wrap gap-2">
       {tags.map((tag) => {
         const on = active.includes(tag);
         return (
@@ -32,12 +27,7 @@ export function TagFilterBar({
             type="button"
             aria-pressed={on}
             onClick={() => onToggle(tag)}
-            className={`min-h-10 border-b-2 pb-0.5 text-sm transition-colors ${
-              on
-                ? "border-accent text-ink"
-                : // resting underline so these read as controls, not labels
-                  "border-line-2 text-ink-2 hover:border-control hover:text-ink"
-            }`}
+            className={`min-h-11 rounded-full border px-3 text-sm transition-colors ${on ? "border-accent bg-accent text-accent-ink" : "border-control bg-card text-ink-2 hover:bg-well hover:text-ink"}`}
           >
             {tag}
           </button>

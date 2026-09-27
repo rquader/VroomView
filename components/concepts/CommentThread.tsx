@@ -73,7 +73,7 @@ export function CommentThread({
           <p className="text-sm text-ink-2">Sign in to comment or vote.</p>
           <Link
             href={`${ROUTES.login}?next=${encodeURIComponent(ROUTES.concept(conceptId) + "#discussion")}`}
-            className="btn btn-secondary btn-sm min-h-9 shrink-0"
+            className="btn btn-secondary btn-sm min-h-11 shrink-0"
           >
             Sign in
           </Link>
@@ -88,7 +88,7 @@ export function CommentThread({
               <button
                 type="button"
                 onClick={() => setActive([])}
-                className="text-xs text-accent hover:underline"
+                className="min-h-11 rounded-btn px-3 text-sm text-accent hover:underline"
               >
                 Clear
               </button>
