@@ -10,8 +10,6 @@ import next from "eslint-config-next";
  *
  * Add project-specific overrides as extra config objects after the spread.
  */
-const eslintConfig = [
-  ...next,
-];
+const eslintConfig = [...next];
 
 export default eslintConfig;

@@ -39,7 +39,7 @@ export function SpecList({
         return (
           <div key={s.label} className="min-w-0">
             <dt
-              className={`overline ${hero ? "" : "text-[10px] tracking-[0.12em]"} ${
+              className={`ui-label ${hero ? "" : "text-[10px] tracking-[0.12em]"} ${
                 isLead ? "text-accent" : ""
               }`}
             >

@@ -1,17 +1,41 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { CheckIcon } from "@/components/ui/Icon";
 
 /**
  * Curated themes (nature / car-studio inspired). Each maps to a token table in
- * globals.css via data-theme on <html>. Order defines the cycle.
+ * styles/themes.css via data-theme on <html>. Order defines the cycle.
  */
 const THEMES = [
-  { id: "vellum", label: "Vellum", note: "Studio paper · petrol", paper: "#f2eee5", accent: "#0c5b5e" },
-  { id: "moss", label: "Moss", note: "Stone · racing green", paper: "#eef0e8", accent: "#2f5d3a" },
-  { id: "clay", label: "Clay", note: "Sand · terracotta", paper: "#f4ece1", accent: "#a5502f" },
-  { id: "graphite", label: "Graphite", note: "Night studio", paper: "#1e1b15", accent: "#58c2b0" },
+  {
+    id: "vellum",
+    label: "Vellum",
+    note: "Studio paper · petrol",
+    paper: "#f2eee5",
+    accent: "#0c5b5e",
+  },
+  {
+    id: "moss",
+    label: "Moss",
+    note: "Stone · racing green",
+    paper: "#eef0e8",
+    accent: "#2f5d3a",
+  },
+  {
+    id: "clay",
+    label: "Clay",
+    note: "Sand · terracotta",
+    paper: "#f4ece1",
+    accent: "#a5502f",
+  },
+  {
+    id: "graphite",
+    label: "Graphite",
+    note: "Night studio",
+    paper: "#1e1b15",
+    accent: "#58c2b0",
+  },
 ];
 
 /**
@@ -44,8 +68,8 @@ function SwatchDisc({
 const THEME_EVENT = "vv-theme-change";
 
 /**
- * Theme state shared across every consumer (masthead cycle button AND the
- * mobile-menu list). The DOM attribute is the source of truth — set before
+ * Theme state shared across every consumer. The DOM attribute is the source
+ * of truth — set before
  * paint by the no-flash script in layout.tsx. useSyncExternalStore hydrates
  * with the server snapshot ("vellum") and immediately reconciles to the real
  * client value, so instances can't drift.
@@ -72,54 +96,32 @@ function useTheme() {
   return { theme, pick: pickTheme };
 }
 
-/**
- * THE theme picker: one button wearing the current theme's color chip
- * (paper/accent split disc); each click advances to the next theme and the
- * new chip stamps in. Direct selection with names lives in the mobile menu's
- * <ThemeList> — this button is the fast lane.
- */
-export function ThemeCycleButton() {
+/** Cycles the four themes in their published order. */
+export function ThemePicker() {
   const { theme, pick } = useTheme();
-  const [announce, setAnnounce] = useState("");
-
-  const index = Math.max(
-    0,
-    THEMES.findIndex((t) => t.id === theme),
-  );
-  const current = THEMES[index];
-  const next = THEMES[(index + 1) % THEMES.length];
-
-  const cycle = () => {
-    pick(next.id);
-    setAnnounce(`${next.label} theme`);
-  };
+  const current = THEMES.find((item) => item.id === theme) ?? THEMES[0];
+  const currentIndex = THEMES.findIndex((item) => item.id === current.id);
+  const next = THEMES[(currentIndex + 1) % THEMES.length];
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={cycle}
-        title={`Theme: ${current.label} — click for ${next.label}`}
-        aria-label={`Theme: ${current.label}. Switch to ${next.label}.`}
-        suppressHydrationWarning
-        className="group flex h-10 w-10 items-center justify-center rounded-full transition-transform hover:scale-105 active:scale-95"
-      >
-        <SwatchDisc
-          key={current.id}
-          paper={current.paper}
-          accent={current.accent}
-          className="h-9 w-9 rounded-full ring-1 ring-control motion-safe:animate-[vv-glyph-in_0.25s_var(--ease-spring)]"
-        />
-      </button>
-      <span aria-live="polite" className="sr-only">
-        {announce}
-      </span>
-    </>
+    <button
+      type="button"
+      onClick={() => pick(next.id)}
+      aria-label={`Theme: ${current.label}. Switch to ${next.label}.`}
+      title={`Theme: ${current.label}. Next: ${next.label}.`}
+      className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-ink-2 transition-colors hover:bg-well hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rubric"
+    >
+      <SwatchDisc
+        paper={current.paper}
+        accent={current.accent}
+        className="h-6 w-6 rounded-full ring-1 ring-control"
+      />
+    </button>
   );
 }
 
 /** Labelled list for the mobile menu — full-width rows, 44px tap targets. */
-export function ThemeList() {
+export function ThemeList({ onPick }: { onPick?: () => void } = {}) {
   const { theme, pick } = useTheme();
 
   return (
@@ -130,7 +132,10 @@ export function ThemeList() {
           <button
             key={t.id}
             type="button"
-            onClick={() => pick(t.id)}
+            onClick={() => {
+              pick(t.id);
+              onPick?.();
+            }}
             aria-pressed={on}
             suppressHydrationWarning
             className={`flex min-h-11 items-center gap-3 rounded-btn px-2.5 text-left transition-colors ${
@@ -159,4 +164,4 @@ export function ThemeList() {
   );
 }
 
-export default ThemeCycleButton;
+export default ThemePicker;

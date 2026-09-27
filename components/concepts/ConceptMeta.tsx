@@ -1,5 +1,4 @@
 import type { Concept } from "@/types";
-import { sheetNo } from "@/utils/sheet";
 
 /**
  * The filing register for the detail page's desktop rail — sheet number,
@@ -17,13 +16,13 @@ export function ConceptMeta({ concept }: { concept: Concept }) {
 
   return (
     <section aria-label="About this proposal">
-      <h2 className="overline border-b border-line pb-3">On this sheet</h2>
+      <h2 className="ui-label border-b border-line pb-3">About this concept</h2>
 
       <dl className="mt-2 flex flex-col">
         {[
-          ["Sheet", sheetNo(concept.id)],
-          ["Filed by", `@${concept.author.username}`],
-          ["Filed", filed],
+          ["Body style", concept.bodyStyle],
+          ["Ideator", `@${concept.author.username}`],
+          ["Posted", filed],
           // "any maker" is the deliberate reading of NULL, not missing data
           ["Maker", concept.make ?? "Any maker"],
           // the running balance of the argument, with its parts shown
@@ -36,13 +35,15 @@ export function ConceptMeta({ concept }: { concept: Concept }) {
             key={label}
             className="flex items-baseline justify-between gap-4 border-b border-line py-2.5"
           >
-            <dt className="overline text-[10px]">{label}</dt>
-            <dd className="text-sm text-ink">{value}</dd>
+            <dt className="ui-label text-[10px]">{label}</dt>
+            <dd className="min-w-0 break-words text-right text-sm text-ink">
+              {value}
+            </dd>
           </div>
         ))}
         <div className="flex items-baseline justify-between gap-4 py-2.5">
-          <dt className="overline shrink-0 text-[10px]">Lenses</dt>
-          <dd className="text-right text-[11px] uppercase tracking-wide text-ink-3">
+          <dt className="ui-label shrink-0 text-[10px]">Topics</dt>
+          <dd className="text-right text-xs text-ink-3">
             {concept.tags.join(" · ")}
           </dd>
         </div>

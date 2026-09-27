@@ -7,12 +7,12 @@ the app's drafting language, and each layer carries a `cl` class (`vv-ink-2`,
 `vv-accent`, …) that lottie-web renders into the SVG so `app/globals.css` can
 re-ink them with the active theme's tokens.
 
-| File | Used by | Drawing |
-|------|---------|---------|
-| `loading.json` | `LoadingAnimation` | drafting dial — accent tick sweeping a dashed circle (loops) |
-| `empty.json` | `EmptyState` | blank sheet draws itself, a wagon elevation is sketched on, a dimension rule underlines it (slow loop) |
-| `success.json` | `SuccessAnimation` | approval stamp — rings land with overshoot, check draws on |
-| `error.json` | `ErrorAnimation` | broken dimension — rules draw in misaligned, the break slashes in |
+| File           | Used by            | Drawing                                                                                                |
+| -------------- | ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `loading.json` | `LoadingAnimation` | drafting dial — accent tick sweeping a dashed circle (loops)                                           |
+| `empty.json`   | `EmptyState`       | blank sheet draws itself, a wagon elevation is sketched on, a dimension rule underlines it (slow loop) |
+| `success.json` | `SuccessAnimation` | approval stamp — rings land with overshoot, check draws on                                             |
+| `error.json`   | `ErrorAnimation`   | broken dimension — rules draw in misaligned, the break slashes in                                      |
 
 `<LottiePlayer>` fetches these at runtime from `/animations/<name>.json`; if a
 file is missing or the user prefers reduced motion, components show their

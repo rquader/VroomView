@@ -17,7 +17,9 @@ const VIEWPORTS = {
   tablet: { width: 768, height: 1024 },
   mobile: { width: 390, height: 844 },
 };
-const THEMES = quick ? ["vellum", "graphite"] : ["vellum", "moss", "clay", "graphite"];
+const THEMES = quick
+  ? ["vellum", "graphite"]
+  : ["vellum", "moss", "clay", "graphite"];
 const PAGES = quick
   ? [["home", "/"]]
   : [
@@ -33,7 +35,9 @@ const browser = await chromium.launch();
 for (const [vpName, viewport] of Object.entries(VIEWPORTS)) {
   const ctx = await browser.newContext({ viewport, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
-  page.on("pageerror", (e) => console.log(`PAGE ERROR [${vpName}]:`, e.message));
+  page.on("pageerror", (e) =>
+    console.log(`PAGE ERROR [${vpName}]:`, e.message),
+  );
   for (const theme of THEMES) {
     await page.addInitScript((t) => localStorage.setItem("vv-theme", t), theme);
     for (const [pageName, path] of PAGES) {

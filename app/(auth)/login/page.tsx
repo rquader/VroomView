@@ -24,8 +24,7 @@ export default async function LoginPage({
   return (
     <AuthShell
       kicker="Sign in"
-      title="Back to the board"
-      lede="Your lenses, votes, and notes pick up where you left them — on any device."
+      title="Sign in"
       footer={
         <>
           New here?{" "}

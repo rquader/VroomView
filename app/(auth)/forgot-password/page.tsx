@@ -10,7 +10,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthShell
       kicker="Reset"
-      title="Lost the password?"
+      title="Reset your password"
       lede="Tell us the account email and we'll send a reset link."
       footer={
         <Link

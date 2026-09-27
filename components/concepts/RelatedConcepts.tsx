@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Concept } from "@/types";
+import type { ConceptSummary } from "@/types";
 import { ROUTES } from "@/constants/app";
 import { Silhouette } from "@/components/ui/Silhouette";
 
@@ -9,12 +9,12 @@ import { Silhouette } from "@/components/ui/Silhouette";
  * data-source-agnostic. Each entry carries its elevation thumbnail — the
  * board's visual index mark — and only claims votes it actually has.
  */
-export function RelatedConcepts({ concepts }: { concepts: Concept[] }) {
+export function RelatedConcepts({ concepts }: { concepts: ConceptSummary[] }) {
   if (concepts.length === 0) return null;
 
   return (
     <section aria-label="Related concepts" className="mt-10">
-      <h2 className="overline border-b border-line pb-3">More like this</h2>
+      <h2 className="ui-label border-b border-line pb-3">More like this</h2>
       <ul className="mt-2 flex flex-col">
         {concepts.map((c) => (
           <li key={c.id} className="border-b border-line last:border-b-0">

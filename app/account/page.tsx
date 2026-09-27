@@ -28,19 +28,18 @@ export default async function AccountPage() {
         Account
       </p>
       <h1 className="mt-3 font-serif text-4xl font-medium tracking-[-0.02em]">
-        The registration
+        Account settings
       </h1>
       <p className="mt-3 leading-relaxed text-ink-2">
         Signed in as{" "}
         <span className="font-medium text-ink">@{viewer.username}</span>
-        {viewer.displayName ? ` (${viewer.displayName})` : ""}. Everything you
-        file — proposals, notes, votes — carries this registration.
+        {viewer.displayName ? ` (${viewer.displayName})` : ""}.
       </p>
 
       <section className="sheet mt-10 overflow-hidden" aria-labelledby="handle">
         <div className="border-b border-line bg-well/60 px-5 py-2.5">
-          <h2 id="handle" className="overline text-ink-2">
-            Handle
+          <h2 id="handle" className="ui-label text-ink-2">
+            Username
           </h2>
         </div>
         <div className="px-5 py-5">
@@ -53,19 +52,18 @@ export default async function AccountPage() {
         aria-labelledby="password"
       >
         <div className="border-b border-line bg-well/60 px-5 py-2.5">
-          <h2 id="password" className="overline text-ink-2">
+          <h2 id="password" className="ui-label text-ink-2">
             Password
           </h2>
         </div>
         <div className="px-5 py-5">
           <p className="text-sm leading-relaxed text-ink-2">
-            Setting a new password signs out every other device — a clean
-            slate, on purpose. Forgot it entirely? The{" "}
+            Setting a new password signs out other devices. The{" "}
             <Link
               href="/forgot-password"
               className="text-accent underline-offset-2 hover:underline"
             >
-              reset-by-email flow
+              email reset
             </Link>{" "}
             works signed out.
           </p>
@@ -81,15 +79,15 @@ export default async function AccountPage() {
         aria-labelledby="delete"
       >
         <div className="border-b border-danger/30 bg-well/60 px-5 py-2.5">
-          <h2 id="delete" className="overline text-danger">
+          <h2 id="delete" className="ui-label text-danger">
             Close the account
           </h2>
         </div>
         <div className="px-5 py-5">
           <p className="text-sm leading-relaxed text-ink-2">
-            Deletion is immediate and irreversible: the account, its sessions
-            on every device, and everything it filed — proposals, design
-            sheets, notes, and votes — are removed together.
+            Deletion is immediate and irreversible: the account, its sessions on
+            every device, and its concepts, sketches, comments, and votes — are
+            removed together.
           </p>
           <div className="mt-4">
             <DeleteAccountForm username={viewer.username} />

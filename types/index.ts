@@ -96,6 +96,12 @@ export type Concept = {
   postedAt: string; // ISO (created_at)
 };
 
+/**
+ * The compact concept shape used by board and related-concept reads. Full
+ * proposal prose is loaded only for a concept detail page.
+ */
+export type ConceptSummary = Omit<Concept, "details" | "feasibility">;
+
 /** A note in a concept's discussion — filterable by the same 8 lenses. */
 export type ConceptComment = {
   id: string;

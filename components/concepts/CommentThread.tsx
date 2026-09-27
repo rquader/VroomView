@@ -70,12 +70,12 @@ export function CommentThread({
         />
       ) : (
         <div className="sheet flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-ink-2">
-            Reviews are open — sign in to add your take and support the strong
-            arguments.
-          </p>
-          <Link href={ROUTES.login} className="btn btn-secondary btn-sm min-h-9 shrink-0">
-            Sign in to review
+          <p className="text-sm text-ink-2">Sign in to comment or vote.</p>
+          <Link
+            href={`${ROUTES.login}?next=${encodeURIComponent(ROUTES.concept(conceptId) + "#discussion")}`}
+            className="btn btn-secondary btn-sm min-h-11 shrink-0"
+          >
+            Sign in
           </Link>
         </div>
       )}
@@ -83,26 +83,30 @@ export function CommentThread({
       {available.length > 0 ? (
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center justify-between">
-            <p className="overline">Narrow by lens</p>
+            <p className="ui-label">Filter comments by topic</p>
             {active.length > 0 ? (
               <button
                 type="button"
                 onClick={() => setActive([])}
-                className="text-xs text-accent hover:underline"
+                className="min-h-11 rounded-btn px-3 text-sm text-accent hover:underline"
               >
                 Clear
               </button>
             ) : null}
           </div>
-          <TagFilterBar active={active} onToggle={toggle} available={available} />
+          <TagFilterBar
+            active={active}
+            onToggle={toggle}
+            available={available}
+          />
         </div>
       ) : null}
 
       {visible.length === 0 ? (
         <p className="note">
           {optimisticComments.length === 0
-            ? "No notes yet — this proposal is waiting on its first review."
-            : "No notes under that lens yet — try another, or add the first."}
+            ? "No comments yet."
+            : "No comments match these topics."}
         </p>
       ) : (
         <ul className="flex flex-col gap-3">

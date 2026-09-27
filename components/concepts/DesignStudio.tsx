@@ -28,6 +28,9 @@ import type { ConceptDesign } from "@/types";
  * (lib/design.ts) by construction, so what previews is what validates.
  */
 
+// Sixteen points fit the stored path limit without dropping intermediate points.
+const MAX_COORDINATE_POINTS = 16;
+
 const BLANK: ConceptDesign = {
   v: 1,
   kind: "studio",
@@ -71,6 +74,9 @@ export function DesignStudio({
 }) {
   const [penDown, setPenDown] = useState(false);
   const [drawing, setDrawing] = useState<[number, number][] | null>(null);
+  const [keyboardPoints, setKeyboardPoints] = useState<[number, number][]>([]);
+  const [coordinateX, setCoordinateX] = useState<number | "">(48);
+  const [coordinateY, setCoordinateY] = useState<number | "">(20);
   const surfaceRef = useRef<SVGSVGElement>(null);
 
   const set = (patch: Partial<ConceptDesign>) =>
@@ -86,7 +92,11 @@ export function DesignStudio({
   };
 
   const penStart = (e: React.PointerEvent) => {
-    if (!penDown || !design || design.strokes.length >= DESIGN_LIMITS.maxStrokes)
+    if (
+      !penDown ||
+      !design ||
+      design.strokes.length >= DESIGN_LIMITS.maxStrokes
+    )
       return;
     const p = toCanvas(e);
     if (!p) return;
@@ -112,7 +122,54 @@ export function DesignStudio({
     if (d) set({ strokes: [...design.strokes, { d }] });
   };
 
-  const livePreview = drawing ? pointsToPath(drawing) : null;
+  const hasValidCoordinate =
+    typeof coordinateX === "number" &&
+    typeof coordinateY === "number" &&
+    Number.isFinite(coordinateX) &&
+    Number.isFinite(coordinateY) &&
+    coordinateX >= 0 &&
+    coordinateX <= 96 &&
+    coordinateY >= 0 &&
+    coordinateY <= 40;
+
+  const addKeyboardPoint = () => {
+    if (
+      !design ||
+      !hasValidCoordinate ||
+      keyboardPoints.length >= MAX_COORDINATE_POINTS ||
+      design.strokes.length >= DESIGN_LIMITS.maxStrokes
+    )
+      return;
+    setKeyboardPoints((points) => [...points, [coordinateX, coordinateY]]);
+  };
+
+  const finishKeyboardStroke = () => {
+    if (
+      !design ||
+      keyboardPoints.length < 2 ||
+      design.strokes.length >= DESIGN_LIMITS.maxStrokes
+    )
+      return;
+    const d = pointsToPath(
+      keyboardPoints.map(
+        ([x, y]) => [x, y + design.rideHeight] as [number, number],
+      ),
+    );
+    if (d) {
+      set({ strokes: [...design.strokes, { d }] });
+      setKeyboardPoints([]);
+    }
+  };
+
+  const clearSketch = () => {
+    setDrawing(null);
+    setKeyboardPoints([]);
+    if (design) set({ strokes: [] });
+  };
+
+  // Keyboard points never share the pointer buffer, so leaving the plate
+  // cannot accidentally save an unfinished coordinate stroke.
+  const livePreview = pointsToPath(drawing ?? keyboardPoints);
   const skeleton = design?.base ? skeletonById(design.base) : null;
 
   return (
@@ -120,9 +177,9 @@ export function DesignStudio({
       {/* the plate: preview and (when the pen is up) drawing surface */}
       <div className="sheet overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-line bg-well/60 px-4 py-2">
-          <span className="overline text-[10px] text-ink-2">Design bay</span>
-          <span className="dateline text-[10px] text-ink-2">
-            {design ? designProvenance(design) : "empty plate"}
+          <span className="ui-label text-xs text-ink-2">Sketch</span>
+          <span className="dateline text-xs text-ink-2">
+            {design ? designProvenance(design) : "No sketch"}
           </span>
         </div>
         <div className="relative px-4 py-3">
@@ -137,9 +194,8 @@ export function DesignStudio({
               /* nothing chosen yet — keep the plate's proportions and invite */
               <div className="flex aspect-[96/40] w-full items-center justify-center">
                 <p className="max-w-[36ch] text-center text-sm leading-relaxed text-ink-2">
-                  Give the concept a face: pick a skeleton below, or take a
-                  blank plate and draw. Skip it entirely — the sheet files
-                  either way.
+                  Choose a base or a blank canvas to add a sketch. A design is
+                  optional.
                 </p>
               </div>
             )}
@@ -177,7 +233,7 @@ export function DesignStudio({
 
       {/* 1 · the skeleton library */}
       <div>
-        <p className="overline mb-2 text-[10px]">Start from a skeleton</p>
+        <p className="ui-label mb-2 text-xs">Choose a base</p>
         <div className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1.5 scrollbar-thin">
           <button
             type="button"
@@ -185,12 +241,12 @@ export function DesignStudio({
             onClick={() => set({ base: null })}
             className={`flex min-h-11 w-24 shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-btn border px-2 py-2 transition-colors ${
               design !== null && design.base === null
-                ? "border-accent bg-accent/10 text-accent"
+                ? "border-accent bg-well text-ink"
                 : "border-control bg-card text-ink-2 hover:bg-well hover:text-ink"
             }`}
           >
-            <span className="text-[11px] font-semibold">Blank plate</span>
-            <span className="dateline text-[9px]">pen only</span>
+            <span className="text-xs font-semibold">Blank canvas</span>
+            <span className="dateline text-xs text-ink-2">sketch only</span>
           </button>
           {SKELETONS.map((s) => {
             const selected = design?.base === s.id;
@@ -202,17 +258,17 @@ export function DesignStudio({
                 onClick={() => set({ base: s.id })}
                 className={`flex w-28 shrink-0 snap-start flex-col items-center gap-1 rounded-btn border px-2 pt-2 pb-1.5 transition-colors ${
                   selected
-                    ? "border-accent bg-accent/10 text-accent"
+                    ? "border-accent bg-well text-ink"
                     : "border-control bg-card text-ink-2 hover:bg-well hover:text-ink"
                 }`}
               >
                 <ProfileSvg
                   profile={s.profile}
-                  className={`h-8 w-auto ${selected ? "text-accent" : "text-ink-3"}`}
+                  className={`h-8 w-auto ${selected ? "text-ink" : "text-ink-3"}`}
                 />
-                <span className="text-[11px] font-semibold">{s.name}</span>
+                <span className="text-xs font-semibold">{s.name}</span>
                 {/* provenance in the picker, not just the fine print */}
-                <span className="dateline text-[9px]">
+                <span className="dateline text-xs text-ink-2">
                   {s.origin === "ai" ? "AI-drafted" : "board"}
                 </span>
               </button>
@@ -227,7 +283,7 @@ export function DesignStudio({
           {design.base !== null ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5">
-                <span className="overline flex items-baseline justify-between text-[10px]">
+                <span className="ui-label flex items-baseline justify-between text-xs">
                   Wheel size
                   <span className="font-mono normal-case tracking-normal text-ink-2">
                     {Math.round(design.wheelScale * 100)}%
@@ -244,7 +300,7 @@ export function DesignStudio({
                 />
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className="overline flex items-baseline justify-between text-[10px]">
+                <span className="ui-label flex items-baseline justify-between text-xs">
                   Ride height
                   <span className="font-mono normal-case tracking-normal text-ink-2">
                     {design.rideHeight > 0 ? "+" : ""}
@@ -273,48 +329,130 @@ export function DesignStudio({
               disabled={
                 design.strokes.length >= DESIGN_LIMITS.maxStrokes && !penDown
               }
-              className={`btn btn-sm min-h-9 border transition-colors ${
+              className={`btn btn-sm min-h-11 border transition-colors ${
                 penDown
-                  ? "border-accent bg-accent/10 text-accent"
+                  ? "border-accent bg-well text-ink"
                   : "border-control bg-card text-ink-2 hover:bg-well hover:text-ink"
               }`}
             >
-              {penDown ? "Pen down — draw on the plate" : "Take the pen"}
+              {penDown ? "Stop drawing" : "Draw"}
             </button>
-            <span className="dateline">
+            <span className="dateline text-xs text-ink-2">
               {design.strokes.length}/{DESIGN_LIMITS.maxStrokes} strokes
             </span>
             {design.strokes.length > 0 ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => set({ strokes: design.strokes.slice(0, -1) })}
-                  className="btn btn-ghost btn-sm min-h-9"
-                >
-                  Undo stroke
-                </button>
-                <button
-                  type="button"
-                  onClick={() => set({ strokes: [] })}
-                  className="btn btn-ghost btn-sm min-h-9"
-                >
-                  Clear pen
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() => set({ strokes: design.strokes.slice(0, -1) })}
+                className="btn btn-ghost btn-sm min-h-11"
+              >
+                Undo stroke
+              </button>
+            ) : null}
+            {design.strokes.length > 0 ||
+            keyboardPoints.length > 0 ||
+            drawing ? (
+              <button
+                type="button"
+                onClick={clearSketch}
+                className="btn btn-ghost btn-sm min-h-11"
+              >
+                Clear sketch
+              </button>
             ) : null}
             <button
               type="button"
               onClick={() => {
                 setPenDown(false);
                 setDrawing(null);
+                setKeyboardPoints([]);
                 onChange(null);
               }}
-              className="btn btn-ghost btn-sm ml-auto min-h-9 hover:text-danger"
+              className="btn btn-ghost btn-sm ml-auto min-h-11 hover:text-danger"
             >
               <CloseIcon size={13} />
-              Clear the plate
+              Reset design
             </button>
           </div>
+
+          <details className="rounded-btn border border-line bg-card px-3 py-2.5">
+            <summary className="cursor-pointer text-sm font-semibold text-ink">
+              Draw with coordinates
+            </summary>
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+              <label className="flex min-w-24 flex-col gap-1 text-xs font-medium text-ink">
+                X (0–96)
+                <input
+                  type="number"
+                  min={0}
+                  max={96}
+                  step={0.1}
+                  value={coordinateX}
+                  onChange={(event) =>
+                    setCoordinateX(
+                      event.target.value === ""
+                        ? ""
+                        : Number(event.target.value),
+                    )
+                  }
+                  className="field min-h-11 px-2 py-1 text-sm"
+                />
+              </label>
+              <label className="flex min-w-24 flex-col gap-1 text-xs font-medium text-ink">
+                Y (0–40)
+                <input
+                  type="number"
+                  min={0}
+                  max={40}
+                  step={0.1}
+                  value={coordinateY}
+                  onChange={(event) =>
+                    setCoordinateY(
+                      event.target.value === ""
+                        ? ""
+                        : Number(event.target.value),
+                    )
+                  }
+                  className="field min-h-11 px-2 py-1 text-sm"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={addKeyboardPoint}
+                disabled={
+                  !hasValidCoordinate ||
+                  keyboardPoints.length >= MAX_COORDINATE_POINTS ||
+                  design.strokes.length >= DESIGN_LIMITS.maxStrokes
+                }
+                className="btn btn-sm min-h-11 border border-control bg-card text-ink hover:bg-well"
+              >
+                Add point
+              </button>
+              <button
+                type="button"
+                onClick={finishKeyboardStroke}
+                disabled={
+                  keyboardPoints.length < 2 ||
+                  design.strokes.length >= DESIGN_LIMITS.maxStrokes
+                }
+                className="btn btn-sm min-h-11 border border-control bg-card text-ink hover:bg-well"
+              >
+                Finish stroke
+              </button>
+              <span aria-live="polite" className="text-xs text-ink-2">
+                Draft: {keyboardPoints.length}/{MAX_COORDINATE_POINTS} points
+              </span>
+              {keyboardPoints.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setKeyboardPoints([])}
+                  className="btn btn-ghost btn-sm min-h-11 text-ink-2 hover:text-ink"
+                >
+                  Clear draft
+                </button>
+              ) : null}
+            </div>
+          </details>
 
           {/* the skeleton's own name keeps the provenance honest at a glance */}
           {skeleton?.origin === "ai" ? (

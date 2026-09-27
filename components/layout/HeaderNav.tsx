@@ -25,7 +25,7 @@ export function HeaderNav({
             aria-current={current ? "page" : undefined}
             className={`rounded-btn px-3 py-2 text-sm transition-colors ${
               current
-                ? "font-medium text-accent"
+                ? "bg-well font-medium text-ink"
                 : "text-ink-2 hover:bg-well hover:text-ink"
             }`}
           >

@@ -9,7 +9,7 @@ export default function LoadingConcept() {
     <main
       className="mx-auto max-w-6xl animate-pulse px-5 py-10 sm:px-8"
       aria-busy="true"
-      aria-label="Pulling this sheet"
+      aria-label="Loading concept"
     >
       <div className="h-4 w-16 rounded bg-well" />
 
@@ -73,7 +73,7 @@ export default function LoadingConcept() {
           ))}
         </div>
       </div>
-      <span className="sr-only">Pulling this sheet…</span>
+      <span className="sr-only">Loading concept…</span>
     </main>
   );
 }

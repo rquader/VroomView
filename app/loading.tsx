@@ -5,7 +5,7 @@ import { LoadingAnimation } from "@/components/animations";
 export default function Loading() {
   return (
     <div className="flex min-h-[40vh] items-center justify-center">
-      <LoadingAnimation label="Pulling the board…" />
+      <LoadingAnimation label="Loading concepts…" />
     </div>
   );
 }

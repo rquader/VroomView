@@ -1,0 +1,125 @@
+/* Semantic colors shared by all four themes. Keep text and controls within
+   the contrast pairs checked by scripts/check-contrast.mjs. */
+
+@theme inline {
+  --color-page: var(--page);
+  --color-card: var(--card);
+  --color-well: var(--well);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-control: var(--control);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-ink: var(--accent-ink);
+  --color-rubric: var(--rubric);
+  --color-danger: var(--danger);
+
+  --font-sans:
+    var(--ff-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: var(--ff-serif), ui-serif, Georgia, "Times New Roman", serif;
+  --font-mono: var(--ff-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-btn: 9px;
+  --radius-field: 10px;
+  --radius-card: 12px;
+
+  /* motion vocabulary — quiet by default, one soft-spring for arrivals */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+
+/*
+  Named themes — set via data-theme on <html> (switcher + no-flash script in
+  layout.tsx). Each is a complete, hand-tuned token table that passes the
+  contrast contract above. Default = Vellum.
+*/
+:root,
+[data-theme="vellum"] {
+  --page: #f2eee5;
+  --card: #faf8f2;
+  --well: #e9e3d6;
+  --ink: #201d17;
+  --ink-2: #5d564a;
+  --ink-3: #706a5d;
+  --line: #ddd6c7;
+  --line-2: #c6bda9;
+  --control: #8d8678;
+  --accent: #0c5b5e;
+  --accent-2: #094749;
+  --accent-ink: #f4f7f6;
+  --rubric: #a8531f;
+  --danger: #a1291f;
+  --shadow-paper:
+    0 1px 2px rgba(40, 30, 18, 0.05), 0 4px 14px -6px rgba(40, 30, 18, 0.1);
+  --shadow-raise: 0 6px 22px -6px rgba(40, 30, 18, 0.18);
+  color-scheme: light;
+}
+
+/* Moss — nature + British-racing heritage: stone paper, deep forest green */
+[data-theme="moss"] {
+  --page: #eef0e8;
+  --card: #f6f7f1;
+  --well: #e1e6d7;
+  --ink: #1b201a;
+  --ink-2: #525a4c;
+  --ink-3: #686e5d;
+  --line: #d6dcc9;
+  --line-2: #bec7aa;
+  --control: #838975;
+  --accent: #2f5d3a;
+  --accent-2: #244a2d;
+  --accent-ink: #f1f5ec;
+  --rubric: #906328;
+  --danger: #a1291f;
+  --shadow-paper:
+    0 1px 2px rgba(30, 40, 24, 0.05), 0 4px 14px -6px rgba(30, 40, 24, 0.1);
+  --shadow-raise: 0 6px 22px -6px rgba(30, 40, 24, 0.16);
+  color-scheme: light;
+}
+
+/* Clay — design-studio clay + warm earth: sand paper, terracotta */
+[data-theme="clay"] {
+  --page: #f4ece1;
+  --card: #fbf5ec;
+  --well: #ecdfce;
+  --ink: #241d16;
+  --ink-2: #63564a;
+  --ink-3: #75685a;
+  --line: #e2d5c3;
+  --line-2: #ccbaa2;
+  --control: #918473;
+  --accent: #a5502f;
+  --accent-2: #8a3f22;
+  --accent-ink: #f8f1e9;
+  --rubric: #3f6b68;
+  --danger: #9e2b1c;
+  --shadow-paper:
+    0 1px 2px rgba(60, 40, 24, 0.05), 0 4px 14px -6px rgba(60, 40, 24, 0.1);
+  --shadow-raise: 0 6px 22px -6px rgba(60, 40, 24, 0.16);
+  color-scheme: light;
+}
+
+/* Graphite — night studio: warm charcoal + luminous petrol */
+[data-theme="graphite"] {
+  --page: #15130e;
+  --card: #1e1b15;
+  --well: #29241c;
+  --ink: #ece5d6;
+  --ink-2: #b1a794;
+  --ink-3: #8c8473;
+  --line: #322c22;
+  --line-2: #4a4234;
+  --control: #6e685d;
+  --accent: #58c2b0;
+  --accent-2: #74d0c1;
+  --accent-ink: #08201d;
+  --rubric: #d98a4e;
+  --danger: #e5776b;
+  --shadow-paper:
+    0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 14px -6px rgba(0, 0, 0, 0.4);
+  --shadow-raise: 0 8px 26px -6px rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}

@@ -1,19 +1,18 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ROUTES } from "@/constants/app";
-import { useDialogFocus } from "@/hooks/useDialogFocus";
 import { signOutAction } from "@/lib/actions/auth";
 import { MenuIcon, CloseIcon } from "@/components/ui/Icon";
 import { ThemeList } from "@/components/ui/ThemeSwitcher";
 
 const NAV = [
-  { label: "Feed", href: ROUTES.home },
+  { label: "Community", href: ROUTES.home },
   { label: "Explore", href: ROUTES.explore },
   { label: "About", href: ROUTES.about },
-  { label: "Propose a concept", href: ROUTES.submit },
+  { label: "Share a concept", href: ROUTES.submit },
 ];
 
 /**
@@ -26,6 +25,10 @@ export function MobileMenu({ username }: { username: string | null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const panelId = useId();
+  const titleId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   // Route changed → the user navigated; close during render (the "adjust
   // state when props change" pattern — an effect here would double-render
@@ -36,18 +39,29 @@ export function MobileMenu({ username }: { username: string | null }) {
     setOpen(false);
   }
 
-  const panelRef = useDialogFocus<HTMLDivElement>(open);
-
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+    const dialog = dialogRef.current;
+    const panel = panelRef.current;
+    if (!dialog || !panel) return;
+
+    const updatePanelPosition = () => {
+      const headerBottom =
+        triggerRef.current?.closest("header")?.getBoundingClientRect().bottom ??
+        0;
+      panel.style.top = `${headerBottom}px`;
+      panel.style.maxHeight = `calc(100dvh - ${headerBottom}px)`;
     };
-    document.addEventListener("keydown", onKey);
+
+    updatePanelPosition();
+    dialog.showModal();
+    window.addEventListener("resize", updatePanelPosition);
+    const previousOverflow = document.documentElement.style.overflow;
     document.documentElement.style.overflow = "hidden";
     return () => {
-      document.removeEventListener("keydown", onKey);
-      document.documentElement.style.overflow = "";
+      window.removeEventListener("resize", updatePanelPosition);
+      if (dialog.open) dialog.close();
+      document.documentElement.style.overflow = previousOverflow;
     };
   }, [open]);
 
@@ -65,6 +79,7 @@ export function MobileMenu({ username }: { username: string | null }) {
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
@@ -75,79 +90,104 @@ export function MobileMenu({ username }: { username: string | null }) {
         {open ? <CloseIcon size={20} /> : <MenuIcon size={20} />}
       </button>
 
-      {open ? (
-        <div className="md:hidden">
-          <button
-            type="button"
-            aria-label="Close menu"
-            onClick={() => setOpen(false)}
-            className="fixed inset-0 z-30 cursor-default bg-black/30 motion-safe:animate-[vv-fade-in_0.15s_ease]"
-          />
-          <div
-            id={panelId}
-            ref={panelRef}
-            tabIndex={-1}
-            className="absolute inset-x-0 top-full z-40 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-line bg-page shadow-[var(--shadow-raise)] outline-none motion-safe:animate-[vv-drop-in_0.18s_var(--ease-out-soft)]"
+      <dialog
+        ref={dialogRef}
+        aria-labelledby={titleId}
+        onCancel={() => setOpen(false)}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) setOpen(false);
+        }}
+        className="fixed inset-0 m-0 h-dvh max-h-none w-screen max-w-none overflow-hidden border-0 bg-black/30 p-0 text-ink backdrop:bg-transparent md:hidden"
+      >
+        <div
+          id={panelId}
+          ref={panelRef}
+          className="absolute inset-x-0 overflow-y-auto border-b border-line bg-page shadow-[var(--shadow-raise)] motion-safe:animate-[vv-drop-in_0.18s_var(--ease-out-soft)]"
+        >
+          <nav
+            className="mx-auto max-w-6xl px-5 py-4 sm:px-8"
+            aria-label="Site"
           >
-            <nav className="mx-auto max-w-6xl px-5 py-4 sm:px-8" aria-label="Site">
-              <ul className="flex flex-col">
-                {NAV.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      aria-current={pathname === item.href ? "page" : undefined}
-                      className={`flex min-h-12 items-center border-b border-line font-serif text-xl tracking-[-0.01em] transition-colors hover:text-accent ${
-                        pathname === item.href ? "text-accent" : "text-ink"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <p className="overline mt-5 mb-2">Palette</p>
-              <ThemeList />
+            <div className="flex items-center justify-between gap-3 pb-2">
+              <h2 id={titleId} className="ui-label">
+                Menu
+              </h2>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Close menu"
+                className="btn btn-ghost min-h-11 min-w-11"
+              >
+                <CloseIcon size={18} />
+              </button>
+            </div>
+            <ul className="flex flex-col">
+              {NAV.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={pathname === item.href ? "page" : undefined}
+                    className={`flex min-h-12 items-center border-b border-line font-serif text-xl tracking-[-0.01em] transition-colors hover:text-accent ${
+                      pathname === item.href ? "text-accent" : "text-ink"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="ui-label mt-5 mb-2">Appearance</p>
+            <ThemeList />
 
-              <p className="overline mt-5 mb-2">Account</p>
-              {username ? (
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
-                  <span className="text-sm text-ink-2">
-                    Signed in as{" "}
-                    <span className="font-medium text-ink">@{username}</span>
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Link
-                      href={ROUTES.account}
-                      className="btn btn-ghost btn-sm min-h-10"
+            <p className="ui-label mt-5 mb-2">Account</p>
+            {username ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-2">
+                <span className="text-sm text-ink-2">
+                  Signed in as{" "}
+                  <span className="font-medium text-ink">@{username}</span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <Link
+                    href={ROUTES.account}
+                    onClick={() => setOpen(false)}
+                    className="btn btn-ghost btn-sm min-h-11"
+                  >
+                    Account settings
+                  </Link>
+                  <form action={signOutAction}>
+                    <button
+                      type="submit"
+                      name="scope"
+                      value="local"
+                      className="btn btn-secondary btn-sm min-h-11"
                     >
-                      Account settings
-                    </Link>
-                    <form action={signOutAction}>
-                      <button
-                        type="submit"
-                        name="scope"
-                        value="local"
-                        className="btn btn-secondary btn-sm min-h-10"
-                      >
-                        Sign out
-                      </button>
-                    </form>
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3 pb-2">
-                  <Link href={ROUTES.login} className="btn btn-secondary btn-sm min-h-10">
-                    Sign in
-                  </Link>
-                  <Link href={ROUTES.signup} className="btn btn-ghost btn-sm min-h-10">
-                    Create account
-                  </Link>
-                </div>
-              )}
-            </nav>
-          </div>
+                      Sign out
+                    </button>
+                  </form>
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3 pb-2">
+                <Link
+                  href={ROUTES.login}
+                  onClick={() => setOpen(false)}
+                  className="btn btn-secondary btn-sm min-h-11"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href={ROUTES.signup}
+                  onClick={() => setOpen(false)}
+                  className="btn btn-ghost btn-sm min-h-11"
+                >
+                  Create account
+                </Link>
+              </div>
+            )}
+          </nav>
         </div>
-      ) : null}
+      </dialog>
     </>
   );
 }

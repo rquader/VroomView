@@ -1,0 +1,79 @@
+/* drawer/menu arrivals — soft, short; killed entirely under reduced motion */
+@keyframes vv-slide-up {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes vv-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes vv-drop-in {
+  from {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+/* cards arriving on the board — a short rise, staggered by index */
+@keyframes vv-rise {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+/* the support stamp landing — approval pressed onto the sheet */
+@keyframes vv-stamp {
+  from {
+    transform: scale(0.82) rotate(-5deg);
+  }
+  60% {
+    transform: scale(1.08) rotate(1deg);
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+  }
+}
+/* the theme button's glyph landing — a stamp, not a spin */
+@keyframes vv-glyph-in {
+  from {
+    transform: scale(0.55) rotate(-24deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* view transitions (page crossfade + title morph) collapse to instant —
+     the pseudo-elements live on the root, outside the * rules above */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

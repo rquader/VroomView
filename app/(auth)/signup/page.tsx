@@ -20,11 +20,11 @@ export default async function SignupPage({
   return (
     <AuthShell
       kicker="New reviewer"
-      title="Join the review"
-      lede="An account lets you file concepts, support the strong ones, and argue in the notes."
+      title="Create an account"
+      lede="Post concepts, vote, and join discussions."
       footer={
         <>
-          Already reviewing?{" "}
+          Already have an account?{" "}
           <Link
             href={`${ROUTES.login}${next !== "/" ? `?next=${encodeURIComponent(next)}` : ""}`}
             className="text-accent underline-offset-2 hover:underline"

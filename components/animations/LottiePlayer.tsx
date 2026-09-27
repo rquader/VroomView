@@ -95,7 +95,11 @@ export function LottiePlayer({
 
   return (
     // vv-lottie scopes the theme re-inking rules in globals.css
-    <div className={`vv-lottie ${className ?? ""}`} role="img" aria-label={ariaLabel}>
+    <div
+      className={`vv-lottie ${className ?? ""}`}
+      role="img"
+      aria-label={ariaLabel}
+    >
       <Lottie animationData={data} loop={loop} autoplay={autoplay} />
     </div>
   );

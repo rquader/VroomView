@@ -7,201 +7,144 @@ import { getConcept, getRelated } from "@/lib/services/concepts.service";
 import { listCommentsByConcept } from "@/lib/services/comments.service";
 import { getViewer } from "@/lib/services/viewer.service";
 import { timeAgo } from "@/utils/time";
-import { sheetNo } from "@/utils/sheet";
 import { designProvenance } from "@/lib/design";
-import { DesignSheet } from "@/components/concepts/DesignSheet";
+import { ConceptArtwork } from "@/components/concepts/ConceptArtwork";
 import { SpecList } from "@/components/concepts/SpecList";
 import { VoteControl } from "@/components/concepts/VoteControl";
 import { CommentThread } from "@/components/concepts/CommentThread";
 import { ConceptMeta } from "@/components/concepts/ConceptMeta";
 import { RelatedConcepts } from "@/components/concepts/RelatedConcepts";
-import { Silhouette } from "@/components/ui/Silhouette";
-import { ArrowLeftIcon, TagIcon } from "@/components/ui/Icon";
+import { Avatar } from "@/components/ui/Avatar";
+import { ArrowLeftIcon, CommentIcon } from "@/components/ui/Icon";
 
-// Rendered per request: content lives in Supabase now, and vote state is
-// per-viewer. (No generateStaticParams — that pattern retired with the mock.)
+type DetailPageProps = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
+}: DetailPageProps): Promise<Metadata> {
   const { id } = await params;
   const concept = await getConcept(id);
-  return { title: concept ? concept.title : "Concept not found" };
+  return {
+    title: concept?.title ?? "Concept not found",
+    description: concept?.summary,
+  };
 }
 
-export default async function ConceptDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ConceptDetailPage({ params }: DetailPageProps) {
   const { id } = await params;
   const concept = await getConcept(id);
   if (!concept) notFound();
-
   const [comments, related, viewer] = await Promise.all([
     listCommentsByConcept(concept.id),
     getRelated(concept),
     getViewer(),
   ]);
   const signedIn = viewer !== null;
+  const author = concept.author.displayName || concept.author.username;
 
   return (
-    <main className="mx-auto max-w-6xl px-5 py-10 sm:px-8">
+    <main className="page-shell pt-6 sm:pt-8">
       <Link
         href={ROUTES.home}
-        className="inline-flex min-h-10 items-center gap-1.5 text-sm text-ink-3 transition-colors hover:text-ink"
+        className="inline-flex min-h-11 items-center gap-2 text-sm text-ink-2 hover:text-accent"
       >
-        <ArrowLeftIcon size={16} />
-        Feed
+        <ArrowLeftIcon size={16} /> Community
       </Link>
-
-      <div className="mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_264px] lg:gap-16">
-        <div>
-          <article>
-            {/*
-              The drawing sheet — the page's showpiece. The whole header is ONE
-              filed sheet: register strip (body style, author, sheet number),
-              title beside the elevation drawing, the measured spec band, then
-              the action band where backing gets stamped. The identity moment
-              of the product lives here, so it earns the full vocabulary.
-            */}
-            <div className="sheet relative overflow-hidden">
-              <div
-                aria-hidden
-                className="drafting-grid pointer-events-none absolute inset-0 opacity-70"
-              />
-
-              {/* register strip — text on well surfaces stays ink/ink-2/accent
-                  (ink-3 dips below 4.5:1 there; see 21 - Accessibility) */}
-              <div className="relative flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line bg-well/60 px-5 py-2.5 sm:px-7">
-                <div className="flex items-center gap-2.5 text-[11px]">
-                  <span className="font-semibold uppercase tracking-[0.14em] text-accent">
-                    {concept.bodyStyle}
-                  </span>
-                  <span className="dateline text-ink-2">
-                    {timeAgo(concept.postedAt)} ·{" "}
-                    <span className="normal-case">
-                      @{concept.author.username}
+      <div className="mt-5 grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_264px] lg:gap-12">
+        <div className="min-w-0">
+          <article className="sheet overflow-hidden">
+            <div className="p-5 sm:p-8">
+              <div className="mb-5 flex items-center gap-3">
+                <Avatar name={author} />
+                <div className="text-sm">
+                  <p className="font-medium">{author}</p>
+                  <p className="mt-0.5 text-xs text-ink-3">
+                    @{concept.author.username} <span className="mx-1">·</span>{" "}
+                    <span suppressHydrationWarning>
+                      {timeAgo(concept.postedAt)}
                     </span>
-                    {concept.make ? (
-                      <>
-                        {" "}
-                        · for{" "}
-                        <span className="normal-case">{concept.make}</span>
-                      </>
-                    ) : null}
-                  </span>
-                </div>
-                <span className="dateline text-ink-2">
-                  Sheet {sheetNo(concept.id)}
-                </span>
-              </div>
-
-              {/* title block: headline + summary beside the elevation drawing */}
-              <div className="relative grid gap-7 px-5 pt-6 pb-7 sm:px-7 sm:pt-8 lg:grid-cols-[minmax(0,1fr)_290px] lg:items-center lg:gap-10">
-                <div>
-                  {/* pairs with the feed card's identically-named transition:
-                      the title morphs from card to sheet on navigation */}
-                  <ViewTransition name={`vv-title-${concept.id}`}>
-                    <h1 className="font-serif text-4xl font-medium leading-[1.08] tracking-[-0.02em] sm:text-[2.75rem]">
-                      {concept.title}
-                    </h1>
-                  </ViewTransition>
-                  <p className="mt-4 text-lg leading-relaxed text-ink-2 sm:text-xl">
-                    {concept.summary}
                   </p>
                 </div>
-                <div className="lg:border-l lg:border-line lg:pl-10">
-                  {concept.design ? (
-                    /* the author's own elevation drafts itself; the caption
-                       carries the studio provenance (AI-drafted skeletons
-                       are labelled — that's the deal) */
-                    <>
-                      <DesignSheet
-                        design={concept.design}
-                        className="mx-auto h-auto w-full max-w-[260px] text-ink lg:max-w-none"
-                      />
-                      <div
-                        className="dim-rule mx-auto mt-3 max-w-[260px] lg:max-w-none"
-                        aria-hidden
-                      />
-                      <p className="dateline mt-2 text-center text-ink-2">
-                        Author&apos;s elevation ·{" "}
-                        {designProvenance(concept.design)}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <Silhouette
-                        bodyStyle={concept.bodyStyle}
-                        strokeWidth={1.25}
-                        className="mx-auto h-auto w-full max-w-[260px] text-ink lg:max-w-none"
-                      />
-                      <div
-                        className="dim-rule mx-auto mt-3 max-w-[260px] lg:max-w-none"
-                        aria-hidden
-                      />
-                      <p className="dateline mt-2 text-center text-ink-2">
-                        {concept.bodyStyle} · elevation
-                      </p>
-                    </>
-                  )}
-                </div>
               </div>
-
-              {/* the measured spec band */}
-              <div className="relative border-t border-line bg-well/40 px-5 py-6 sm:px-7">
-                <h2 className="overline text-accent">Proposed specification</h2>
-                <div className="mt-5">
-                  <SpecList specs={concept.specs} size="hero" />
-                </div>
-              </div>
-
-              {/* action band: lenses + the support stamp */}
-              <div className="relative flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line px-5 py-4 sm:px-7">
-                <div className="flex min-w-0 items-center gap-1.5 text-[11px] uppercase tracking-wide text-ink-3">
-                  <TagIcon size={13} className="shrink-0" />
-                  <span>{concept.tags.join(" · ")}</span>
-                </div>
-                <VoteControl
-                  variant="stamp"
-                  conceptId={concept.id}
-                  score={concept.score}
-                  viewerVote={concept.viewerVote}
-                  signedIn={signedIn}
-                  className="w-full sm:ml-auto sm:w-auto"
+              <ViewTransition name={`vv-title-${concept.id}`}>
+                <h1 className="font-serif text-4xl font-medium leading-[1.08] tracking-[-0.03em] sm:text-5xl">
+                  {concept.title}
+                </h1>
+              </ViewTransition>
+              <p className="mt-4 text-base leading-relaxed text-ink-2 sm:text-lg">
+                {concept.summary}
+              </p>
+              <div className="mt-6">
+                <ConceptArtwork
+                  bodyStyle={concept.bodyStyle}
+                  design={concept.design}
+                  large
                 />
               </div>
+              {concept.design ? (
+                <p className="mt-2 text-xs text-ink-3">
+                  {designProvenance(concept.design)}
+                </p>
+              ) : null}
+              <section className="mt-7" aria-labelledby="specifications">
+                <h2 id="specifications" className="mb-5 text-sm font-semibold">
+                  Proposed specifications
+                </h2>
+                <SpecList specs={concept.specs} size="hero" />
+              </section>
+              {concept.details ? (
+                <section className="mt-8">
+                  <h2 className="section-heading">The argument</h2>
+                  <p className="mt-3 whitespace-pre-wrap break-words leading-relaxed text-ink-2">
+                    {concept.details}
+                  </p>
+                </section>
+              ) : null}
+              {concept.feasibility ? (
+                <section className="mt-8">
+                  <h2 className="section-heading">How it could work</h2>
+                  <p className="mt-3 whitespace-pre-wrap break-words leading-relaxed text-ink-2">
+                    {concept.feasibility}
+                  </p>
+                </section>
+              ) : null}
+              <div className="mt-6 flex flex-wrap gap-2">
+                {concept.tags.map((tag) => (
+                  <Link
+                    key={tag}
+                    href={`/?tag=${encodeURIComponent(tag)}`}
+                    className="topic-tag"
+                  >
+                    {tag}
+                  </Link>
+                ))}
+              </div>
             </div>
-
-            {concept.details ? (
-              <div className="mt-8 max-w-3xl">
-                {/* same label the drafting table uses — filing and reading rhyme */}
-                <h2 className="overline">The case for it</h2>
-                <p className="mt-3 leading-relaxed">{concept.details}</p>
-              </div>
-            ) : null}
-
-            {concept.feasibility ? (
-              <div className="mt-8 max-w-3xl">
-                <h2 className="overline">The production case</h2>
-                <p className="mt-3 leading-relaxed">{concept.feasibility}</p>
-              </div>
-            ) : null}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-5 py-3 sm:px-8">
+              <VoteControl
+                conceptId={concept.id}
+                score={concept.score}
+                viewerVote={concept.viewerVote}
+                signedIn={signedIn}
+              />
+              <a href="#discussion" className="btn btn-ghost gap-2 text-sm">
+                <CommentIcon size={17} />
+                {comments.length} comments
+              </a>
+            </div>
           </article>
-
-          <section id="discussion" className="mt-12 max-w-3xl scroll-mt-24">
-            <div className="flex items-baseline gap-3 border-b border-line pb-3">
-              <h2 className="font-serif text-2xl font-medium tracking-[-0.01em]">
-                Discussion
-              </h2>
-              <span className="dateline">
-                {comments.length} {comments.length === 1 ? "note" : "notes"}
+          <section
+            id="discussion"
+            className="mt-10 scroll-mt-28"
+            aria-labelledby="comments-heading"
+          >
+            <h2 id="comments-heading" className="section-heading">
+              Comments{" "}
+              <span className="ml-1 font-sans text-sm font-normal text-ink-3">
+                {comments.length}
               </span>
-            </div>
-            <div className="mt-6">
+            </h2>
+            <div className="mt-5">
               <CommentThread
                 conceptId={concept.id}
                 comments={comments}
@@ -213,16 +156,10 @@ export default async function ConceptDetailPage({
             </div>
           </section>
         </div>
-
-        {/* Register + related: desktop right rail. On mobile the sheet header
-            already carries the meta, so only "more like this" follows the read. */}
-        <aside className="hidden lg:sticky lg:top-24 lg:block lg:self-start">
+        <aside className="lg:sticky lg:top-28">
           <ConceptMeta concept={concept} />
           <RelatedConcepts concepts={related} />
         </aside>
-        <div className="mt-12 lg:hidden">
-          <RelatedConcepts concepts={related} />
-        </div>
       </div>
     </main>
   );

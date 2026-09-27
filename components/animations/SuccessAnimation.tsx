@@ -30,7 +30,13 @@ export function SuccessAnimation({
               strokeLinejoin="round"
             >
               <circle cx="24" cy="24" r="20" strokeWidth="1.75" />
-              <circle cx="24" cy="24" r="16" strokeWidth="0.75" opacity="0.55" />
+              <circle
+                cx="24"
+                cy="24"
+                r="16"
+                strokeWidth="0.75"
+                opacity="0.55"
+              />
               <path d="M16.5 24.5l5 5L32 19" strokeWidth="2.25" />
             </g>
           </svg>

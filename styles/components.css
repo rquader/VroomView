@@ -1,0 +1,282 @@
+@layer components {
+  /* ── Editorial type roles ─────────────────────────────────────────── */
+  .ui-label {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--ink-3);
+  }
+  .dateline {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    letter-spacing: 0;
+    color: var(--ink-3);
+  }
+
+  /* ── Paper surfaces — cards as drawing sheets ─────────────────────── */
+  .sheet {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-paper);
+  }
+  .sheet-hover {
+    transition:
+      transform 0.2s var(--ease-out-soft),
+      border-color 0.2s ease,
+      box-shadow 0.2s var(--ease-out-soft);
+  }
+  .sheet-hover:hover {
+    transform: none;
+    border-color: var(--line-2);
+    box-shadow: var(--shadow-raise);
+  }
+
+  /* ── Drafting vocabulary — the identity, used sparingly ───────────── */
+  /* A dimension rule: hairline with end ticks, as on a measured drawing. */
+  .dim-rule {
+    position: relative;
+    height: 1px;
+    background: var(--line-2);
+  }
+  .dim-rule::before,
+  .dim-rule::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    width: 1px;
+    height: 7px;
+    background: var(--line-2);
+  }
+  .dim-rule::before {
+    left: 0;
+  }
+  .dim-rule::after {
+    right: 0;
+  }
+
+  /* Accent-tinted dimension rule — under a card's HEADLINE spec only (the
+     one number that sells the concept). Decorative, so the soft mix is fine. */
+  .dim-rule-accent,
+  .dim-rule-accent::before,
+  .dim-rule-accent::after {
+    background: color-mix(in oklab, var(--accent) 55%, var(--line-2));
+  }
+
+  /* Faint drafting grid for hero/empty regions — reads as graph vellum. */
+  .drafting-grid {
+    background-image:
+      linear-gradient(
+        color-mix(in oklab, var(--line) 55%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--line) 55%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 28px 28px;
+    /* fade the grid out toward the bottom so content never sits on visible lines */
+    mask-image: linear-gradient(to bottom, black, transparent);
+  }
+
+  /* ── Button system — one shape, token-driven, quiet motion ────────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    border-radius: var(--radius-btn);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      border-color 0.15s ease,
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    padding: 0.5rem 0.95rem;
+    font-weight: 600;
+    box-shadow:
+      0 1px 2px rgba(20, 13, 7, 0.18),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-2);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-raise);
+  }
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  .btn-secondary {
+    background: var(--card);
+    color: var(--ink);
+    border: 1px solid var(--control);
+    padding: 0.5rem 0.95rem;
+    box-shadow: 0 1px 2px rgba(40, 30, 18, 0.05);
+  }
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--well);
+    border-color: var(--ink-3);
+  }
+  .btn-ghost {
+    color: var(--ink-2);
+    padding: 0.4rem 0.7rem;
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--well);
+    color: var(--ink);
+  }
+  .btn-sm {
+    min-height: 2rem;
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+    gap: 0.35rem;
+  }
+
+  /* ── Field system ─────────────────────────────────────────────────── */
+  .field {
+    width: 100%;
+    min-height: 2.75rem;
+    border-radius: var(--radius-field);
+    min-width: 0;
+    border: 1px solid var(--control);
+    background: var(--card);
+    color: var(--ink);
+    font-size: 0.875rem;
+    padding: 0.55rem 0.75rem;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  .field::placeholder {
+    color: var(--ink-3);
+  }
+  .field:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-color: var(--accent);
+  }
+  .field:disabled {
+    opacity: 0.65;
+  }
+
+  /* ── Margin note — status without loud colored boxes ──────────────── */
+  .note {
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--rubric);
+    background: var(--well);
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    color: var(--ink-2);
+    font-size: 0.875rem;
+  }
+
+  /* ── Lens checkbox — an ink-stamp tick (feed + drawer filters) ────── */
+  .lens-check {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    flex: none;
+    border: 1.5px solid var(--control);
+    border-radius: 4px;
+    background: var(--card);
+    cursor: pointer;
+    position: relative;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s;
+  }
+  .lens-check:checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .lens-check:checked::after {
+    content: "";
+    position: absolute;
+    left: 4.5px;
+    top: 1.5px;
+    width: 4px;
+    height: 8px;
+    border: solid var(--accent-ink);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .lens-check:hover {
+    border-color: var(--ink-2);
+  }
+
+  /* skip link — hidden until keyboard-focused, then a small pinned tab */
+  .skip-link {
+    position: fixed;
+    top: -100%;
+    left: 1rem;
+    z-index: 100;
+    padding: 0.6rem 1rem;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: var(--radius-btn);
+    transition: none;
+  }
+  .skip-link:focus-visible {
+    top: 1rem;
+  }
+
+  /*
+    Theme-aware Lottie: our animations (authored by scripts/build-animations.mjs)
+    are stroke-only, and each layer carries a `cl` class that lottie-web writes
+    onto its <g>. CSS properties beat SVG presentation attributes, so these
+    rules re-ink every animation with the active theme — one JSON, four themes.
+  */
+  .vv-lottie svg .vv-ink path {
+    stroke: var(--ink);
+  }
+  .vv-lottie svg .vv-ink-2 path {
+    stroke: var(--ink-2);
+  }
+  .vv-lottie svg .vv-ink-3 path {
+    stroke: var(--ink-3);
+  }
+  .vv-lottie svg .vv-control path {
+    stroke: var(--control);
+  }
+  .vv-lottie svg .vv-accent path {
+    stroke: var(--accent);
+  }
+  .vv-lottie svg .vv-danger path {
+    stroke: var(--danger);
+  }
+
+  /* thin themed scrollbar */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-2) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--line-2);
+    border-radius: 3px;
+  }
+}

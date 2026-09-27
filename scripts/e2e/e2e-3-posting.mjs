@@ -26,7 +26,9 @@ check(
 );
 
 // signed-in drafting
-const ctx = await browser.newContext({ viewport: { width: 1440, height: 950 } });
+const ctx = await browser.newContext({
+  viewport: { width: 1440, height: 950 },
+});
 const page = await ctx.newPage();
 page.on("pageerror", (e) => console.log("PAGE ERROR:", e.message));
 await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
@@ -39,7 +41,9 @@ await page.goto(`${BASE}/submit`, { waitUntil: "networkidle" });
 await page.getByLabel("Title").fill(TITLE);
 await page
   .getByLabel("Summary")
-  .fill("A friendly electric microbus for car-share fleets — flat floor, swappable seats, honest range.");
+  .fill(
+    "A friendly electric microbus for car-share fleets — flat floor, swappable seats, honest range.",
+  );
 await page.getByLabel("Body style").fill("Minivan");
 // default rows are Est. price / Range / Powertrain / Drivetrain now
 await page.getByLabel("Spec 1 value").fill("$26,000");
@@ -73,7 +77,10 @@ console.log("created:", conceptUrl);
 
 // it's on the board too
 await page.goto(`${BASE}/`, { waitUntil: "networkidle" });
-check(await page.getByText(TITLE).first().isVisible(), "the new concept appears in the feed");
+check(
+  await page.getByText(TITLE).first().isVisible(),
+  "the new concept appears in the feed",
+);
 
 await browser.close();
 console.log(failures === 0 ? "\nPOSTING E2E PASSED" : `\n${failures} FAILURES`);

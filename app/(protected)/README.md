@@ -1,16 +1,5 @@
-# `(protected)` route group
+# Protected route group
 
-A **route group** (parentheses = not part of the URL) for pages that require a
-signed-in user — the feed, settings, messages, etc.
+This directory reserves a Next.js route group for pages that require a signed-in user. Parentheses do not add a URL segment, and the group name itself does not enforce authentication. Every page or action must use the project's auth checks and rely on Supabase Row Level Security for data access.
 
-Two layers protect these (used together):
-
-1. **Middleware** (`middleware.ts` → `lib/supabase/middleware.ts`) refreshes the
-   session on every request and can redirect unauthenticated users. (The redirect is
-   commented out until auth pages exist.)
-2. **A group layout** `(protected)/layout.tsx` (add later) can call the server Supabase
-   client, check `auth.getUser()`, and `redirect("/login")` if there's no user —
-   defense in depth.
-
-Planned routes (not built yet), e.g. `feed/page.tsx` → `/feed`. See
-`06 - Auth Architecture` in the docs.
+There are no protected pages in this group yet. Current routes perform authorization in their server actions and data boundaries.

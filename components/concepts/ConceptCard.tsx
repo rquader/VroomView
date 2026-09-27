@@ -1,114 +1,111 @@
 import Link from "next/link";
 import { ViewTransition } from "react";
-import type { Concept } from "@/types";
+import type { ConceptSummary } from "@/types";
 import { ROUTES } from "@/constants/app";
 import { timeAgo } from "@/utils/time";
+import { CommentIcon } from "@/components/ui/Icon";
+import { Avatar } from "@/components/ui/Avatar";
 import { DesignPlate } from "./DesignPlate";
-import { SpecList } from "./SpecList";
 import { VoteControl } from "./VoteControl";
-import { Silhouette } from "@/components/ui/Silhouette";
-import { CommentIcon, TagIcon } from "@/components/ui/Icon";
 
-/**
- * A concept post in the feed — a catalogue entry: index + body-style kicker +
- * dateline, serif title (the only link — the card holds its own buttons), lede,
- * the measured spec sheet with its headline number, then quiet tag marks +
- * discussion/vote. Hovering the card (pointer devices) ghosts the concept's
- * elevation in from the right edge — the drawing showing through the sheet.
- */
 export function ConceptCard({
   concept,
-  index,
   signedIn,
 }: {
-  concept: Concept;
-  index?: number;
+  concept: ConceptSummary;
   signedIn: boolean;
 }) {
-  return (
-    <article className="sheet sheet-hover group relative overflow-hidden p-5 sm:p-6">
-      {/* hover ghost: the author's own design when they drafted one */}
-      {concept.design ? (
-        <DesignPlate
-          design={concept.design}
-          className="pointer-events-none absolute -right-3 top-5 hidden w-44 translate-x-3 text-ink opacity-0 transition-[opacity,transform] duration-300 ease-[var(--ease-out-soft)] group-hover:translate-x-0 group-hover:opacity-10 lg:block"
-        />
-      ) : (
-        <Silhouette
-          bodyStyle={concept.bodyStyle}
-          aria-hidden
-          className="pointer-events-none absolute -right-3 top-5 hidden w-44 translate-x-3 text-ink opacity-0 transition-[opacity,transform] duration-300 ease-[var(--ease-out-soft)] group-hover:translate-x-0 group-hover:opacity-10 lg:block"
-        />
-      )}
+  const author = concept.author.displayName || concept.author.username;
+  const href = ROUTES.concept(concept.id);
+  const hasDesign =
+    concept.design &&
+    (concept.design.base !== null || concept.design.strokes.length > 0);
+  const headlineSpec = concept.specs[0];
 
-      <div className="flex items-center gap-2.5 text-[11px]">
-        {typeof index === "number" ? (
-          <span className="font-mono text-rubric">
-            {String(index).padStart(2, "0")}
-          </span>
-        ) : null}
-        <span className="font-semibold uppercase tracking-[0.14em] text-accent">
+  return (
+    <article className="gallery-card">
+      <Link
+        href={href}
+        className="gallery-preview"
+        aria-label={`View ${concept.title}`}
+        aria-describedby={!hasDesign ? `summary-${concept.id}` : undefined}
+      >
+        <span className="gallery-preview-label">
           {concept.bodyStyle}
+          {concept.make ? ` · ${concept.make}` : ""}
         </span>
-        {/* suppress: age labels re-compute on the client and may drift from the
-            build-time SSG text (e.g. "5h" → "9h") — that drift is expected */}
-        <span className="dateline truncate" suppressHydrationWarning>
-          {timeAgo(concept.postedAt)} ·{" "}
-          {/* handles keep their true case inside the caps dateline */}
-          <span className="normal-case">@{concept.author.username}</span>
-          {concept.make ? (
-            <>
-              {" "}
-              · for <span className="normal-case">{concept.make}</span>
-            </>
+        {hasDesign ? (
+          <div className="gallery-drawing" aria-hidden="true">
+            <DesignPlate design={concept.design!} strokeWidth={0.85} />
+          </div>
+        ) : (
+          <p id={`summary-${concept.id}`} className="gallery-excerpt">
+            {concept.summary}
+          </p>
+        )}
+        <span className="gallery-preview-foot">
+          {hasDesign ? <span>Ideator’s sketch</span> : <span>Idea</span>}
+          {headlineSpec ? (
+            <span className="text-right">
+              <span className="sr-only">{headlineSpec.label}: </span>
+              {headlineSpec.value}
+            </span>
           ) : null}
         </span>
-      </div>
-
-      {/* named transition: this title morphs into the detail sheet's h1 —
-          the card being pulled up to the drafting table */}
-      <ViewTransition name={`vv-title-${concept.id}`}>
-        <h2 className="mt-2.5 font-serif text-[1.4rem] font-medium leading-snug tracking-[-0.01em]">
-          <Link
-            href={ROUTES.concept(concept.id)}
-            className="transition-colors group-hover:text-accent"
+      </Link>
+      <div className="px-1 pt-4">
+        <ViewTransition name={`vv-title-${concept.id}`}>
+          <h2 className="font-serif text-[1.65rem] font-medium leading-tight tracking-[-0.025em]">
+            <Link href={href} className="hover:text-accent">
+              {concept.title}
+            </Link>
+          </h2>
+        </ViewTransition>
+        {hasDesign ? (
+          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-ink-2">
+            {concept.summary}
+          </p>
+        ) : null}
+        <div className="mt-3 flex items-center gap-2 text-xs text-ink-2">
+          <Avatar name={author} small />
+          <span className="truncate font-medium">{author}</span>
+          <span aria-hidden="true">·</span>
+          <time
+            dateTime={concept.postedAt}
+            className="shrink-0"
+            suppressHydrationWarning
           >
-            {concept.title}
-          </Link>
-        </h2>
-      </ViewTransition>
-      <p className="mt-1.5 leading-relaxed text-ink-2">{concept.summary}</p>
-
-      <div className="mt-5">
-        <SpecList specs={concept.specs} lead />
+            {timeAgo(concept.postedAt)}
+          </time>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-x-3">
+          {concept.tags.slice(0, 2).map((tag) => (
+            <Link
+              key={tag}
+              href={`/?tag=${encodeURIComponent(tag)}`}
+              className="inline-flex min-h-9 items-center rounded text-xs text-ink-2 underline decoration-line-2 underline-offset-4 hover:text-accent"
+            >
+              {tag}
+            </Link>
+          ))}
+        </div>
       </div>
-
-      <div className="mt-5 flex items-center gap-4 border-t border-line pt-3.5">
-        <div className="flex min-w-0 items-center gap-1.5 text-[11px] uppercase tracking-wide text-ink-3">
-          <TagIcon size={13} className="shrink-0" />
-          <span className="truncate">{concept.tags.join(" · ")}</span>
-        </div>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Link
-            href={`${ROUTES.concept(concept.id)}#discussion`}
-            aria-label={`${concept.comments} ${
-              concept.comments === 1 ? "note" : "notes"
-            } — open the discussion`}
-            className="inline-flex min-h-9 items-center gap-1.5 rounded-btn px-1.5 text-sm text-ink-3 transition-colors hover:text-accent"
-          >
-            <CommentIcon size={15} />
-            <span className="font-mono tabular-nums">{concept.comments}</span>
-          </Link>
-          <VoteControl
-            conceptId={concept.id}
-            score={concept.score}
-            viewerVote={concept.viewerVote}
-            signedIn={signedIn}
-          />
-        </div>
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 px-1 pt-3">
+        <VoteControl
+          conceptId={concept.id}
+          score={concept.score}
+          viewerVote={concept.viewerVote}
+          signedIn={signedIn}
+        />
+        <Link
+          href={`${href}#discussion`}
+          className="btn btn-ghost min-h-11 gap-2 text-sm"
+          aria-label={`${concept.comments} comments on ${concept.title}`}
+        >
+          <CommentIcon size={18} />
+          <span>{concept.comments}</span>
+        </Link>
       </div>
     </article>
   );
 }
-
-export default ConceptCard;

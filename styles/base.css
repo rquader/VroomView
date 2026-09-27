@@ -1,0 +1,33 @@
+@layer base {
+  body {
+    background-color: var(--page);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* editorial focus mark — warm oxide, offset. One mark, everywhere. */
+  :focus-visible {
+    outline: 2px solid var(--rubric);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  html {
+    scroll-padding-top: 6rem;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 22%, transparent);
+  }
+
+  /* anchor jumps (skip link, in-page nav) glide instead of teleporting —
+     only for users who haven't asked for reduced motion */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+}

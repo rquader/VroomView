@@ -25,14 +25,14 @@ export default function Error({
         This page failed to load
       </h1>
       <p role="alert" className="leading-relaxed text-ink-2">
-        Something broke on our side, not yours. Trying again usually clears it.
+        Please try again. If the problem continues, come back later.
       </p>
       <div className="mt-1 flex flex-wrap items-center justify-center gap-3">
         <button type="button" onClick={reset} className="btn btn-secondary">
           Try again
         </button>
         <Link href={ROUTES.home} className="btn btn-ghost">
-          Back to the feed
+          Back to community
         </Link>
       </div>
     </main>

@@ -12,7 +12,7 @@ export function HeroSketch() {
   return (
     <div className="sheet overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b border-line bg-well/60 px-4 py-2">
-        <span className="overline text-[10px] text-ink-2">
+        <span className="ui-label text-[10px] text-ink-2">
           Elevation studies
         </span>
         <span className="dateline text-[10px] text-ink-2">03 sheets</span>

@@ -33,12 +33,13 @@ export const metadata: Metadata = {
 
 // Applies the saved theme before first paint (no flash). Default: vellum.
 const THEME_INIT =
-  "try{var t=localStorage.getItem('vv-theme')||'vellum';document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme='vellum'}";
+  "try{var t=localStorage.getItem('vv-theme')||'vellum';document.documentElement.dataset.theme=['vellum','moss','clay','graphite'].includes(t)?t:'vellum'}catch(e){document.documentElement.dataset.theme='vellum'}";
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${serif.variable} ${sans.variable} ${mono.variable}`}
     >

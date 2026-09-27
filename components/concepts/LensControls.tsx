@@ -2,14 +2,9 @@
 
 import type { ConceptTag } from "@/types";
 import { LENS_GROUPS, lensLabel } from "@/constants/lenses";
+import { CheckIcon } from "@/components/ui/Icon";
 
-/**
- * The "review lenses" — the 11 tags grouped into meaningful families and
- * rendered as ink-stamp checkboxes with live counts. Presentational; the
- * parent owns the state. One implementation serves both the desktop rail
- * (compact) and the mobile drawer (`roomy` → 44px touch rows).
- */
-
+/** One controlled topic picker for the desktop sidebar and mobile drawer. */
 export function LensControls({
   active,
   counts,
@@ -22,47 +17,39 @@ export function LensControls({
   roomy?: boolean;
 }) {
   return (
-    <div className={`flex flex-col ${roomy ? "gap-6" : "gap-7"}`}>
+    <div className={`flex flex-col ${roomy ? "gap-6" : "gap-5"}`}>
       {LENS_GROUPS.map((group) => (
-        <div key={group.label}>
-          <p className={`overline ${roomy ? "mb-2" : "mb-3.5"}`}>
+        <fieldset key={group.label}>
+          <legend className="mb-2 px-2 text-xs font-medium text-ink-3">
             {group.label}
-          </p>
-          <ul className={`flex flex-col ${roomy ? "gap-0.5" : "gap-0"}`}>
-            {group.tags.map((tag) => (
-              <li key={tag}>
-                <label
-                  className={`flex cursor-pointer items-center gap-2.5 text-sm text-ink-2 transition-colors hover:text-ink ${
-                    roomy
-                      ? "min-h-11 rounded-btn px-1.5 hover:bg-well"
-                      : "min-h-9" /* the lg rail is touch-reachable on tablets */
-                  }`}
-                >
+          </legend>
+          <div className="space-y-1">
+            {group.tags.map((tag) => {
+              const selected = active.includes(tag);
+              return (
+                <label key={tag} className="block cursor-pointer">
                   <input
                     type="checkbox"
-                    className="lens-check"
-                    checked={active.includes(tag)}
+                    className="peer sr-only"
+                    checked={selected}
                     onChange={() => onToggle(tag)}
+                    aria-label={tag}
                   />
-                  {/* "Other" reads plainly inside its family; screen readers
-                      still get the disambiguated name */}
-                  <span className="flex-1">
-                    {lensLabel(tag)}
-                    {lensLabel(tag) !== tag ? (
-                      <span className="sr-only"> ({group.label})</span>
-                    ) : null}
-                  </span>
-                  <span className="font-mono text-xs text-ink-3">
-                    {counts[tag] ?? 0}
+                  <span
+                    className={`flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent ${selected ? "bg-accent text-accent-ink" : "text-ink-2 hover:bg-well hover:text-ink"}`}
+                  >
+                    <span className="flex-1">{lensLabel(tag)}</span>
+                    <span className="text-xs tabular-nums">
+                      {counts[tag] ?? 0}
+                    </span>
+                    {selected ? <CheckIcon size={14} /> : null}
                   </span>
                 </label>
-              </li>
-            ))}
-          </ul>
-        </div>
+              );
+            })}
+          </div>
+        </fieldset>
       ))}
     </div>
   );
 }
-
-export default LensControls;
