@@ -32,7 +32,7 @@ export function CommentCard({
     if (!window.confirm("Delete this comment? This can't be undone.")) return;
     setDeleteError(null);
     startTransition(async () => {
-      const result = await deleteComment(comment.id, comment.conceptId);
+      const result = await deleteComment(comment.id);
       if (!result.ok) setDeleteError(result.error);
     });
   };
@@ -111,7 +111,6 @@ export function CommentCard({
               <div className="ml-auto">
                 <CommentSupport
                   commentId={comment.id}
-                  conceptId={comment.conceptId}
                   votes={comment.votes}
                   voted={comment.viewerHasVoted}
                   signedIn={signedIn}

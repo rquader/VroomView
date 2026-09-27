@@ -31,11 +31,19 @@ async function getSessionUser() {
   return { supabase, user };
 }
 
-function validTags(tags: string[]): tags is ConceptTag[] {
+function validTags(tags: unknown): tags is ConceptTag[] {
   return (
+    Array.isArray(tags) &&
     tags.length <= ALL_TAGS.length &&
-    tags.every((t) => (ALL_TAGS as string[]).includes(t))
+    tags.every(
+      (tag): tag is ConceptTag =>
+        typeof tag === "string" && (ALL_TAGS as string[]).includes(tag),
+    )
   );
+}
+
+function normalizedCommentBody(body: unknown): string | null {
+  return typeof body === "string" ? body.trim() : null;
 }
 
 /**
@@ -98,23 +106,47 @@ export async function setConceptVote(
   return { ok: true };
 }
 
-export async function toggleCommentVote(
+async function getCommentConceptId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
   commentId: string,
-  conceptId: string,
-  currentlyVoted: boolean,
+): Promise<string | null> {
+  const { data, error } = await supabase
+    .from("comments")
+    .select("concept_id")
+    .eq("id", commentId)
+    .maybeSingle();
+  return error || !data ? null : data.concept_id;
+}
+
+/** Set a comment vote after resolving its real parent concept on the server. */
+export async function setCommentVote(
+  commentId: string,
+  desiredVoted: boolean,
 ): Promise<ActionResult> {
   const { supabase, user } = await getSessionUser();
   if (!user) return { ok: false, error: SIGN_IN_FIRST };
+  if (typeof desiredVoted !== "boolean") {
+    return { ok: false, error: "That vote didn't stick — try again." };
+  }
 
-  const result = currentlyVoted
+  // Do not trust a client to tell us which concept owns a comment. This read
+  // also prevents a missing or hidden comment from looking like a vote success.
+  const conceptId = await getCommentConceptId(supabase, commentId);
+  if (!conceptId)
+    return {
+      ok: false,
+      error: "That comment is unavailable — refresh and try again.",
+    };
+
+  const result = desiredVoted
     ? await supabase
+        .from("comment_votes")
+        .insert({ comment_id: commentId, voter_id: user.id })
+    : await supabase
         .from("comment_votes")
         .delete()
         .eq("comment_id", commentId)
-        .eq("voter_id", user.id)
-    : await supabase
-        .from("comment_votes")
-        .insert({ comment_id: commentId, voter_id: user.id });
+        .eq("voter_id", user.id);
 
   if (result.error && result.error.code !== "23505") {
     return { ok: false, error: "That vote didn't stick — try again." };
@@ -126,18 +158,18 @@ export async function toggleCommentVote(
 
 export async function addComment(
   conceptId: string,
-  body: string,
-  tags: string[],
+  body: unknown,
+  tags: unknown,
 ): Promise<ActionResult> {
   const { supabase, user } = await getSessionUser();
   if (!user) return { ok: false, error: SIGN_IN_FIRST };
 
-  const trimmed = body.trim();
-  if (trimmed.length < 1) return { ok: false, error: "Write the note first." };
+  const trimmed = normalizedCommentBody(body);
+  if (!trimmed) return { ok: false, error: "Write the comment first." };
   if (trimmed.length > 2000)
-    return { ok: false, error: "Notes max out at 2,000 characters." };
+    return { ok: false, error: "Comments max out at 2,000 characters." };
   if (!validTags(tags))
-    return { ok: false, error: "Those lenses don't exist." };
+    return { ok: false, error: "Those topics don't exist." };
 
   const { error } = await supabase.from("comments").insert({
     concept_id: conceptId,
@@ -145,28 +177,28 @@ export async function addComment(
     body: trimmed,
     tags,
   });
-  if (error) return { ok: false, error: "The note didn't post — try again." };
+  if (error)
+    return { ok: false, error: "The comment didn't post — try again." };
 
   revalidatePath(`/concepts/${conceptId}`);
-  revalidatePath("/"); // feed shows note counts
+  revalidatePath("/"); // feed shows comment counts
   return { ok: true };
 }
 
 export async function updateComment(
   commentId: string,
-  conceptId: string,
-  body: string,
-  tags: string[],
+  body: unknown,
+  tags: unknown,
 ): Promise<ActionResult> {
   const { supabase, user } = await getSessionUser();
   if (!user) return { ok: false, error: SIGN_IN_FIRST };
 
-  const trimmed = body.trim();
-  if (trimmed.length < 1) return { ok: false, error: "Write the note first." };
+  const trimmed = normalizedCommentBody(body);
+  if (!trimmed) return { ok: false, error: "Write the comment first." };
   if (trimmed.length > 2000)
-    return { ok: false, error: "Notes max out at 2,000 characters." };
+    return { ok: false, error: "Comments max out at 2,000 characters." };
   if (!validTags(tags))
-    return { ok: false, error: "Those lenses don't exist." };
+    return { ok: false, error: "Those topics don't exist." };
 
   // .select() makes Postgres report the rows RLS actually let us touch —
   // zero rows means "not yours (or gone)", which we surface honestly.
@@ -174,19 +206,18 @@ export async function updateComment(
     .from("comments")
     .update({ body: trimmed, tags })
     .eq("id", commentId)
-    .select("id")
+    .select("id, concept_id")
     .maybeSingle();
-  if (error) return { ok: false, error: "The edit didn't save — try again." };
-  if (!data) return { ok: false, error: "You can only edit your own notes." };
+  if (error)
+    return { ok: false, error: "The comment didn't save — try again." };
+  if (!data)
+    return { ok: false, error: "You can only edit your own comments." };
 
-  revalidatePath(`/concepts/${conceptId}`);
+  revalidatePath(`/concepts/${data.concept_id}`);
   return { ok: true };
 }
 
-export async function deleteComment(
-  commentId: string,
-  conceptId: string,
-): Promise<ActionResult> {
+export async function deleteComment(commentId: string): Promise<ActionResult> {
   const { supabase, user } = await getSessionUser();
   if (!user) return { ok: false, error: SIGN_IN_FIRST };
 
@@ -194,12 +225,14 @@ export async function deleteComment(
     .from("comments")
     .delete()
     .eq("id", commentId)
-    .select("id")
+    .select("id, concept_id")
     .maybeSingle();
-  if (error) return { ok: false, error: "The note didn't delete — try again." };
-  if (!data) return { ok: false, error: "You can only delete your own notes." };
+  if (error)
+    return { ok: false, error: "The comment didn't delete — try again." };
+  if (!data)
+    return { ok: false, error: "You can only delete your own comments." };
 
-  revalidatePath(`/concepts/${conceptId}`);
+  revalidatePath(`/concepts/${data.concept_id}`);
   revalidatePath("/");
   return { ok: true };
 }

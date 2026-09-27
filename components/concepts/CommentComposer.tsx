@@ -61,7 +61,7 @@ export function CommentComposer({
         });
       }
       const result = editing
-        ? await updateComment(editing.id, conceptId, body, tags)
+        ? await updateComment(editing.id, body, tags)
         : await addComment(conceptId, body, tags);
       if (!result.ok) {
         setError(result.error);
