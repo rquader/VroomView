@@ -1,5 +1,7 @@
 import type { SVGProps } from "react";
 import { profileFor, type Profile } from "@/constants/profiles";
+import { designPenValue } from "@/lib/design";
+import type { ConceptDesign } from "@/types";
 
 /**
  * Blueprint-style body elevations. Geometry lives in constants/profiles.ts
@@ -28,7 +30,7 @@ export function ProfileSvg({
   /** raises the body off the axles by this many canvas units (studio knob) */
   rideHeight?: number;
   /** author-drawn strokes (already validated M/L/Q path data) */
-  extraStrokes?: string[];
+  extraStrokes?: ConceptDesign["strokes"];
 }) {
   const p = profile;
   return (
@@ -53,8 +55,13 @@ export function ProfileSvg({
         {[...p.seams, ...p.accents].map((d) => (
           <path key={d} d={d} strokeWidth={strokeWidth * 0.7} opacity={0.5} />
         ))}
-        {extraStrokes.map((d, i) => (
-          <path key={`x-${i}`} d={d} strokeWidth={strokeWidth * 0.85} />
+        {extraStrokes.map((stroke, i) => (
+          <path
+            key={`x-${i}`}
+            d={stroke.d}
+            stroke={designPenValue(stroke.color)}
+            strokeWidth={strokeWidth * 0.85}
+          />
         ))}
       </g>
       {p.wheels.map((cx) => (

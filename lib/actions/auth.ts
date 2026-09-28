@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { safeAuthNext } from "@/lib/auth/redirects";
 
 /**
  * Auth flows as Server Actions. The mental model:
@@ -23,18 +24,17 @@ export type AuthState =
   | { status: "error"; message: string }
   | { status: "sent"; email: string };
 
-/** Only allow app-internal paths — a `next` from the URL is user input, and
- *  redirecting to arbitrary origins is the classic open-redirect hole. */
-function safeNext(raw: FormDataEntryValue | null): string {
-  const next = typeof raw === "string" ? raw : "";
-  return next.startsWith("/") && !next.startsWith("//") ? next : "/";
-}
-
 async function origin(): Promise<string> {
   // Trustworthy enough for building the email link: Supabase only redirects
   // to URLs on its allowlist, so a spoofed Host can't hijack the flow.
   const h = await headers();
-  return h.get("origin") ?? `https://${h.get("host") ?? "localhost:3000"}`;
+  const requestOrigin = h.get("origin");
+  if (requestOrigin) return new URL(requestOrigin).origin;
+  const host = h.get("host") ?? "localhost:3000";
+  const protocol = /^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host)
+    ? "http"
+    : "https";
+  return `${protocol}://${host}`;
 }
 
 export async function signUpAction(
@@ -89,7 +89,7 @@ export async function signUpAction(
     options: {
       // Lands on our callback route, which exchanges the code for a session.
       emailRedirectTo: `${await origin()}/auth/callback?next=${encodeURIComponent(
-        safeNext(formData.get("next")),
+        safeAuthNext(formData.get("next")),
       )}`,
       // the handle rides the signup metadata; handle_new_user honors it
       ...(username.length > 0 ? { data: { username } } : {}),
@@ -111,7 +111,7 @@ export async function signUpAction(
   // Email confirmation is ON, so no session yet — the account activates when
   // they click the link. (If confirmations were off, a session would exist
   // and we'd redirect straight in.)
-  if (data.session) redirect(safeNext(formData.get("next")));
+  if (data.session) redirect(safeAuthNext(formData.get("next")));
   return { status: "sent", email };
 }
 
@@ -137,7 +137,7 @@ export async function signInAction(
     };
   }
 
-  redirect(safeNext(formData.get("next")));
+  redirect(safeAuthNext(formData.get("next")));
 }
 
 /** scope "local" = this device only; "global" = revoke every session. */

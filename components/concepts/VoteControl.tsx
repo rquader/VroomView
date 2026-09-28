@@ -42,7 +42,12 @@ export function VoteControl({
   const [pressedAt, setPressedAt] = useState<number | null>(null);
   const [view, setOptimistic] = useOptimistic(
     { score, viewerVote },
-    (_current, next: { score: number; viewerVote: VoteDirection }) => next,
+    (current, next: VoteDirection) => ({
+      // React reapplies pending actions when server props refresh. State the
+      // desired vote relative to that current base, preserving everyone else.
+      score: current.score + next - current.viewerVote,
+      viewerVote: next,
+    }),
   );
 
   const cast = (dir: 1 | -1) => {
@@ -57,10 +62,7 @@ export function VoteControl({
     setFailed(false);
     setPressedAt(Date.now());
     startTransition(async () => {
-      setOptimistic({
-        score: view.score + (next - view.viewerVote),
-        viewerVote: next,
-      });
+      setOptimistic(next);
       const result = await setConceptVote(conceptId, next);
       if (!result.ok) setFailed(true);
     });

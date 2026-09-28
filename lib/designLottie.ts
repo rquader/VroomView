@@ -1,5 +1,6 @@
 import { skeletonById, type Profile } from "@/constants/profiles";
 import type { ConceptDesign } from "@/types";
+import { designPenValue, designViewport } from "@/lib/design";
 
 /**
  * Synthesizes a Lottie document from a concept design so the author's
@@ -35,9 +36,22 @@ const anim = (pairs: [number, number | number[]][]) => ({
   })),
 });
 
-const strokeItem = (cl: string, width: number): LottieShape => ({
+const strokeItem = (
+  cl: string,
+  width: number,
+  color?: string,
+): LottieShape => ({
   ty: "st",
-  c: stat(COLORS[cl] ?? COLORS["vv-ink"]),
+  c: stat(
+    color && color.startsWith("#")
+      ? [
+          parseInt(color.slice(1, 3), 16) / 255,
+          parseInt(color.slice(3, 5), 16) / 255,
+          parseInt(color.slice(5, 7), 16) / 255,
+          1,
+        ]
+      : (COLORS[cl] ?? COLORS["vv-ink"]),
+  ),
   o: stat(100),
   w: stat(width),
   lc: 2,
@@ -101,9 +115,7 @@ function pathFromSvg(d: string): LottieShape {
   return { ty: "sh", ks: stat({ c: closed, v, i: iT, o: oT }) };
 }
 
-// comp geometry: the 96×40 canvas at 5× → 480×200
-const W = 480;
-const H = 200;
+// All compositions use the same five pixels per body-coordinate unit.
 const S = 5;
 
 function layer({
@@ -150,6 +162,9 @@ function layer({
  * `blank` designs (no base) draw only the author's strokes over the plate.
  */
 export function designToLottie(design: ConceptDesign): object {
+  const viewport = designViewport(design);
+  const W = viewport.width * S;
+  const H = viewport.height * S;
   const profile: Profile | null = design.base
     ? (skeletonById(design.base)?.profile ?? null)
     : null;
@@ -241,7 +256,9 @@ export function designToLottie(design: ConceptDesign): object {
           name: `wheel-${n}`,
           cl: "vv-ink",
           op,
-          transform: { p: stat([cx * S, 31.5 * S, 0]) },
+          transform: {
+            p: stat([(cx - viewport.x) * S, (31.5 - viewport.y) * S, 0]),
+          },
           opacity: anim([
             [t, 0],
             [t + 4, 100],
@@ -264,7 +281,7 @@ export function designToLottie(design: ConceptDesign): object {
       layer({
         ind: ++ind,
         name: `pen-${n}`,
-        cl: "vv-ink",
+        cl: stroke.color && stroke.color !== "ink" ? "vv-pen" : "vv-ink",
         op,
         transform: bodyTransform,
         opacity: anim([
@@ -280,7 +297,7 @@ export function designToLottie(design: ConceptDesign): object {
               [t + strokeFrames, 100],
             ]),
           ),
-          strokeItem("vv-ink", 1.15),
+          strokeItem("vv-ink", 1.15, designPenValue(stroke.color)),
         ],
       }),
     );

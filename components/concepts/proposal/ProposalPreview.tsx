@@ -53,7 +53,9 @@ export function ProposalPreview({
         </h2>
         <p className="mt-1.5 leading-relaxed text-ink-2">
           {summary.trim() || (
-            <span className="text-ink-3">Your short summary appears here.</span>
+            <span className="text-ink-3">
+              Your one-line pitch appears here.
+            </span>
           )}
         </p>
 
@@ -67,11 +69,7 @@ export function ProposalPreview({
           <div className="mt-5">
             <SpecList specs={completeSpecs} lead />
           </div>
-        ) : (
-          <p className="mt-5 text-sm text-ink-3">
-            Your specifications appear here.
-          </p>
-        )}
+        ) : null}
 
         {tags.length > 0 ? (
           <div className="mt-5 border-t border-line pt-3.5 text-[11px] uppercase tracking-wide text-ink-3">
