@@ -6,18 +6,12 @@ import { ROUTES } from "@/constants/app";
 import { createConcept } from "@/lib/actions/concepts";
 import type { ConceptDesign, ConceptTag, SpecMetric } from "@/types";
 import { ChevronUpIcon, CloseIcon } from "@/components/ui/Icon";
+import { DesignStudio } from "./DesignStudio";
 import { TagFilterBar } from "./TagFilterBar";
 import { ProposalIdeaFields } from "./proposal/ProposalIdeaFields";
 import { ProposalPreview } from "./proposal/ProposalPreview";
 import { ProposalSpecsEditor } from "./proposal/ProposalSpecsEditor";
 import { ProposalVehicleFields } from "./proposal/ProposalVehicleFields";
-
-const DEFAULT_SPECS: SpecMetric[] = [
-  { label: "Est. price", value: "" },
-  { label: "Range", value: "" },
-  { label: "Powertrain", value: "" },
-  { label: "Drivetrain", value: "" },
-];
 
 /** Owns the draft and submission flow; sections receive only the state they render. */
 export function DraftingTable({
@@ -35,11 +29,12 @@ export function DraftingTable({
   const [bodyStyle, setBodyStyle] = useState("");
   const [makeMode, setMakeMode] = useState<"any" | "specific">("any");
   const [make, setMake] = useState("");
-  const [specs, setSpecs] = useState<SpecMetric[]>(DEFAULT_SPECS);
+  const [specs, setSpecs] = useState<SpecMetric[]>([]);
   const [design, setDesign] = useState<ConceptDesign | null>(null);
   const [tags, setTags] = useState<ConceptTag[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [followPreview, setFollowPreview] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const previewTitleId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -151,9 +146,17 @@ export function DraftingTable({
   );
 
   return (
-    <div className="pb-20 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-12 lg:pb-0">
+    <div className="pb-20 lg:grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start lg:gap-12 lg:pb-0">
       <form
-        className="flex flex-col gap-10"
+        className="flex min-w-0 flex-col gap-6"
+        onInvalidCapture={(event) => {
+          // Native validation must be able to reveal and focus collapsed fields.
+          let ancestor = (event.target as HTMLElement).parentElement;
+          while (ancestor) {
+            if (ancestor instanceof HTMLDetailsElement) ancestor.open = true;
+            ancestor = ancestor.parentElement;
+          }
+        }}
         onSubmit={(event) => {
           event.preventDefault();
           shareConcept();
@@ -162,40 +165,89 @@ export function DraftingTable({
         <ProposalIdeaFields
           title={title}
           summary={summary}
-          details={details}
-          feasibility={feasibility}
           onTitleChange={setTitle}
           onSummaryChange={setSummary}
-          onDetailsChange={setDetails}
-          onFeasibilityChange={setFeasibility}
         />
-        <ProposalVehicleFields
-          bodyStyle={bodyStyle}
-          makeMode={makeMode}
-          make={make}
-          design={design}
-          onBodyStyleChange={setBodyStyle}
-          onMakeModeChange={setMakeMode}
-          onMakeChange={setMake}
-          onDesignChange={setDesign}
-        />
-        <ProposalSpecsEditor
-          specs={specs}
-          communityLabels={communityLabels}
-          onSpecChange={setSpec}
-          onRemove={removeSpec}
-          onAdd={addSpec}
-          onAddLabel={addLabelledSpec}
-        />
-        <fieldset>
-          <legend className="ui-label mb-4 w-full border-b border-line pb-2.5">
-            What feedback would help?
-          </legend>
-          <p className="mb-3 text-sm text-ink-2">
-            Choose at least one topic to guide the conversation.
+        <details className="rounded-panel border border-line bg-card p-4 sm:p-5">
+          <summary className="cursor-pointer font-medium">
+            Add a sketch{" "}
+            <span className="ml-2 text-sm font-normal text-ink-2">
+              Optional
+            </span>
+          </summary>
+          <p className="mt-2 text-sm text-ink-2">
+            Start from a vehicle outline or draw your own. A rough sketch is
+            enough.
           </p>
-          <TagFilterBar active={tags} onToggle={toggleTag} />
-        </fieldset>
+          <div className="mt-5">
+            <DesignStudio design={design} onChange={setDesign} />
+          </div>
+        </details>
+        <details className="rounded-panel border border-line bg-card p-4 sm:p-5">
+          <summary className="cursor-pointer font-medium">
+            Advanced details{" "}
+            <span className="ml-2 text-sm font-normal text-ink-2">
+              Optional
+            </span>
+          </summary>
+          <p className="mt-2 text-sm text-ink-2">
+            Vehicle, reasoning, specifications, and topics for feedback.
+          </p>
+          <div className="mt-6 flex flex-col gap-8">
+            <ProposalVehicleFields
+              bodyStyle={bodyStyle}
+              makeMode={makeMode}
+              make={make}
+              onBodyStyleChange={setBodyStyle}
+              onMakeModeChange={setMakeMode}
+              onMakeChange={setMake}
+            />
+            <fieldset className="flex flex-col gap-5">
+              <legend className="ui-label mb-4 w-full border-b border-line pb-2.5">
+                Develop the idea · optional
+              </legend>
+              <label className="flex flex-col gap-1.5">
+                <span className="ui-label">Why this should exist</span>
+                <textarea
+                  value={details}
+                  onChange={(event) => setDetails(event.target.value)}
+                  rows={4}
+                  maxLength={2000}
+                  placeholder="Who would use it? What problem does it solve?"
+                  className="field resize-y"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="ui-label">How it could work</span>
+                <textarea
+                  value={feasibility}
+                  onChange={(event) => setFeasibility(event.target.value)}
+                  rows={3}
+                  maxLength={2000}
+                  placeholder="Possible engineering, costs, and trade-offs. It is okay to have open questions."
+                  className="field resize-y"
+                />
+              </label>
+            </fieldset>
+            <ProposalSpecsEditor
+              specs={specs}
+              communityLabels={communityLabels}
+              onSpecChange={setSpec}
+              onRemove={removeSpec}
+              onAdd={addSpec}
+              onAddLabel={addLabelledSpec}
+            />
+            <fieldset>
+              <legend className="ui-label mb-4 w-full border-b border-line pb-2.5">
+                Feedback topics · optional
+              </legend>
+              <p className="mb-3 text-sm text-ink-2">
+                Choose the areas where you would most value feedback.
+              </p>
+              <TagFilterBar active={tags} onToggle={toggleTag} />
+            </fieldset>
+          </div>
+        </details>
         {error ? (
           <p role="alert" className="text-sm text-danger">
             {error}
@@ -211,9 +263,19 @@ export function DraftingTable({
 
       <aside
         aria-label="Live preview"
-        className="hidden lg:sticky lg:top-24 lg:block"
+        className={`hidden min-w-0 lg:block ${followPreview ? "lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto" : ""}`}
       >
-        <p className="ui-label mb-3 border-b border-line pb-2.5">Preview</p>
+        <div className="mb-3 flex items-center justify-between gap-3 border-b border-line pb-2.5">
+          <p className="ui-label">Preview</p>
+          <button
+            type="button"
+            aria-pressed={followPreview}
+            onClick={() => setFollowPreview((current) => !current)}
+            className="btn btn-ghost btn-sm min-h-11"
+          >
+            {followPreview ? "Keep at top" : "Follow as I scroll"}
+          </button>
+        </div>
         {preview}
       </aside>
 

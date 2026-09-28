@@ -46,13 +46,17 @@ export function ProposalSpecsEditor({
   return (
     <fieldset>
       <legend className="ui-label mb-4 w-full border-b border-line pb-2.5">
-        The numbers
+        Specifications · optional
       </legend>
+      <p className="mb-4 text-sm text-ink-2">
+        Add only what helps explain your idea. Estimates are welcome: try price,
+        range, seating, or cargo space.
+      </p>
       <div className="flex flex-col gap-2.5">
         <span className="ui-label">
           Specifications{" "}
           <span className="normal-case tracking-normal text-ink-3">
-            · at least one, up to 8
+            · up to 8
           </span>
         </span>
         {specs.map((spec, index) => (

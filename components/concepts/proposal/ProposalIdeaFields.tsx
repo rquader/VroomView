@@ -1,24 +1,16 @@
 type ProposalIdeaFieldsProps = {
   title: string;
   summary: string;
-  details: string;
-  feasibility: string;
   onTitleChange: (value: string) => void;
   onSummaryChange: (value: string) => void;
-  onDetailsChange: (value: string) => void;
-  onFeasibilityChange: (value: string) => void;
 };
 
 /** Renders the written rationale while the parent retains the draft. */
 export function ProposalIdeaFields({
   title,
   summary,
-  details,
-  feasibility,
   onTitleChange,
   onSummaryChange,
-  onDetailsChange,
-  onFeasibilityChange,
 }: ProposalIdeaFieldsProps) {
   return (
     <fieldset>
@@ -46,7 +38,7 @@ export function ProposalIdeaFields({
         </label>
         <label className="flex flex-col gap-1.5">
           <span className="ui-label">
-            Summary{" "}
+            One-line pitch{" "}
             <span className="normal-case tracking-normal text-ink-3">
               · required
             </span>
@@ -58,44 +50,12 @@ export function ProposalIdeaFields({
             minLength={20}
             maxLength={300}
             required
-            placeholder="What would you change or create?"
+            placeholder="e.g. A family van with all-wheel drive for snowy school runs."
             className="field resize-none"
           />
           <span className="text-xs text-ink-3">
-            20–300 characters. This is what people first read.
+            20–300 characters. Tell people what changes and why it matters.
           </span>
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="ui-label">
-            The argument{" "}
-            <span className="normal-case tracking-normal text-ink-3">
-              · optional
-            </span>
-          </span>
-          <textarea
-            value={details}
-            onChange={(event) => onDetailsChange(event.target.value)}
-            rows={4}
-            maxLength={2000}
-            placeholder="What should change, who would benefit, and why?"
-            className="field resize-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="ui-label">
-            How it could work{" "}
-            <span className="normal-case tracking-normal text-ink-3">
-              · optional
-            </span>
-          </span>
-          <textarea
-            value={feasibility}
-            onChange={(event) => onFeasibilityChange(event.target.value)}
-            rows={3}
-            maxLength={2000}
-            placeholder="Possible engineering, costs, and trade-offs"
-            className="field resize-none"
-          />
         </label>
       </div>
     </fieldset>

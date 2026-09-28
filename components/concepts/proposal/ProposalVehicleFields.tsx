@@ -1,10 +1,11 @@
 import { useId } from "react";
 import { COMMON_MAKES } from "@/constants/specs";
-import type { ConceptDesign } from "@/types";
-import { DesignStudio } from "../DesignStudio";
 
 const BODY_STYLES = [
   "Sedan",
+  "SUV",
+  "Crossover",
+  "Van",
   "Minivan",
   "Wagon",
   "Coupe",
@@ -16,22 +17,18 @@ type ProposalVehicleFieldsProps = {
   bodyStyle: string;
   makeMode: "any" | "specific";
   make: string;
-  design: ConceptDesign | null;
   onBodyStyleChange: (value: string) => void;
   onMakeModeChange: (mode: "any" | "specific") => void;
   onMakeChange: (value: string) => void;
-  onDesignChange: (design: ConceptDesign | null) => void;
 };
 
 export function ProposalVehicleFields({
   bodyStyle,
   makeMode,
   make,
-  design,
   onBodyStyleChange,
   onMakeModeChange,
   onMakeChange,
-  onDesignChange,
 }: ProposalVehicleFieldsProps) {
   const makerGroupId = useId();
 
@@ -45,7 +42,7 @@ export function ProposalVehicleFields({
           <span className="ui-label">
             Body style{" "}
             <span className="normal-case tracking-normal text-ink-3">
-              · required
+              · optional
             </span>
           </span>
           <input
@@ -53,9 +50,8 @@ export function ProposalVehicleFields({
             onChange={(event) => onBodyStyleChange(event.target.value)}
             minLength={3}
             maxLength={24}
-            required
             list="body-styles"
-            placeholder="Wagon"
+            placeholder="Choose a style, or leave it open"
             className="field"
           />
           <datalist id="body-styles">
@@ -109,7 +105,6 @@ export function ProposalVehicleFields({
               onChange={(event) => onMakeChange(event.target.value)}
               minLength={2}
               maxLength={40}
-              required
               list="common-makes"
               placeholder="e.g. Honda"
               aria-label="Existing or proposed brand"
@@ -122,7 +117,6 @@ export function ProposalVehicleFields({
             ))}
           </datalist>
         </div>
-        <DesignStudio design={design} onChange={onDesignChange} />
       </div>
     </fieldset>
   );

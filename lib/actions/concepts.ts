@@ -78,7 +78,7 @@ export async function createConcept(
   if (summary.length < 20 || summary.length > 300)
     return {
       ok: false,
-      error: "Use 20–300 characters for the summary.",
+      error: "Use 20–300 characters for the one-line pitch.",
     };
   if (details.length > 2000)
     return { ok: false, error: "Keep the argument within 2,000 characters." };
@@ -88,7 +88,7 @@ export async function createConcept(
       error:
         "Keep the explanation of how it could work within 2,000 characters.",
     };
-  if (bodyStyle.length < 3 || bodyStyle.length > 24)
+  if (bodyStyle.length > 0 && (bodyStyle.length < 3 || bodyStyle.length > 24))
     return { ok: false, error: "Use 3–24 characters for the body style." };
   if (make.length > 0 && (make.length < 2 || make.length > 40))
     return {
@@ -97,8 +97,26 @@ export async function createConcept(
         "Use 2–40 characters for the brand, or leave it blank for any brand.",
     };
 
-  if (!Array.isArray(input.specs)) {
-    return { ok: false, error: "Add at least one spec." };
+  if (
+    !Array.isArray(input.specs) ||
+    input.specs.some(
+      (spec) =>
+        !isRecord(spec) ||
+        typeof spec.label !== "string" ||
+        typeof spec.value !== "string",
+    )
+  ) {
+    return { ok: false, error: "Check the specification fields." };
+  }
+  if (
+    input.specs.some(
+      (spec) => Boolean(spec.label.trim()) !== Boolean(spec.value.trim()),
+    )
+  ) {
+    return {
+      ok: false,
+      error: "Complete or remove each unfinished specification.",
+    };
   }
   // Keep only complete string spec rows, bounded like the DB expects.
   const specs = input.specs
@@ -110,7 +128,6 @@ export async function createConcept(
     })
     .filter((spec) => spec.label.length > 0 && spec.value.length > 0)
     .slice(0, 8);
-  if (specs.length === 0) return { ok: false, error: "Add at least one spec." };
   if (specs.some((s) => s.label.length > 24 || s.value.length > 24))
     return {
       ok: false,
@@ -124,11 +141,6 @@ export async function createConcept(
     (tag): tag is string =>
       typeof tag === "string" && (ALL_TAGS as string[]).includes(tag),
   );
-  if (tags.length === 0)
-    return {
-      ok: false,
-      error: "Pick at least one topic so reviewers know what to discuss.",
-    };
 
   // the studio design: strictly parsed (grammar, bounds, known skeletons) —
   // anything malformed is refused rather than silently stripped, and a
@@ -156,7 +168,7 @@ export async function createConcept(
       summary,
       details: details.length > 0 ? details : null,
       feasibility: feasibility.length > 0 ? feasibility : null,
-      body_style: bodyStyle,
+      body_style: bodyStyle || "Unspecified",
       make: make.length > 0 ? make : null,
       design,
       specs,

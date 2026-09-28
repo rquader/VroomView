@@ -16,6 +16,23 @@ const validInput = {
   tags: ["Design"],
 };
 
+test("a title and pitch can be shared without optional vehicle details", async () => {
+  const { client, mock } = createConceptsActionMock();
+  const actions = await loadConceptActions(client, mock.revalidated);
+  const result = await actions.createConcept({
+    ...validInput,
+    bodyStyle: "",
+    specs: [],
+    tags: [],
+  });
+  assert.deepEqual(result, { ok: true, id: "concept-a" });
+  assert.equal(
+    (mock.inserted[0] as { body_style: string }).body_style,
+    "Unspecified",
+  );
+  assert.deepEqual((mock.inserted[0] as { specs: unknown[] }).specs, []);
+});
+
 test("malformed proposal fields return errors before an insert", async () => {
   const { client, mock } = createConceptsActionMock();
   const actions = await loadConceptActions(client, mock.revalidated);
@@ -47,6 +64,20 @@ test("signed-out proposal creation stops before validation or insert", async () 
   const result = await actions.createConcept({ title: {} });
 
   assert.equal(result.ok, false);
+  assert.deepEqual(mock.inserted, []);
+});
+
+test("an unfinished specification is not silently discarded", async () => {
+  const { client, mock } = createConceptsActionMock();
+  const actions = await loadConceptActions(client, mock.revalidated);
+  for (const specs of [
+    [{ label: "Range", value: "" }],
+    [{ label: "", value: "300 mi" }],
+  ]) {
+    const result = await actions.createConcept({ ...validInput, specs });
+    assert.equal(result.ok, false);
+    assert.match(result.error, /complete|remove/i);
+  }
   assert.deepEqual(mock.inserted, []);
 });
 
