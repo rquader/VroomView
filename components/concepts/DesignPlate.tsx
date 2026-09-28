@@ -1,5 +1,6 @@
 import { skeletonById } from "@/constants/profiles";
 import { ProfileSvg } from "@/components/ui/Silhouette";
+import { designPenValue, designViewport } from "@/lib/design";
 import type { ConceptDesign } from "@/types";
 
 /**
@@ -18,6 +19,7 @@ export function DesignPlate({
   className?: string;
 }) {
   const skeleton = design.base ? skeletonById(design.base) : null;
+  const { viewBox } = designViewport(design);
 
   if (skeleton) {
     return (
@@ -25,7 +27,8 @@ export function DesignPlate({
         profile={skeleton.profile}
         wheelScale={design.wheelScale}
         rideHeight={design.rideHeight}
-        extraStrokes={design.strokes.map((s) => s.d)}
+        extraStrokes={design.strokes}
+        viewBox={viewBox}
         strokeWidth={strokeWidth}
         className={className}
       />
@@ -35,7 +38,7 @@ export function DesignPlate({
   // blank plate: only the author's pen
   return (
     <svg
-      viewBox="0 0 96 40"
+      viewBox={viewBox}
       fill="none"
       stroke="currentColor"
       strokeWidth={strokeWidth}
@@ -45,7 +48,12 @@ export function DesignPlate({
       className={className}
     >
       {design.strokes.map((s, i) => (
-        <path key={i} d={s.d} strokeWidth={strokeWidth * 0.85} />
+        <path
+          key={i}
+          d={s.d}
+          stroke={designPenValue(s.color)}
+          strokeWidth={strokeWidth * 0.85}
+        />
       ))}
     </svg>
   );

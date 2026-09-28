@@ -33,6 +33,8 @@ export type SpecMetric = { label: string; value: string };
 /** A viewer's standing vote on a concept: backed, none, or voted down. */
 export type VoteDirection = -1 | 0 | 1;
 
+export type DesignPenColor = "ink" | "blue" | "red" | "green" | "gold";
+
 /**
  * The Design Studio's output — a versioned design document (concepts.design
  * JSONB). Parsed STRICTLY on write and read by lib/design.ts; kind:"studio"
@@ -47,8 +49,10 @@ export type ConceptDesign = {
   wheelScale: number;
   /** canvas units the body rides above the axles */
   rideHeight: number;
-  /** author pen strokes, M/L/Q path data on the 96×40 canvas */
-  strokes: { d: string }[];
+  /** absent on older designs, which keep the original 96×40 framing */
+  viewport?: "roomy";
+  /** author pen strokes in body coordinates, with optional palette ink */
+  strokes: { d: string; color?: DesignPenColor }[];
 };
 
 /**
