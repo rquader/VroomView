@@ -11,11 +11,14 @@ export type EngagementMock = {
   revalidated: string[];
   writes: string[];
   scopes: { table: string; column: string; value: unknown }[];
+  conceptVoteWrites: { operation: "update" | "insert"; payload: unknown }[];
   responses: {
     lookup?: Response<{ concept_id: string } | null>;
     update?: Response<{ id: string; concept_id: string } | null>;
     delete?: Response<{ id: string; concept_id: string } | null>;
     vote?: Response<null>;
+    conceptUpdates?: Response<{ concept_id: string }[]>[];
+    conceptInsert?: Response<null>;
   };
 };
 
@@ -28,6 +31,7 @@ export function createEngagementMock(
     revalidated: [],
     writes: [],
     scopes: [],
+    conceptVoteWrites: [],
     responses: overrides,
   };
   const response = <T>(value: Response<T> | undefined, fallback: T) =>
@@ -96,6 +100,42 @@ export function createEngagementMock(
       };
     },
   };
+  let conceptUpdateIndex = 0;
+  const conceptVotes = {
+    update(payload: unknown) {
+      mock.writes.push("concept-vote:update");
+      mock.conceptVoteWrites.push({ operation: "update", payload });
+      const result = response(
+        mock.responses.conceptUpdates?.[conceptUpdateIndex++],
+        [],
+      );
+      const query = {
+        eq(column: string, value: unknown) {
+          scope("concept_votes", column, value);
+          return query;
+        },
+        select: async () => result,
+        then: Promise.resolve(result).then.bind(Promise.resolve(result)),
+      };
+      return query;
+    },
+    insert: async (payload: unknown) => {
+      mock.writes.push("concept-vote:insert");
+      mock.conceptVoteWrites.push({ operation: "insert", payload });
+      return response(mock.responses.conceptInsert, null);
+    },
+    delete() {
+      mock.writes.push("concept-vote:delete");
+      const query = {
+        eq(column: string, value: unknown) {
+          scope("concept_votes", column, value);
+          return query;
+        },
+        then: Promise.resolve(ok(null)).then.bind(Promise.resolve(ok(null))),
+      };
+      return query;
+    },
+  };
   return {
     mock,
     client: {
@@ -103,6 +143,7 @@ export function createEngagementMock(
       from(table: string) {
         if (table === "comments") return comments;
         if (table === "comment_votes") return commentVotes;
+        if (table === "concept_votes") return conceptVotes;
         throw new Error(`Unexpected table: ${table}`);
       },
     },

@@ -49,7 +49,8 @@ function normalizedCommentBody(body: unknown): string | null {
 /**
  * Set the caller's standing vote on a concept: +1 (back it), -1 (vote it
  * down), or 0 (withdraw). Not a toggle — the client states the desired end
- * state, so a stale/raced call converges on what the user last asked for.
+ * state, so repeating a request is idempotent. Concurrent requests from
+ * different tabs still settle in database execution order.
  */
 export async function setConceptVote(
   conceptId: string,
@@ -88,12 +89,13 @@ export async function setConceptVote(
         .from("concept_votes")
         .insert({ concept_id: conceptId, voter_id: user.id, value: next });
       if (insertError?.code === "23505") {
-        const { error: retryError } = await supabase
+        const { data: retried, error: retryError } = await supabase
           .from("concept_votes")
           .update({ value: next })
           .eq("concept_id", conceptId)
-          .eq("voter_id", user.id);
-        if (retryError)
+          .eq("voter_id", user.id)
+          .select("concept_id");
+        if (retryError || !retried?.length)
           return { ok: false, error: "That vote didn't stick — try again." };
       } else if (insertError) {
         return { ok: false, error: "That vote didn't stick — try again." };
