@@ -6,7 +6,7 @@ The root `proxy.ts` applies the Supabase session refresh convention through `lib
 
 Email confirmation depends on the hosted Auth configuration as well as the app:
 
-- Under Authentication → URL Configuration, set Site URL to `https://vroom-view.vercel.app`. Allow `https://vroom-view.vercel.app/**` and the local development origin, such as `http://localhost:3000/**`. The app supplies `/auth/callback?next=…` as the signup and recovery redirect. Supabase falls back to Site URL when a redirect is not allowed; an old localhost Site URL therefore sends production emails to localhost.
+- Under Authentication → URL Configuration, set Site URL to `https://vroom-view.vercel.app`. Allow `https://vroom-view.vercel.app/auth/callback**` and the local development origin, such as `http://localhost:3000/**`. The app supplies `/auth/callback?next=…` as the signup and recovery redirect. Supabase falls back to Site URL when a redirect is not allowed; an old localhost Site URL therefore sends production emails to localhost.
 - Under Authentication → Sign In / Providers → Email, enable **Confirm email**. Supabase enforces confirmation before password sign-in. Turning this off automatically confirms new accounts and permits immediate signup sessions. Enabling it later does not establish that those older accounts verified ownership of their email.
 - The default `{{ .ConfirmationURL }}` template supports the callback flow. If using a custom `token_hash` template with `/auth/confirm`, ensure its base URL points to the deployed app, and use `type=recovery` for password recovery. A template based on `{{ .SiteURL }}` requires the correct Site URL even when the app passes `emailRedirectTo`.
 
