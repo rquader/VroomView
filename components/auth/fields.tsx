@@ -22,7 +22,9 @@ export function EmailField({ autoFocus = false }: { autoFocus?: boolean }) {
         name="email"
         type="email"
         required
-        autoComplete="email"
+        autoComplete="username"
+        autoCapitalize="none"
+        spellCheck={false}
         autoFocus={autoFocus}
         placeholder="you@example.com"
         className="field"
@@ -48,7 +50,7 @@ export function UsernameField() {
         id={id}
         name="username"
         type="text"
-        autoComplete="username"
+        autoComplete="off"
         autoCapitalize="none"
         spellCheck={false}
         maxLength={24}

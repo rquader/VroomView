@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { safeAuthNext } from "@/lib/auth/redirects";
 
 /**
  * PKCE landing spot. Confirmation, recovery, and (later) OAuth emails link
@@ -10,9 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const rawNext = url.searchParams.get("next") ?? "/";
-  const next =
-    rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
+  const next = safeAuthNext(url.searchParams.get("next"));
 
   if (code) {
     const supabase = await createClient();

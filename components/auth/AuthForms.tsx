@@ -108,11 +108,11 @@ export function SignupForm({ next }: { next: string }) {
     <form action={action} className="flex flex-col gap-5">
       <input type="hidden" name="next" value={next} />
       <EmailField autoFocus />
-      <UsernameField />
       <PasswordField
         autoComplete="new-password"
         hint="At least 8 characters."
       />
+      <UsernameField />
       <ErrorNote state={state} />
       <SubmitButton pending={pending}>Create account</SubmitButton>
     </form>
